@@ -19,7 +19,7 @@ public class Main_tm {
 	private testRender tester, tester2;
 	private Thread testThread;
 	private Thread monsterThread;
-	private Thread TrapThread;
+	private Thread trapThread;
 	private Thread mapThread;
 	/**
 	 * Launch the application.
@@ -64,10 +64,11 @@ public class Main_tm {
 		game_frame.getContentPane().add(gameFramer, BorderLayout.CENTER);		
 		gameFramer.addRenderObj(tester);
 		gameFramer.addRenderObj(tester2);
+		
 		Thread testThread = new Thread() {
 			public void run() {
 				while(true) {
-					tester.move(0, 0, 600, 480);
+					tester.move(0, 0, 1000, 1000);
 					tester2.move(0, 0, 600, 480);
 					
 					try {

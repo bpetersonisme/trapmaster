@@ -17,8 +17,10 @@ import javax.swing.Timer;
  */
 @SuppressWarnings("serial")
 public class RenderEngine_tm extends JPanel{ 
-	private int X_SCREEN_WIDTH;
-	private int Y_SCREEN_HEIGHT;
+	private double viewportXPos; 
+	private double viewportYPos;
+	private int viewportWidth;
+	private int viewportHeight;
 	private BufferedImage viewport;
 	private Graphics gameGraphics;
 	private Timer gameTimer; 
@@ -32,9 +34,11 @@ public class RenderEngine_tm extends JPanel{
 	 * @param frameDelay the time between frames 
 	 */
 	public RenderEngine_tm(int x, int y, int frameDelay) {
-		X_SCREEN_WIDTH = x;
-		Y_SCREEN_HEIGHT = y;
-		viewport = new BufferedImage(X_SCREEN_WIDTH, Y_SCREEN_HEIGHT, BufferedImage.TYPE_INT_RGB);
+		viewportXPos = 0.0 - x/2;
+		viewportYPos = 0.0 - y/2;
+		viewportWidth = x;
+		viewportHeight = y;
+		viewport = new BufferedImage(viewportWidth, viewportHeight, BufferedImage.TYPE_INT_RGB);
 		gameGraphics = viewport.getGraphics();
 		delay = frameDelay;
 		gameTimer = new Timer(delay, new framePaintingListener());
@@ -91,10 +95,29 @@ public class RenderEngine_tm extends JPanel{
 			i++;
 		}
 	}
+	public double getViewportX() {
+		return viewportXPos;
+	}
+	public double getViewportY() {
+		return viewportYPos;
+	}
 	
+	public void setViewportXPos(int newX) {
+		viewportXPos = newX;
+	}
+	public void setViewportYPos(int newY) {
+		viewportYPos = newY;
+	}
+	
+	public double getRelX(double absX) {
+		return absX - viewportXPos;
+	}
+	public double getRelY(double absY) {
+		return absY - viewportYPos;
+	}
 	
 	public void paintComponent(Graphics g) {
-		g.drawImage(viewport,  0,  0, X_SCREEN_WIDTH, Y_SCREEN_HEIGHT, null);
+		g.drawImage(viewport,  0,  0, viewportWidth, viewportHeight, null);
 	
 	}
 	
@@ -103,7 +126,7 @@ public class RenderEngine_tm extends JPanel{
 			runTime = System.nanoTime();
 			int i;
 			gameGraphics.setColor(new Color(180, 105, 100));
-			gameGraphics.fillRect(0, 0, X_SCREEN_WIDTH, Y_SCREEN_HEIGHT);
+			gameGraphics.fillRect(0, 0, viewportWidth, viewportHeight);
 			int renderSize = renderables.size();
 			RenderObj curr;
 			for(i = 0; i < renderSize; i++) {
