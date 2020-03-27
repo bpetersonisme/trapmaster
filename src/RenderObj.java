@@ -21,8 +21,9 @@ public abstract class RenderObj {
 	private int spriteHeight; //The (y) height of the sprite 
 	private int spriteWidth; //The (x) width of the sprite 
 	
-	private int posX; //The horizontal (x) position of the object "in the world"
-	private int posY; //The vertical (y) position of the object "in the world"
+	private double posX; //The horizontal (x) position of the object 
+	private double posY; //The vertical (y) position of the object 
+	private int posZ; //The "depth" (z?) position of the object; used to determine the draw order
 	
 	//Assuming your sequence of sprites is 
 	public void cycleAnim() {
@@ -50,9 +51,14 @@ public abstract class RenderObj {
 	}
 	
 	public void setCurrSprite(int row, int col) {
-		int xPos = spriteWidth * col;
-		int yPos = spriteHeight * row;
-		currSprite = spriteSheet.getSubimage(xPos, yPos, xPos + spriteWidth, yPos + spriteHeight);
+		if(row > spriteSheetRows || row < 0 || col > spriteSheetCols || col < 0) {
+			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
+		}
+		else {
+			int spriteSheetY = spriteHeight * row;
+			int spriteSheetX = spriteWidth * col;
+			currSprite = spriteSheet.getSubimage(spriteSheetX, spriteSheetY, spriteSheetX + spriteWidth, spriteSheetY + spriteHeight);
+		}
 	}
 
 	//End CurrSprite
@@ -82,22 +88,32 @@ public abstract class RenderObj {
 		setCurrSprite(0, 0);
 	}
 	
-	
-	
-	protected int getspriteSheetCols() {
-		return spriteSheetCols;
+	/**
+	 * Returns whether or not this object is colliding with other
+	 * @return True is other is colliding with this object, false otherwise
+	 */
+	public boolean isColliding(RenderObj other) {
+		boolean collision = false;
+		
+		return collision;
 	}
 	
-	protected int getspriteSheetRows() {
+	//Returns how many columns are on the sprite sheet- It's just for internal use
+	protected int getSpriteSheetCols() {
+		return spriteSheetCols;
+	}
+	//Returns how many rows are on the sprite sheet- it's basically just for internal use
+	protected int getSpriteSheetRows() {
 		return spriteSheetRows;
 	}
  
 	
-	
+	//Returns the current column of the current sprite- for internal use
 	protected int getCurrSpriteCol() {
 		return currSpriteCol;
 	}
 
+	//Sets the current column of the current sprite- will also 
 	protected void setCurrSpriteCol(int currSpriteCol) {
 		this.currSpriteCol = currSpriteCol;
 		setCurrSprite(currSpriteRow, currSpriteCol);
@@ -122,19 +138,27 @@ public abstract class RenderObj {
 	}
 
 
-	public int getPosX() {
+	public double getPosX() {
 		return posX;
 	}
 
-	public void setPosX(int posX) {
-		this.posX = posX;
+	public void setPosX(double newX) {
+		posX = newX;
 	}
 
-	public int getPosY() {
+	public double getPosY() {
 		return posY;
 	}
 
-	public void setPosY(int posY) {
-		this.posY = posY;
+	public void setPosY(double newY) {
+		posY = newY;
+	}
+	
+	public int getPosZ() {
+		return posZ;
+	}
+	
+	public void setPosZ(int newZ) {
+		posZ = newZ;
 	}
 }

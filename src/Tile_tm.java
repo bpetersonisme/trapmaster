@@ -1,4 +1,4 @@
 
-public abstract class Tile_tm {
+public abstract class Tile_tm extends RenderObj  {
 
 }
