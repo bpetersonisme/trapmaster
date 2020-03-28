@@ -1,4 +1,7 @@
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+
 
 /**
  * RenderObj is the superclass to all the visible objects in game. 
@@ -17,6 +20,8 @@ public abstract class RenderObj {
 	private int spriteSheetRows;
 	private int currSpriteCol;
 	private int currSpriteRow;
+	private int currSpriteHeight;
+	private int currSpriteWidth; 
 	
 	private int spriteHeight; //The (y) height of the sprite 
 	private int spriteWidth; //The (x) width of the sprite 
@@ -24,6 +29,9 @@ public abstract class RenderObj {
 	private double posX; //The horizontal (x) position of the object 
 	private double posY; //The vertical (y) position of the object 
 	private int posZ; //The "depth" (z?) position of the object; used to determine the draw order
+	
+	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
+	
 	
 	//Assuming your sequence of sprites is 
 	public void cycleAnim() {
@@ -118,6 +126,16 @@ public abstract class RenderObj {
 		this.currSpriteCol = currSpriteCol;
 		setCurrSprite(currSpriteRow, currSpriteCol);
 	}
+	
+	//Rotates the current sprite to whatever angle is
+	protected void rotateCurrSprite() {
+		
+		Graphics2D g2D = currSprite.createGraphics();
+		AffineTransform rotator = g2D.getTransform();
+		rotator.rotate(Math.toRadians(angle), spriteWidth/2, spriteHeight/2);
+		g2D.drawImage(currSprite, null, 0, 0);
+		g2D.dispose();
+	}
 
 	protected int getCurrSpriteRow() {
 		return currSpriteRow;
@@ -160,5 +178,17 @@ public abstract class RenderObj {
 	
 	public void setPosZ(int newZ) {
 		posZ = newZ;
+	}
+	
+	public double getAngle() {
+		return angle;
+	}
+	
+	public void setAngle(double newAngle) {
+		newAngle = newAngle % 360; 
+		if(newAngle < 0) 
+			newAngle = 360 + newAngle;
+		angle = newAngle;
+		rotateCurrSprite();
 	}
 }
