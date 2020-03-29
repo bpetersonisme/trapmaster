@@ -1,4 +1,5 @@
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
@@ -20,11 +21,11 @@ public abstract class RenderObj {
 	private int spriteSheetRows;
 	private int currSpriteCol;
 	private int currSpriteRow;
-	private int currSpriteHeight;
-	private int currSpriteWidth; 
+	private int currSpriteHeight; //The (y) height of each sprite with respect to its angle
+	private int currSpriteWidth;  //The (x) height of the current sprite with respect to its angle
 	
-	private int spriteHeight; //The (y) height of the sprite 
-	private int spriteWidth; //The (x) width of the sprite 
+	private int spriteHeight; //The (y) height of each sprite on the sprite sheet
+	private int spriteWidth; //The (x) width of each sprite on the sprite sheet
 	
 	private double posX; //The horizontal (x) position of the object 
 	private double posY; //The vertical (y) position of the object 
@@ -129,11 +130,17 @@ public abstract class RenderObj {
 	
 	//Rotates the current sprite to whatever angle is
 	protected void rotateCurrSprite() {
+		double sin = Math.abs(Math.sin(angle));
+		double cos = Math.abs(Math.cos(angle));
+		int newWidth = (int)Math.floor(currSpriteWidth*cos + currSpriteHeight*sin);
+		int newHeight = (int)Math.floor(currSpriteWidth*sin + currSpriteHeight*cos);
+
 		
 		Graphics2D g2D = currSprite.createGraphics();
+		GraphicsConfiguration gc = BufferedImage.getDefaultConfiguration();
 		AffineTransform rotator = g2D.getTransform();
 		rotator.rotate(Math.toRadians(angle), spriteWidth/2, spriteHeight/2);
-		g2D.drawImage(currSprite, null, 0, 0);
+		g2D.drawRenderedImage(currSprite, null);
 		g2D.dispose();
 	}
 
@@ -154,7 +161,14 @@ public abstract class RenderObj {
 	public int getSpriteWidth() {
 		return spriteWidth;
 	}
+	
+	public int getRotatedSpriteHeight() {
+		return currSpriteHeight;
+	}
 
+	public int getRotatedSpriteWidth() {
+		return currSpriteWidth;
+	}
 
 	public double getPosX() {
 		return posX;
