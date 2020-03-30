@@ -1,4 +1,6 @@
 import java.awt.EventQueue;
+import java.awt.Graphics2D;
+import java.awt.MouseInfo;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -12,6 +14,13 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import javax.swing.JLabel;
+
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+import java.awt.GridLayout;
+
 
 public class Testbed_tm {
 
@@ -21,6 +30,12 @@ public class Testbed_tm {
 	private Thread monsterThread;
 	private Thread trapThread;
 	private Thread mapThread;
+	int gamex = 1920;
+	int gamey = 1080;
+	int i;
+	JLabel mousePos, entPosLabel;
+	private JLabel entAngleLabel;
+	private JLabel entDimLabel;
 	/**
 	 * Launch the application.
 	 */
@@ -49,29 +64,66 @@ public class Testbed_tm {
 	 */
 	private void initialize() {
 		game_frame = new JFrame();
-		game_frame.setBounds(100, 100, 700, 580);
+		game_frame.setBounds(100, 100, gamex, gamey);
 		game_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		tester = null;
 		tester2 = null;
-		try {
+		try { 
 			tester = new testRender("/test.png", 1, 1, 200, 200);
-			tester2 = new testRender("/test.png", 1, 1, 200, 200);
-		}
+			tester2 = new testRender("/Enterprise.jpg", 1, 1, 1000, 500); 
+			}
 		catch(IOException e) {
 			e.printStackTrace();
 		}
-		RenderEngine_tm gameFramer = new RenderEngine_tm(600, 480, 16);
-		game_frame.getContentPane().add(gameFramer, BorderLayout.CENTER);		
+		game_frame.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
+		
+		RenderEngine_tm gameFramer = new RenderEngine_tm(gamex, gamey, 16);
+		
+		
+		
+		game_frame.getContentPane().add(gameFramer);		
+		gameFramer.setLayout(null);
+		
+		mousePos = new JLabel("MOUSe");
+		mousePos.setBounds(934, 5, 300, 155);
+		gameFramer.add(mousePos);
+		
+		entPosLabel = new JLabel("also here");
+		entPosLabel.setBounds(934, 165, 300, 22);
+		gameFramer.add(entPosLabel);
+		
+		entAngleLabel = new JLabel("New label");
+		entAngleLabel.setBounds(934, 193, 312, 14);
+		gameFramer.add(entAngleLabel);
+		
+		entDimLabel = new JLabel("df");
+		entDimLabel.setBounds(934, 217, 372, 14);
+		gameFramer.add(entDimLabel);
 		gameFramer.addRenderObj(tester);
 		gameFramer.addRenderObj(tester2);
 		
+		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent arg0) {
+				mousePos.setText("Mouse x is: " + MouseInfo.getPointerInfo().getLocation().getX() + " Mouse y is: " +
+						MouseInfo.getPointerInfo().getLocation().getY());
+			}
+		});
+		 
+		
 		Thread testThread = new Thread() {
 			public void run() {
+				int i = 0; 
 				while(true) {
-					tester.move(0, 0, 600, 480);
-					//tester2.move(0, 0, 600, 480);
-					tester2.setAngle(tester2.getAngle() + 1);
-					tester2.rotateCurrSprite();
+					System.out.println("\n");
+					tester.move(0, 0, gamex, gamey);
+					 
+						tester2.rotateCurrSprite(i);
+						i++;
+						entPosLabel.setText("Ent pos: (" + tester2.getPosX() + ", " + tester2.getPosY() + ")"); 
+						entAngleLabel.setText("Ent angle: " + tester2.getAngle());
+						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
+					
 					try {
 						sleep(20);
 					}
@@ -83,6 +135,7 @@ public class Testbed_tm {
 		};
 		testThread.start();
 		gameFramer.startRender(); 
+		tester2.rotateCurrSprite(1);
 		
 		
 	}
@@ -95,7 +148,41 @@ public class Testbed_tm {
 		private double xRate;
 		private double yRate;
 		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y) throws IOException {
-			setSpriteSheet(ImageIO.read(this.getClass().getResourceAsStream(fileName)), 1, 1, 25, 25);
+			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(fileName));
+		 
+			int newWidth = buf.getWidth(); 
+			int newHeight = buf.getHeight(); 
+			
+			System.out.println("Width is: " + buf.getWidth() + " Height is: " + buf.getHeight());
+			if(buf.getWidth() > 256 || buf.getHeight() > 256) {
+				
+ 
+				int div; 
+				if(newWidth > newHeight) {
+					div = (int)Math.floor(newWidth/256);
+				}
+				else {
+					div = (int)Math.floor(newHeight/256);
+				}
+				System.out.println("Div is: " + div);
+				newWidth /= div;
+				newHeight /= div;
+				
+				
+				System.out.println("NewWidth is : " + newWidth + " and newHeight is: " + newHeight);
+				BufferedImage newBuf = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g2d = newBuf.createGraphics();
+				int test = 2; 
+				
+				g2d.drawImage(buf.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT), null, null);
+				g2d.dispose();
+				buf = newBuf;
+			} 
+			
+			setSpriteSheet(buf, 1, 1, newWidth, newHeight);
+			
+			System.out.println("Width: " + getCurrSprite().getWidth() + " Height: " + getCurrSprite().getHeight());
+			System.out.println("X is : " + getPosX() + "So Width is: " + getPosX() + getCurrSprite().getWidth());
 			setPosX(x);
 			setPosY(y);
 			setPosZ(0);
@@ -135,7 +222,6 @@ public class Testbed_tm {
 			}
 		}
 	}
-	
 }
 
 

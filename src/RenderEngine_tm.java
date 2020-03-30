@@ -38,7 +38,7 @@ public class RenderEngine_tm extends JPanel{
 		viewportYPos = 0.0 - y/2;
 		viewportWidth = x;
 		viewportHeight = y;
-		viewport = new BufferedImage(viewportWidth, viewportHeight, BufferedImage.TYPE_INT_RGB);
+		viewport = new BufferedImage(viewportWidth, viewportHeight, BufferedImage.TYPE_INT_ARGB);
 		gameGraphics = viewport.getGraphics();
 		delay = frameDelay;
 		gameTimer = new Timer(delay, new framePaintingListener());

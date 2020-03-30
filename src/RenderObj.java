@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.geom.AffineTransform;
@@ -92,9 +94,14 @@ public abstract class RenderObj {
 		spriteSheetCols = numCols;
 		this.spriteWidth = spriteWidth;
 		this.spriteHeight = spriteHeight;
+		currSpriteWidth = spriteWidth;
+		currSpriteHeight = spriteHeight;	
 		currSpriteRow = 0;
 		currSpriteCol = 0;
 		setCurrSprite(0, 0);
+		if(angle > 0)
+			rotateToAngle();
+		
 	}
 	
 	/**
@@ -128,20 +135,49 @@ public abstract class RenderObj {
 		setCurrSprite(currSpriteRow, currSpriteCol);
 	}
 	
-	//Rotates the current sprite to whatever angle is
-	protected void rotateCurrSprite() {
-		double sin = Math.abs(Math.sin(angle));
-		double cos = Math.abs(Math.cos(angle));
-		int newWidth = (int)Math.floor(currSpriteWidth*cos + currSpriteHeight*sin);
-		int newHeight = (int)Math.floor(currSpriteWidth*sin + currSpriteHeight*cos);
-
+	protected void rotateToAngle() {
+		rotateCurrSprite(angle);
+	}
+	//Rotates the current sprite to be "degrees-" some value between 0 and 360. 
+	protected void rotateCurrSprite(double degree) {
 		
-		Graphics2D g2D = currSprite.createGraphics();
-		GraphicsConfiguration gc = BufferedImage.getDefaultConfiguration();
-		AffineTransform rotator = g2D.getTransform();
-		rotator.rotate(Math.toRadians(angle), spriteWidth/2, spriteHeight/2);
-		g2D.drawRenderedImage(currSprite, null);
+		degree = degree % 360;
+		if(degree < 0) 
+			degree = 360 - degree;
+		angle = degree;
+		resetSprite(); 
+		System.out.println("Starting height is: " + currSpriteHeight + " Starting width is: " + currSpriteWidth); 
+		System.out.println("Angle is: " + degree + " Degrees");
+		
+		double radsAngle = Math.toRadians(degree);
+		double sin = Math.abs(Math.sin(radsAngle));
+		double cos = Math.abs(Math.cos(radsAngle));
+		int w = spriteWidth;
+		int h = getCurrSprite().getHeight();
+		System.out.println("Sin * width is: " + sin*w + " Cos * height is: " + cos*h);
+		int newWidth = (int)Math.floor(w*cos + h*sin);
+		int newHeight = (int)Math.floor(h*cos + w*sin);
+	//	System.out.println("Sin is: " + sin + " and cos is: " + cos);
+		System.out.println("Therefore, newWidth is: " + newWidth + " and newHeight is: " + newHeight);
+		
+		BufferedImage rotatedSprite = new BufferedImage((int)newWidth, (int)newHeight, BufferedImage.TYPE_INT_ARGB); 
+		Graphics2D g2D = rotatedSprite.createGraphics(); 
+		AffineTransform rotator = new AffineTransform();
+		rotator.translate((newWidth - w)/2, (newHeight-h)/2);
+		rotator.rotate(radsAngle, w/2, h/2);
+		rotator.translate(-(newWidth - w)/2, -((newHeight-h)/2));
+		g2D.setTransform(rotator);
+		g2D.drawImage(currSprite, 0, 0, null);
+		g2D.setColor(Color.RED);
+		g2D.drawRect(0,  0,  newWidth -1 , newHeight - 1);
 		g2D.dispose();
+		currSprite = rotatedSprite;
+		
+		currSpriteWidth = (int) newWidth;
+		currSpriteHeight = (int) newHeight; 
+		
+		System.out.println("Current sprite width: " + currSpriteWidth + "\nCurrent sprite height: " + currSpriteHeight);
+		 
 	}
 
 	protected int getCurrSpriteRow() {
@@ -198,11 +234,15 @@ public abstract class RenderObj {
 		return angle;
 	}
 	
-	public void setAngle(double newAngle) {
-		newAngle = newAngle % 360; 
-		if(newAngle < 0) 
-			newAngle = 360 + newAngle;
-		angle = newAngle;
-		rotateCurrSprite();
+	/**
+	 * ResetSprite returns the current sprite back to an angle of zero, usually so it can be rotated once more. 
+	 */
+	protected void resetSprite() {
+		setCurrSprite(currSpriteCol, currSpriteRow);
+		currSpriteWidth = spriteWidth;
+		currSpriteHeight = spriteHeight;
+		angle = 0;
 	}
+
+
 }
