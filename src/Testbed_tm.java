@@ -113,13 +113,16 @@ public class Testbed_tm {
 		
 		Thread testThread = new Thread() {
 			public void run() {
-				int i = 0; 
+				double i = 0; 
 				while(true) {
 					System.out.println("\n");
-					tester.move(0, 0, gamex, gamey);
-					 
+					
+						tester.move(0, 0, gamex, gamey);
+						tester2.move(0, 0, gamex, gamey);
+
+						tester.rotateCurrSprite(i);
 						tester2.rotateCurrSprite(i);
-						i++;
+						i += 1;
 						entPosLabel.setText("Ent pos: (" + tester2.getPosX() + ", " + tester2.getPosY() + ")"); 
 						entAngleLabel.setText("Ent angle: " + tester2.getAngle());
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
@@ -134,8 +137,7 @@ public class Testbed_tm {
 			}
 		};
 		testThread.start();
-		gameFramer.startRender(); 
-		tester2.rotateCurrSprite(1);
+		gameFramer.startRender();  
 		
 		
 	}
@@ -188,6 +190,7 @@ public class Testbed_tm {
 			setPosZ(0);
 			xRate = Math.random() * 5.0 - 5.0;
 			yRate = Math.random() * 5.0 - 5.0;
+			setAngle(0);
 		}
 		public void move(int x1, int y1, int x2, int y2) {
 			setPosX(getPosX() + xRate);
