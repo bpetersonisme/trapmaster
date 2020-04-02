@@ -3,6 +3,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
 import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 
 
@@ -26,14 +27,17 @@ public abstract class RenderObj {
 	private int currSpriteHeight; //The (y) height of each sprite with respect to its angle
 	private int currSpriteWidth;  //The (x) height of the current sprite with respect to its angle
 	
-	private int spriteHeight; //The (y) height of each sprite on the sprite sheet
-	private int spriteWidth; //The (x) width of each sprite on the sprite sheet
-	
+	private int modelSpriteHeight; //The (y) height of each sprite on the sprite sheet
+	private int modelSpriteWidth; //The (x) width of each sprite on the sprite sheet
 	private double posX; //The horizontal (x) position of the object 
 	private double posY; //The vertical (y) position of the object 
 	private int posZ; //The "depth" (z?) position of the object; used to determine the draw order
 	
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
+	
+	private final int TYPE_RECT = 1;
+	private final int TYPE_CIRCLE = 2;
+	private final int TYPE_OVAL = 3;
 	
 	
 	//Assuming your sequence of sprites is 
@@ -66,9 +70,9 @@ public abstract class RenderObj {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
 		else {
-			int spriteSheetY = spriteHeight * row;
-			int spriteSheetX = spriteWidth * col;
-			currSprite = spriteSheet.getSubimage(spriteSheetX, spriteSheetY, spriteSheetX + spriteWidth, spriteSheetY + spriteHeight);
+			int spriteSheetY = modelSpriteHeight * row;
+			int spriteSheetX = modelSpriteWidth * col;
+			currSprite = spriteSheet.getSubimage(spriteSheetX, spriteSheetY, spriteSheetX + modelSpriteWidth, spriteSheetY + modelSpriteHeight);
 		}
 	}
 
@@ -92,8 +96,8 @@ public abstract class RenderObj {
 		spriteSheet = newSS;
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
-		this.spriteWidth = spriteWidth;
-		this.spriteHeight = spriteHeight;
+		modelSpriteWidth = spriteWidth;
+		modelSpriteHeight = spriteHeight;
 		currSpriteWidth = spriteWidth;
 		currSpriteHeight = spriteHeight;	
 		currSpriteRow = 0;
@@ -105,7 +109,7 @@ public abstract class RenderObj {
 	}
 	
 	/**
-	 * Returns whether or not this object is colliding with other
+	 * Returns whether or not this object is colliding with other, using a spherical model
 	 * @return True is other is colliding with this object, false otherwise
 	 */
 	public boolean isColliding(RenderObj other) {
@@ -143,18 +147,18 @@ public abstract class RenderObj {
 	
 	//Rotates the current sprite to be "degrees-" some value between 0 and 360. 
 	protected void rotateCurrSprite(double degree) {
-		resetSprite();  
+		BufferedImage modelSprite = getModelSprite();
 		degree = degree % 360;
 		if(degree < 0) 
-			degree = 360 - degree;
+			degree = 360 + degree;
 		angle = degree;
 	
 		
 		double radsAngle = Math.toRadians(degree);
 		double sin = Math.abs(Math.sin(radsAngle));
 		double cos = Math.abs(Math.cos(radsAngle));
-		int w = spriteWidth;
-		int h = getCurrSprite().getHeight(); 
+		int w = modelSpriteWidth;
+		int h = modelSpriteHeight; 
 		int newWidth = (int)Math.floor(w*cos + h*sin);
 		int newHeight = (int)Math.floor(h*cos + w*sin);
 	//	System.out.println("Sin is: " + sin + " and cos is: " + cos); 
@@ -164,18 +168,27 @@ public abstract class RenderObj {
 		AffineTransform rotator = new AffineTransform();
 		rotator.translate((newWidth - w)/2, (newHeight-h)/2);
 		rotator.rotate(radsAngle, w/2, h/2);
-		//rotator.translate(-(newWidth - w)/2, -((newHeight-h)/2));
 		g2D.setTransform(rotator);
-		g2D.drawImage(currSprite, 0, 0, null); 
+		g2D.drawImage(modelSprite, 0, 0, null); 
 		g2D.dispose();
 		currSprite = rotatedSprite;
 		
 		currSpriteWidth = (int) newWidth;
 		currSpriteHeight = (int) newHeight; 
-		 
+ 
 		 
 	}
 
+	/**
+	 * GetModelSprite returns an unrotated version of the current sprite
+	 * @return
+	 */
+	private BufferedImage getModelSprite() {
+			
+			int spriteSheetY = modelSpriteHeight * currSpriteRow;
+			int spriteSheetX = modelSpriteWidth * currSpriteCol;
+			return spriteSheet.getSubimage(spriteSheetX, spriteSheetY, spriteSheetX + modelSpriteWidth, spriteSheetY + modelSpriteHeight);
+	}
 	protected int getCurrSpriteRow() {
 		return currSpriteRow;
 	}
@@ -187,11 +200,11 @@ public abstract class RenderObj {
 
 
 	public int getSpriteHeight() {
-		return spriteHeight;
+		return modelSpriteHeight;
 	}
 
 	public int getSpriteWidth() {
-		return spriteWidth;
+		return modelSpriteWidth;
 	}
 	
 	public int getRotatedSpriteHeight() {
@@ -202,13 +215,22 @@ public abstract class RenderObj {
 		return currSpriteWidth;
 	}
 
+	/**
+	 * This one's good for rendering purposes
+	 * @return
+	 */
+	public double getPosXRender() {
+		double posXRotated = posX;
+		posXRotated -= currSprite.getWidth();
+		posXRotated /= 2;
+		System.out.println("But now, it's " + posXRotated);
+		return posXRotated;
+	}
+	/**
+	 * getPosX returns the x position of sprite's upper left hand corner
+	 * @return
+	 */
 	public double getPosX() {
-		if(angle > 0) {
-			double posXRotated = posX;
-			posXRotated -= currSprite.getWidth();
-			posXRotated /= 2;
-			return posXRotated;
-		}
 		return posX;
 	}
 
@@ -216,13 +238,15 @@ public abstract class RenderObj {
 		posX = newX;
 	}
 
+	public double getPosYRender() {
+		double posYRotated = posY;
+		posYRotated -= currSprite.getHeight();
+		posYRotated /= 2;
+		System.out.println("But now, it's " + posYRotated);
+		return posYRotated;
+	}
+	
 	public double getPosY() {
-		if(angle > 0) {
-			double posYRotated = posY;
-			posYRotated -= currSprite.getHeight();
-			posYRotated /= 2;
-			return posYRotated;
-		}
 		return posY;
 	}
 
@@ -257,8 +281,8 @@ public abstract class RenderObj {
 	 */
 	protected void resetSprite() {
 		setCurrSprite(currSpriteCol, currSpriteRow);
-		currSpriteWidth = spriteWidth;
-		currSpriteHeight = spriteHeight;
+		currSpriteWidth = modelSpriteWidth;
+		currSpriteHeight = modelSpriteHeight;
 		angle = 0;
 	}
 

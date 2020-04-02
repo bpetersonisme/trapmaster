@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -22,7 +23,7 @@ public class RenderEngine_tm extends JPanel{
 	private int viewportWidth;
 	private int viewportHeight;
 	private BufferedImage viewport;
-	private Graphics gameGraphics;
+	private Graphics2D gameGraphics;
 	private Timer gameTimer; 
 	private ArrayList<RenderObj> renderables;
 	private int delay;
@@ -39,7 +40,7 @@ public class RenderEngine_tm extends JPanel{
 		viewportWidth = x;
 		viewportHeight = y;
 		viewport = new BufferedImage(viewportWidth, viewportHeight, BufferedImage.TYPE_INT_ARGB);
-		gameGraphics = viewport.getGraphics();
+		gameGraphics = viewport.createGraphics();
 		delay = frameDelay;
 		gameTimer = new Timer(delay, new framePaintingListener());
 		renderables = new ArrayList<RenderObj>();
@@ -117,6 +118,17 @@ public class RenderEngine_tm extends JPanel{
 	}
 	
 	public void paintComponent(Graphics g) {
+		
+		int i;
+		gameGraphics.setColor(new Color(180, 105, 100));
+		gameGraphics.fillRect(0, 0, viewportWidth, viewportHeight);
+		int renderSize = renderables.size();
+		RenderObj curr;
+		for(i = 0; i < renderSize; i++) {
+			curr = renderables.get(i);
+			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getPosXRender(), (int)curr.getPosYRender(), null);
+		}
+		
 		g.drawImage(viewport,  0,  0, viewportWidth, viewportHeight, null);
 	
 	}
@@ -124,15 +136,7 @@ public class RenderEngine_tm extends JPanel{
 	private class framePaintingListener implements ActionListener {
 		public void actionPerformed(ActionEvent arg0) {
 			runTime = System.nanoTime();
-			int i;
-			gameGraphics.setColor(new Color(180, 105, 100));
-			gameGraphics.fillRect(0, 0, viewportWidth, viewportHeight);
-			int renderSize = renderables.size();
-			RenderObj curr;
-			for(i = 0; i < renderSize; i++) {
-				curr = renderables.get(i);
-				gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getPosX(), (int)curr.getPosY(), null);
-			}
+			
 			repaint();
 			runTime = (System.nanoTime() - runTime)/1000000;
 			if(delay < runTime) {

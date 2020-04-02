@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 import javax.swing.JLabel;
 
@@ -30,12 +31,13 @@ public class Testbed_tm {
 	private Thread monsterThread;
 	private Thread trapThread;
 	private Thread mapThread;
+	private DecimalFormat formatter;
 	int gamex = 1920;
 	int gamey = 1080;
 	int i;
 	JLabel mousePos, entPosLabel;
 	private JLabel entAngleLabel;
-	private JLabel entDimLabel;
+	private JLabel entDimLabel, entVelLabel;
 	/**
 	 * Launch the application.
 	 */
@@ -80,15 +82,15 @@ public class Testbed_tm {
 		RenderEngine_tm gameFramer = new RenderEngine_tm(gamex, gamey, 16);
 		
 		
-		
+		formatter = new DecimalFormat("#.##");
 		game_frame.getContentPane().add(gameFramer);		
 		gameFramer.setLayout(null);
 		
-		mousePos = new JLabel("MOUSe");
+		mousePos = new JLabel("mouse x: nil mouse y: nil");
 		mousePos.setBounds(934, 5, 300, 155);
 		gameFramer.add(mousePos);
 		
-		entPosLabel = new JLabel("also here");
+		entPosLabel = new JLabel("position");
 		entPosLabel.setBounds(934, 165, 300, 22);
 		gameFramer.add(entPosLabel);
 		
@@ -99,6 +101,10 @@ public class Testbed_tm {
 		entDimLabel = new JLabel("df");
 		entDimLabel.setBounds(934, 217, 372, 14);
 		gameFramer.add(entDimLabel);
+		
+		entVelLabel = new JLabel("velocities");
+		entVelLabel.setBounds(934, 247, 285, 14);
+		gameFramer.add(entVelLabel);
 		gameFramer.addRenderObj(tester);
 		gameFramer.addRenderObj(tester2);
 		
@@ -114,19 +120,19 @@ public class Testbed_tm {
 		Thread testThread = new Thread() {
 			public void run() {
 				double i = 0; 
-				while(true) {
-					System.out.println("\n");
+				while(true) { 
 					
 						tester.move(0, 0, gamex, gamey);
 						tester2.move(0, 0, gamex, gamey);
 
 						tester.rotateCurrSprite(i);
 						tester2.rotateCurrSprite(i);
-						i += 1;
+						i -= 1;
 						entPosLabel.setText("Ent pos: (" + tester2.getPosX() + ", " + tester2.getPosY() + ")"); 
 						entAngleLabel.setText("Ent angle: " + tester2.getAngle());
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
-					
+						entVelLabel.setText("Ent velocity: " + tester2.getVelocity() + "(" + formatter.format(tester2.getXVel()) + ", " + 
+						formatter.format(tester2.getYVel()) + ")");
 					try {
 						sleep(20);
 					}
@@ -145,7 +151,7 @@ public class Testbed_tm {
 	
 
 
-	
+	//testRender is special- it niavely assumes it has been given a one image sprite sheet. 
 	private class testRender extends RenderObj {
 		private double xRate;
 		private double yRate;
@@ -192,10 +198,43 @@ public class Testbed_tm {
 			yRate = Math.random() * 5.0 - 5.0;
 			setAngle(0);
 		}
+		public String getVelocity() {
+			String heading = "No motion"; 
+			double velocity = Math.sqrt(Math.pow(xRate, 2) + Math.pow(yRate, 2));
+			double direction = 0; //Position in degrees. 
+			if(xRate != 0 || yRate != 0) {
+				//If xRate AND yRate are less than zero or xRate AND yRate are greater than zero, take their absolute  
+				if(xRate < 0 && yRate < 0 || xRate > 0 && yRate > 0) {
+					direction = Math.toDegrees(Math.asin(Math.abs(yRate/velocity)));
+					if(xRate < 0) {
+						direction += 180;
+					}
+				}
+				else if(xRate < 0) {
+					direction = Math.toDegrees(Math.acos(xRate/velocity));
+				}
+				else {
+					direction = Math.toDegrees(Math.asin(yRate/velocity));
+					direction = 360 + direction;
+				}
+				DecimalFormat formatter = new DecimalFormat("#.##");
+				heading = formatter.format(velocity) + " at " + formatter.format(direction) + " °";
+			}
+			return heading;
+		}
+		
+		public double getXVel() {
+			return xRate;
+		}
+		public double getYVel() {
+			return yRate;
+		}
+		
 		public void move(int x1, int y1, int x2, int y2) {
+ 
 			setPosX(getPosX() + xRate);
-			setPosY(getPosY() + yRate);
-		 
+			setPosY(getPosY() + yRate); 
+			
 			if(getPosX() + getSpriteWidth() > x2 || getPosX() < x1) {
 				xRate *= -1.0;
 				if(Math.random() > .5)
