@@ -1,5 +1,8 @@
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.MouseInfo;
 
 import javax.imageio.ImageIO;
@@ -10,6 +13,7 @@ import javax.swing.Timer;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,6 +42,12 @@ public class Testbed_tm {
 	JLabel mousePos, entPosLabel;
 	private JLabel entAngleLabel;
 	private JLabel entDimLabel, entVelLabel;
+	private JLabel centerLabel;
+	private JLabel mousePos_1;
+	private JLabel viewportPos;
+	private 	RenderEngine_tm gameFramer;
+	private JLabel lblViewportXPos;
+	private Insets bounds;
 	/**
 	 * Launch the application.
 	 */
@@ -66,20 +76,23 @@ public class Testbed_tm {
 	 */
 	private void initialize() {
 		game_frame = new JFrame();
-		game_frame.setBounds(100, 100, gamex, gamey);
+		bounds = game_frame.getInsets();
+		game_frame.setBounds(100, 100, gamex + bounds.top + bounds.bottom, gamey); 
 		game_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		game_frame.setBounds(bounds.top, bounds.left, gamex, gamey);
+		game_frame.setUndecorated(true);
 		tester = null;
 		tester2 = null;
 		try { 
-			tester = new testRender("/test.png", 1, 1, 200, 200);
-			tester2 = new testRender("/Enterprise.jpg", 1, 1, 1000, 500); 
+			tester = new testRender("/test.png", 1, 1, 200, -200, 0);
+			tester2 = new testRender("/Enterprise.jpg", 1, 1, 0, 0, 1); 
 			}
 		catch(IOException e) {
 			e.printStackTrace();
 		}
 		game_frame.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
 		
-		RenderEngine_tm gameFramer = new RenderEngine_tm(gamex, gamey, 16);
+		gameFramer = new RenderEngine_tm(gamex, gamey, 16);
 		
 		
 		formatter = new DecimalFormat("#.##");
@@ -87,34 +100,57 @@ public class Testbed_tm {
 		gameFramer.setLayout(null);
 		
 		mousePos = new JLabel("mouse x: nil mouse y: nil");
-		mousePos.setBounds(934, 5, 300, 155);
+		mousePos.setBounds(29, 11, 459, 29);
 		gameFramer.add(mousePos);
 		
 		entPosLabel = new JLabel("position");
-		entPosLabel.setBounds(934, 165, 300, 22);
+		entPosLabel.setBounds(29, 124, 300, 22);
 		gameFramer.add(entPosLabel);
 		
 		entAngleLabel = new JLabel("New label");
-		entAngleLabel.setBounds(934, 193, 312, 14);
+		entAngleLabel.setBounds(29, 197, 312, 14);
 		gameFramer.add(entAngleLabel);
 		
 		entDimLabel = new JLabel("df");
-		entDimLabel.setBounds(934, 217, 372, 14);
+		entDimLabel.setBounds(29, 222, 372, 14);
 		gameFramer.add(entDimLabel);
 		
 		entVelLabel = new JLabel("velocities");
-		entVelLabel.setBounds(934, 247, 285, 14);
+		entVelLabel.setBounds(29, 277, 285, 14);
 		gameFramer.add(entVelLabel);
+		
+		 centerLabel = new JLabel("Center");
+		centerLabel.setBounds(29, 157, 312, 29);
+		gameFramer.add(centerLabel);
+		
+		mousePos_1 = new JLabel("mouse viewport x: nil mouse viewport y: nil");
+		mousePos_1.setBounds(29, 84, 567, 29);
+		gameFramer.add(mousePos_1);
+		
+		viewportPos = new JLabel("Viewport x pos: Viewport y pos: ");
+		viewportPos.setBounds(29, 243, 272, 14);
+		gameFramer.add(viewportPos);
+		
+		JLabel lblViewportPos = new JLabel("Viewport Position: (" + gameFramer.getViewportX() + ", " + gameFramer.getViewportY() + ")");
+		lblViewportPos.setBounds(29, 51, 285, 22);
+		gameFramer.add(lblViewportPos);
 		gameFramer.addRenderObj(tester);
 		gameFramer.addRenderObj(tester2);
 		
 		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
-			public void mouseMoved(MouseEvent arg0) {
-				mousePos.setText("Mouse x is: " + MouseInfo.getPointerInfo().getLocation().getX() + " Mouse y is: " +
-						MouseInfo.getPointerInfo().getLocation().getY());
+			public void mouseMoved(MouseEvent e) {
+				mousePos.setText("Mouse x is: " + ((gameFramer.getViewportX()) + e.getX()) + " Mouse y is: " +
+						((gameFramer.getViewportY()) + e.getY()));
+				
+				mousePos_1.setText("Mouse viewport x is: " + (e.getX()) + 
+						"Mouse viewport Y is: " + e.getY());
 			}
+			
 		});
+		
+
+
 		 
 		
 		Thread testThread = new Thread() {
@@ -122,17 +158,23 @@ public class Testbed_tm {
 				double i = 0; 
 				while(true) { 
 					
-						tester.move(0, 0, gamex, gamey);
-						tester2.move(0, 0, gamex, gamey);
+					//	tester.move(0, 0, gamex, gamey);
+						tester2.move(-gamex/2 + tester2.getRotatedSpriteWidth()/2, -gamey/2 + tester2.getRotatedSpriteHeight()/2,
+								gamex/2 - tester2.getRotatedSpriteWidth()/2, gamey/2 - tester2.getRotatedSpriteWidth()/2);
 
 						tester.rotateCurrSprite(i);
-						tester2.rotateCurrSprite(i);
+						//tester2.rotateCurrSprite(i);
 						i -= 1;
-						entPosLabel.setText("Ent pos: (" + tester2.getPosX() + ", " + tester2.getPosY() + ")"); 
+						entPosLabel.setText("Ent pos: (" + formatter.format(tester2.getXPosWorld()) + ", " + formatter.format(tester2.getYPosWorld()) + ")"); 
+						centerLabel.setText("Ent renderPos: (" + formatter.format(tester2.getXPosRender(gameFramer.getViewportX())) + ", " +
+								formatter.format(tester2.getYPosRender(gameFramer.getViewportY())) + ")" +
+								"- Ought to be (" + (tester2.getXPosWorld() - gameFramer.getViewportX()) + ", " + (tester2.getYPosWorld() - gameFramer.getViewportY()) + ")");
 						entAngleLabel.setText("Ent angle: " + tester2.getAngle());
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
 						entVelLabel.setText("Ent velocity: " + tester2.getVelocity() + "(" + formatter.format(tester2.getXVel()) + ", " + 
-						formatter.format(tester2.getYVel()) + ")");
+						formatter.format(tester2.getYVel()) + ")"); 
+						viewportPos.setText("Viewport X Pos: " + gameFramer.getViewportX() + " Viewport Y Pos: " + gameFramer.getViewportY());
+						
 					try {
 						sleep(20);
 					}
@@ -148,14 +190,13 @@ public class Testbed_tm {
 		
 	}
 	
-	
 
 
 	//testRender is special- it niavely assumes it has been given a one image sprite sheet. 
 	private class testRender extends RenderObj {
 		private double xRate;
 		private double yRate;
-		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y) throws IOException {
+		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y, int z) throws IOException {
 			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(fileName));
 		 
 			int newWidth = buf.getWidth(); 
@@ -185,17 +226,18 @@ public class Testbed_tm {
 				g2d.drawImage(buf.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT), null, null);
 				g2d.dispose();
 				buf = newBuf;
+					
+			
 			} 
 			
 			setSpriteSheet(buf, 1, 1, newWidth, newHeight);
 			
-			System.out.println("Width: " + getCurrSprite().getWidth() + " Height: " + getCurrSprite().getHeight());
-			System.out.println("X is : " + getPosX() + "So Width is: " + getPosX() + getCurrSprite().getWidth());
-			setPosX(x);
-			setPosY(y);
-			setPosZ(0);
-			xRate = Math.random() * 5.0 - 5.0;
+			setXPosWorld(x);
+			setYPosWorld(y);
+			setZPos(z);
 			yRate = Math.random() * 5.0 - 5.0;
+			
+			xRate = Math.random() * 5.0 - 5.0;
 			setAngle(0);
 		}
 		public String getVelocity() {
@@ -231,36 +273,33 @@ public class Testbed_tm {
 		}
 		
 		public void move(int x1, int y1, int x2, int y2) {
- 
-			setPosX(getPosX() + xRate);
-			setPosY(getPosY() + yRate); 
 			
-			if(getPosX() + getSpriteWidth() > x2 || getPosX() < x1) {
+			
+			setXPosWorld(getXPosWorld() + xRate);
+			setYPosWorld(getYPosWorld() + yRate); 
+			
+			if(getXPosWorld() + getRotatedSpriteWidth() > x2 || getXPosWorld() < x1) {
 				xRate *= -1.0;
-				if(Math.random() > .5)
-					yRate += Math.random() * 2 - 2;
-				else 
-					yRate -= Math.random() * 2 - 2;
-				if(getPosX() + getSpriteWidth() > x2) {
-					setPosX(x2 - getSpriteWidth());
-				}
-				else {
-					setPosX(0);
-				}
-			}
-			
-			if(getPosY() + getSpriteHeight() > y2 || getPosY() < y1) {
-				yRate *= -1.0;
 				if(Math.random() > .5)
 					xRate += Math.random() * 2 - 2;
 				else 
 					xRate -= Math.random() * 2 - 2;
-				if(getPosY() + getSpriteHeight() > y2) {
-					setPosY(y2 - getSpriteHeight());
+				if(getXPosWorld() + getSpriteWidth() > x2) {
+					setXPosWorld(x2 - getSpriteWidth());
 				}
-				else {
-					setPosY(0);
+				 
+			}
+			
+			if(getYPosWorld() + getRotatedSpriteHeight() > y2 || getYPosWorld() < y1) {
+				yRate *= -1.0;
+				if(Math.random() > .5)
+					yRate += Math.random() * 2 - 2;
+				else 
+					yRate -= Math.random() * 2 - 2;
+				if(getYPosWorld() + getRotatedSpriteHeight() > y2) {
+					setYPosWorld(y2 - getRotatedSpriteHeight());
 				}
+			 
 			}
 		}
 	}

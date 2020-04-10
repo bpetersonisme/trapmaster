@@ -12,7 +12,9 @@ import javax.swing.Timer;
 
 
 /**
- * This is our 2D graphical rendering engine. 
+ * This is our 2D graphical rendering engine. Its coordinate system matches to that 
+ * of the Java standard- that is to say, coordinates start at (0,0) from the upper-left hand corner
+ * And grow downwards and to the right. Anything above or to the left of the viewport is negative. 
  * @author theon
  *
  */
@@ -46,6 +48,7 @@ public class RenderEngine_tm extends JPanel{
 		renderables = new ArrayList<RenderObj>();
 		
 	}
+	
 	
 	public void startRender() {
 		if(!gameTimer.isRunning())
@@ -88,7 +91,7 @@ public class RenderEngine_tm extends JPanel{
 			j = i;
 			jObj = renderables.get(j);
 			jObjLessOne = renderables.get(j-1);
-			while(j > 0 && jObjLessOne.getPosZ() > jObj.getPosZ()) {
+			while(j > 0 && jObjLessOne.getZPos() > jObj.getZPos()) {
 				renderables.set(j, jObjLessOne);
 				renderables.set(j-1, jObj);
 				j = j-1;
@@ -126,7 +129,7 @@ public class RenderEngine_tm extends JPanel{
 		RenderObj curr;
 		for(i = 0; i < renderSize; i++) {
 			curr = renderables.get(i);
-			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getPosXRender(), (int)curr.getPosYRender(), null);
+			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getXPosRender(viewportXPos), (int)curr.getYPosRender(viewportYPos), null);
 		}
 		
 		g.drawImage(viewport,  0,  0, viewportWidth, viewportHeight, null);
