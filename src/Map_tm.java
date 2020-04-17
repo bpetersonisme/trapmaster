@@ -5,38 +5,55 @@ import java.util.List;
 
 public final class Map_tm {
 
-    private Graph graph;
+    /*
+        Not sure if graph object is represented with RenderEngine, and if not, what I am supposed to use.
+        Also not sure how to make Mapper class
+     */
+    private RenderEngine_tm engine;
     private List<Tile_tm> tiles;
-    private Mapper mapper;
-    private int x1,y1,x2,y2;
+    //private Mapper mapper;
+    private int lowestX,lowestY,highestX,highestY;
 
-    public Map_tm(int x1, int y1, int x2, int y2){
-        this.x1 = x1;
-        this.y1 = y2;
-        this.x2 = x2;
-        this.y2 = y2;
+    public Map_tm(int lowestX, int lowestY, int highestX, int highestY){
+        this.lowestX = lowestX;
+        this.lowestY = lowestY;
+        this.highestX = highestX;
+        this.highestY = highestY;
         tiles = new ArrayList<Tile_tm>();
-        graph = null;
-        mapper = null;
+        Tile_tm spawn = new SpawnTile(new Tile_tm[4],null,0,0,0,0);
+        tiles.add(spawn);
+        engine = null;
+        //mapper = null;
     }
 
+    /*
+    Not sure how to implement this method
+     */
     public void remap(){
 
     }
 
-    public int getX1(){
-        return x1;
+    public int getLowestX(){
+        return lowestX;
     }
 
-    public int getY1(){
-        return y1;
+    public int getLowestY(){
+        return lowestY;
     }
 
-    public int getX2(){
-        return x2;
+    public int getHighestX(){
+        return highestX;
     }
 
-    public int getY2(){
-        return y2;
+    public int getHighestY(){
+        return highestY;
+    }
+
+    public Tile_tm getTile(int x, int y){
+        if(x < lowestX || x > highestX || y < lowestY || y > highestY) return null;
+        for(Tile_tm t: tiles){
+            if(x > t.getStartXPos() && x < t.getEndXPos() && y > t.getStartYPos() && y < t.getEndYPos()) return t;
+        }
+        return null;
     }
 }

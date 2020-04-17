@@ -4,13 +4,13 @@ public final class DoorTile extends Tile_tm{
 
     private boolean isOpen;
 
-    public DoorTile(Tile_tm[] neighbors, BufferedImage texture, int[] treasureDist, int[] entranceDist) {
-        super(neighbors, texture, treasureDist, entranceDist);
+    public DoorTile(Tile_tm[] neighbors, BufferedImage texture, int xPos, int yPos, int treasureDist, int entranceDist) {
+        super(neighbors, texture, xPos, yPos, treasureDist, entranceDist);
         isOpen = false;
     }
 
-    public DoorTile(Tile_tm[] neighbors, BufferedImage texture, int[] treasureDist, int[] entranceDist, boolean isOpen) {
-        super(neighbors, texture, treasureDist, entranceDist);
+    public DoorTile(Tile_tm[] neighbors, BufferedImage texture, int xPos, int  yPos, int treasureDist, int entranceDist, boolean isOpen) {
+        super(neighbors, texture, xPos, yPos, treasureDist, entranceDist);
         this.isOpen = isOpen;
     }
 
