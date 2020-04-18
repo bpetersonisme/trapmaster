@@ -2,7 +2,9 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
+import java.awt.Polygon;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -45,12 +47,9 @@ public abstract class RenderObj {
 	private int zPos; //The "depth" (z?) position of the object; used to determine the draw order
 	
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
+
 	
-	private int collisionType; 
-	
-	private final int TYPE_RECT = 1;
-	private final int TYPE_CIRCLE = 2;
-	private final int TYPE_OVAL = 3;
+	 
 	
 	
 	
@@ -151,8 +150,131 @@ public abstract class RenderObj {
 		}
 	}
  
+ 
 	
-	
+	public static boolean isColliding(RenderObj local, RenderObj other) {
+		
+		 //First a check to see if the objects are beyond their theoretical maximum range. No need to bother calculating collision past this.
+		  
+		double localRightX = (local.getXPosWorld() + local.getSpriteWidth()/2); 
+		double localLeftX = (local.getXPosWorld() - local.getSpriteWidth()/2);
+		double localBottomY = (local.getYPosWorld() + local.getSpriteHeight()/2);
+		double localTopY = (local.getYPosWorld() - local.getSpriteHeight()/2);
+		double localAngle = Math.toRadians(local.getAngle());
+		double localSin = Math.sin(localAngle);
+		double localCos = Math.cos(localAngle);
+		
+		double[][] localCoords = new double[4][2];
+		
+		//TopLeft
+		localCoords[0][0] = localLeftX*localCos - localTopY*localSin;
+		localCoords[0][1] = localLeftX*localSin + localTopY*localCos;
+		//TopRight
+		localCoords[1][0] = localRightX*localCos - localTopY*localSin;
+		localCoords[1][1] = localRightX*localSin + localTopY*localCos;
+		//BottomRight
+		localCoords[2][0] = localRightX*localCos - localBottomY*localSin;
+		localCoords[2][1] = localRightX*localSin + localBottomY*localCos;
+		//BottomLeft
+		localCoords[3][0] = localLeftX*localCos - localBottomY*localSin;
+		localCoords[3][1] = localLeftX*localSin + localBottomY*localCos;
+		
+		double otherRightX = (other.getXPosWorld() + other.getSpriteWidth()/2); 
+		double otherLeftX = (other.getXPosWorld() - other.getSpriteWidth()/2);
+		double otherBottomY = (other.getYPosWorld() + other.getSpriteHeight()/2);
+		double otherTopY = (other.getYPosWorld() - other.getSpriteHeight()/2);
+		double otherAngle = Math.toRadians(other.getAngle());
+		double otherSin = Math.sin(otherAngle);
+		double otherCos = Math.cos(otherAngle);
+		
+		
+		double otherCoords[][] = new double[4][2];
+		//TopLeft
+		otherCoords[0][0] = otherLeftX*otherCos - otherTopY*otherSin;
+		otherCoords[0][1] = otherLeftX*otherSin + otherTopY*otherCos;
+		//TopRight
+		otherCoords[1][0] = otherRightX*otherCos - otherTopY*otherSin;
+		otherCoords[1][1] = otherRightX*otherSin + otherTopY*otherCos;
+		
+		//BottomRight
+		otherCoords[2][0] = otherRightX*otherCos - otherBottomY*otherSin;
+		otherCoords[2][1] = otherRightX*otherSin + otherBottomY*otherCos;
+		//BottomLeft
+		otherCoords[3][0] = otherLeftX*otherCos - otherBottomY*otherSin;
+		otherCoords[3][1] = otherLeftX*otherSin + otherBottomY*otherCos;
+
+		int xPolyArray[] = {(int)otherCoords[0][0], (int)otherCoords[1][0], (int) otherCoords[2][0], (int)otherCoords[3][0]};
+		int yPolyArray[] = {(int)otherCoords[0][1], (int)otherCoords[1][1], (int) otherCoords[2][1], (int) otherCoords[3][1]};
+		
+		Polygon containmentTest = new Polygon(xPolyArray, yPolyArray, 4);
+
+		if(containmentTest.contains(local.getXPosWorld(), local.getYPosWorld()))
+			return true;
+		if(containmentTest.contains(localCoords[0][0], localCoords[0][1])) 
+			return true;
+		if(containmentTest.contains(localCoords[1][0], localCoords[1][1]))
+			return true;
+		if(containmentTest.contains(localCoords[2][0], localCoords[2][1]))
+			return true;
+		if(containmentTest.contains(localCoords[3][0], localCoords[3][1]))
+			return true;
+		
+		xPolyArray[0] = (int)localCoords[0][0];
+		xPolyArray[1] = (int)localCoords[1][0];
+		xPolyArray[2] = (int)localCoords[2][0];
+		xPolyArray[3] = (int)localCoords[3][0];
+		
+		yPolyArray[0] = (int)localCoords[0][1];
+		yPolyArray[1] = (int)localCoords[1][1];
+		yPolyArray[2] = (int)localCoords[2][1];
+		yPolyArray[3] = (int)localCoords[3][1];
+		
+		containmentTest = new Polygon(xPolyArray, yPolyArray, 4);
+		if(containmentTest.contains(other.getXPosWorld(), other.getYPosWorld()))
+			return true;
+		if(containmentTest.contains(otherCoords[0][0], otherCoords[0][1])) 
+			return true;
+		if(containmentTest.contains(otherCoords[1][0], otherCoords[1][1]))
+			return true;
+		if(containmentTest.contains(otherCoords[2][0], otherCoords[2][1]))
+			return true;
+		if(containmentTest.contains(otherCoords[3][0], otherCoords[3][1]))
+			return true;
+		
+		xPolyArray = null;
+		yPolyArray = null;
+		containmentTest = null;
+		
+		int i, j, k, m;
+		for(i = 0; i < 4; i++) {
+			if(i == 3) 
+				j = 0;
+			else 
+				j = i+1;
+			for(k = 0; k < 4; k++) {
+				if(k == 3) 
+					m = 0;
+				else 
+					m = k+1;
+				 
+				
+				if(Line2D.linesIntersect(localCoords[i][0], localCoords[i][1], 
+										 localCoords[j][0], localCoords[j][1], 
+										 otherCoords[k][0], otherCoords[k][1], 
+										 otherCoords[m][0], otherCoords[m][1])) {
+ 
+					return true;
+					
+				}
+				
+			}
+		}
+		
+		
+		
+		
+		return false;
+	}
 	
 	
 	/**
@@ -160,23 +282,7 @@ public abstract class RenderObj {
 	 * @return True is other is colliding with this object, false otherwise
 	 */
 	public boolean isColliding(RenderObj other) {
-		boolean collision = false;
-		if(collisionType == TYPE_RECT) {
-			
-		}
-		else if(collisionType == TYPE_CIRCLE) {
-			
-		}
-		else if (collisionType == TYPE_OVAL){
-			
-		}
-		else {
-			System.out.println("INVALID TYPE SELECTION, USING TYPE_OVAL");
-			collisionType = TYPE_OVAL;
-			collision = isColliding(other);
-		}
-		
-		return collision;
+		return isColliding(this, other);
 	}
 	
 	/**

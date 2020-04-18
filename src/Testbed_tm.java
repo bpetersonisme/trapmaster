@@ -47,6 +47,7 @@ public class Testbed_tm {
 	private JLabel viewportPos;
 	private 	RenderEngine_tm gameFramer;
 	private JLabel lblViewportXPos;
+	private JLabel lblCorners;
 	private Insets bounds;
 	/**
 	 * Launch the application.
@@ -85,7 +86,7 @@ public class Testbed_tm {
 		tester2 = null;
 		try { 
 			tester = new testRender("/test.png", 1, 1, 200, -200, 0);
-			tester2 = new testRender("/Enterprise.jpg", 1, 1, 0, 0, 1); 
+			tester2 = new testRender("/Enterprise.jpg", 1, 1, -1, 1, 1); 
 			}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -128,12 +129,16 @@ public class Testbed_tm {
 		gameFramer.add(mousePos_1);
 		
 		viewportPos = new JLabel("Viewport x pos: Viewport y pos: ");
-		viewportPos.setBounds(29, 243, 272, 14);
+		viewportPos.setBounds(1305, 311, 272, 14);
 		gameFramer.add(viewportPos);
 		
 		JLabel lblViewportPos = new JLabel("Viewport Position: (" + gameFramer.getViewportX() + ", " + gameFramer.getViewportY() + ")");
 		lblViewportPos.setBounds(29, 51, 285, 22);
 		gameFramer.add(lblViewportPos);
+		
+		lblCorners = new JLabel("corners");
+		lblCorners.setBounds(29, 311, 716, 14);
+		gameFramer.add(lblCorners);
 		gameFramer.addRenderObj(tester);
 		gameFramer.addRenderObj(tester2);
 		
@@ -155,16 +160,32 @@ public class Testbed_tm {
 		
 		Thread testThread = new Thread() {
 			public void run() {
-				double i = 0; 
+				double i = -50; 
+				double rightX, leftX, bottomY, topY, cos, sin;
 				while(true) { 
 					
 					//	tester.move(0, 0, gamex, gamey);
-						tester2.move(-gamex/2 + tester2.getRotatedSpriteWidth()/2, -gamey/2 + tester2.getRotatedSpriteHeight()/2,
-								gamex/2 - tester2.getRotatedSpriteWidth()/2, gamey/2 - tester2.getRotatedSpriteWidth()/2);
+						//tester2.move(-gamex/2 + tester2.getRotatedSpriteWidth()/2, -gamey/2 + tester2.getRotatedSpriteHeight()/2,
+//								gamex/2 - tester2.getRotatedSpriteWidth()/2, gamey/2 - tester2.getRotatedSpriteWidth()/2);
 
-						tester.rotateCurrSprite(i);
-						//tester2.rotateCurrSprite(i);
+						
+						//tester.rotateCurrSprite(i);
+						tester2.rotateCurrSprite(i);
+						
+						
 						i -= 1;
+						i %= 360;
+						if(i < 0) {
+							i = 360 + i;
+						}
+						
+						rightX = (tester2.getXPosWorld() + tester2.getSpriteWidth()/2); 
+						leftX = (tester2.getXPosWorld() - tester2.getSpriteWidth()/2);
+						bottomY = (tester2.getYPosWorld() + tester2.getSpriteHeight()/2);
+						topY = (tester2.getYPosWorld() - tester2.getSpriteHeight()/2);
+						cos = Math.cos(Math.toRadians(i));
+						sin = Math.sin(Math.toRadians(i));
+						
 						entPosLabel.setText("Ent pos: (" + formatter.format(tester2.getXPosWorld()) + ", " + formatter.format(tester2.getYPosWorld()) + ")"); 
 						centerLabel.setText("Ent renderPos: (" + formatter.format(tester2.getXPosRender(gameFramer.getViewportX())) + ", " +
 								formatter.format(tester2.getYPosRender(gameFramer.getViewportY())) + ")" +
@@ -173,7 +194,12 @@ public class Testbed_tm {
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
 						entVelLabel.setText("Ent velocity: " + tester2.getVelocity() + "(" + formatter.format(tester2.getXVel()) + ", " + 
 						formatter.format(tester2.getYVel()) + ")"); 
-						viewportPos.setText("Viewport X Pos: " + gameFramer.getViewportX() + " Viewport Y Pos: " + gameFramer.getViewportY());
+						viewportPos.setText("Testers colliding? " + tester2.isColliding(tester));
+						lblCorners.setText(
+								"Upper Left: (" + (leftX*cos - topY*sin) + ", " + (leftX*sin + topY*cos) + ") " +
+								"Upper Right: (" + (rightX*cos - topY*sin) + ", " + (rightX*sin + topY*cos) + ") " +
+								"Lower Left: (" + (tester2.getXPosWorld() - tester2.getRotatedSpriteWidth()/2) + ", " + (tester2.getYPosWorld() + (tester2.getRotatedSpriteHeight()/2)) + ") " +
+								"Lower Right: (" + (tester2.getXPosWorld() + tester2.getRotatedSpriteWidth()/2) + ", " + (tester2.getYPosWorld() + (tester2.getRotatedSpriteHeight()/2)) + ")");
 						
 					try {
 						sleep(20);
@@ -237,7 +263,7 @@ public class Testbed_tm {
 			setZPos(z);
 			yRate = Math.random() * 5.0 - 5.0;
 			
-			xRate = Math.random() * 5.0 - 5.0;
+			xRate = Math.random() * 5.0;
 			setAngle(0);
 		}
 		public String getVelocity() {
