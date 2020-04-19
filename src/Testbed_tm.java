@@ -150,6 +150,10 @@ public class Testbed_tm {
 				
 				mousePos_1.setText("Mouse viewport x is: " + (e.getX()) + 
 						"Mouse viewport Y is: " + e.getY());
+				
+				if(e.getX() < 10) {
+					gameFramer.setViewportX((double)(gameFramer.getViewportX() - 1));
+				}
 			}
 			
 		});

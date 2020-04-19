@@ -154,8 +154,21 @@ public abstract class RenderObj {
 	
 	public static boolean isColliding(RenderObj local, RenderObj other) {
 		
-		 //First a check to see if the objects are beyond their theoretical maximum range. No need to bother calculating collision past this.
-		  
+		double centerDistances = Math.pow(local.getXPosWorld() - other.getXPosWorld(), 2);
+		centerDistances += Math.pow(local.getYPosWorld() - other.getYPosWorld(), 2);
+		centerDistances = Math.sqrt(centerDistances);
+		
+		double localExtent = Math.pow(local.getSpriteHeight()/2, 2);
+		localExtent += Math.pow(local.getSpriteWidth()/2, 2);
+		localExtent = Math.sqrt(localExtent);
+		
+		double otherExtent = Math.pow(other.getSpriteHeight()/2,  2);
+		otherExtent += Math.pow(other.getSpriteWidth()/2, 2);
+		otherExtent = Math.sqrt(otherExtent);
+		
+		if(centerDistances > localExtent + otherExtent)
+			return false;
+		
 		double localRightX = (local.getXPosWorld() + local.getSpriteWidth()/2); 
 		double localLeftX = (local.getXPosWorld() - local.getSpriteWidth()/2);
 		double localBottomY = (local.getYPosWorld() + local.getSpriteHeight()/2);
@@ -255,14 +268,11 @@ public abstract class RenderObj {
 				if(k == 3) 
 					m = 0;
 				else 
-					m = k+1;
-				 
-				
+					m = k+1;		
 				if(Line2D.linesIntersect(localCoords[i][0], localCoords[i][1], 
 										 localCoords[j][0], localCoords[j][1], 
 										 otherCoords[k][0], otherCoords[k][1], 
-										 otherCoords[m][0], otherCoords[m][1])) {
- 
+										 otherCoords[m][0], otherCoords[m][1])) { 
 					return true;
 					
 				}
@@ -395,8 +405,7 @@ public abstract class RenderObj {
 	}
  
 
-	//NOTE TO SELF: ADJUST POSITIONAL COORDINATES TO ACCOUNT FOR RECENTERING IN OBJECT RENDERING- AKA, VIEWPORT COORDINATES AND OBJECT COORDINATES 
-	// ARE OFF
+ 
 	
 	/**
 	 * Returns the ideal, unrotated height of the sprite
@@ -435,6 +444,7 @@ public abstract class RenderObj {
 	 * By moving the sprite by (-spriteWidth/2)^2+(-spriteHeight/2)^2 to make sure
 	 * Rotations actually look the way they ought to 
 	 * @return The 'apparent' position of the sprite along the x axis 
+	 * @deprecated use {link {@link #getXPosRender(double)}
 	 */
 	public double getXPosRender() {
 		double xPosRotated = xPos;
@@ -447,7 +457,8 @@ public abstract class RenderObj {
 	/**
 	 * Due to the way RenderEngine works, rotation needs to be accounted for 
 	 * By moving the sprite by (-spriteWidth/2)^2+(-spriteHeight/2)^2 to make sure
-	 * Rotations actually look the way they ought to 
+	 * Rotations actually look the way they ought to. Also, note that you shouldn't use this 
+	 * if you aren't working on the renderer.
 	 * @return The 'apparent' position of the sprite along the x axis 
 	 */
 	public double getXPosRender(double viewportXPos) {
@@ -464,6 +475,7 @@ public abstract class RenderObj {
 	 * By moving the sprite by (-spriteWidth/2)^2+(-spriteHeight/2)^2 to make sure
 	 * Rotations actually look the way they ought to 
 	 * @return The 'apparent' position of the sprite along the y axis 
+	 * @deprecated use {link #getYPosRender(double)} instead.
 	 */
 	public double getYPosRender() {
 		double yPosRotated = yPos;
@@ -475,7 +487,8 @@ public abstract class RenderObj {
 	/**
 	 * Due to the way RenderEngine works, rotation needs to be accounted for 
 	 * By moving the sprite by (-spriteWidth/2)^2+(-spriteHeight/2)^2 to make sure
-	 * Rotations actually look the way they ought to 
+	 * Rotations actually look the way they ought to. Also, note that you shouldn't
+	 * use this if you aren't working on the renderer.
 	 * @return The 'apparent' position of the sprite along the y axis 
 	 */
 	public double getYPosRender(double viewportYPos) {
@@ -525,28 +538,28 @@ public abstract class RenderObj {
 	
 	/**
 	 * Returns the horizontal position of sprite's upper left hand corner
-	 * @return The x position of the sprite's upper left hand corner
+	 * @return The x position of the sprite's center
 	 */
 	public double getPosX() {
-		return xPos;
+		return getXPosWorld();
 	}
 
 	/**
 	 * Changes the horizontal position of sprite's upper left hand corner 
-	 * @param newXPos The new x position of sprite's upper left hand corner
+	 * @param newXPos The new x position of sprite's center
 	 */
 	public void setPosX(double newXPos) {
-		xPos = newXPos;
+		xPosWorld = newXPos;
 	}
 
 	
 	
 	/**
 	 * Returns the vertical position of sprite's upper left hand corner
-	 * @return The y position of the sprite's upper left hand corner
+	 * @return The y position of the sprite's center
 	 */
 	public double getPosY() {
-		return yPos;
+		return getYPosWorld();
 	}
 
 	/**
@@ -554,7 +567,7 @@ public abstract class RenderObj {
 	 * @param newXPos The new x position of sprite's upper left hand corner
 	 */
 	public void setPosY(double newYPos) {
-		yPos = newYPos;
+		yPosWorld = newYPos;
 	}
 	
 	/**

@@ -106,10 +106,10 @@ public class RenderEngine_tm extends JPanel{
 		return viewportYPos;
 	}
 	
-	public void setViewportXPos(int newX) {
+	public void setViewportX(double newX) {
 		viewportXPos = newX;
 	}
-	public void setViewportYPos(int newY) {
+	public void setViewport(double newY) {
 		viewportYPos = newY;
 	}
 	
