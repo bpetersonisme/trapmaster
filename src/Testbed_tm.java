@@ -86,7 +86,7 @@ public class Testbed_tm {
 		tester2 = null;
 		try { 
 			tester = new testRender("/test.png", 1, 1, 200, -200, 0);
-			tester2 = new testRender("/Enterprise.jpg", 1, 1, -1, 1, 1); 
+			tester2 = new testRender("/Enterprise.jpg", 4, 4, -1, 1, 1); 
 			}
 		catch(IOException e) {
 			e.printStackTrace();
@@ -174,10 +174,14 @@ public class Testbed_tm {
 
 						
 						//tester.rotateCurrSprite(i);
-						tester2.rotateCurrSprite(i);
+						//tester2.rotateCurrSprite(i);
 						
+						if(i % 10 == 0) {
+							
+							tester2.animate();
+						}
 						
-						i -= 1;
+						i -= 50;
 						i %= 360;
 						if(i < 0) {
 							i = 360 + i;
@@ -233,7 +237,7 @@ public class Testbed_tm {
 			int newHeight = buf.getHeight(); 
 			
 			System.out.println("Width is: " + buf.getWidth() + " Height is: " + buf.getHeight());
-			if(buf.getWidth() > 256 || buf.getHeight() > 256) {
+			/*if(buf.getWidth() > 256 || buf.getHeight() > 256) {
 				
  
 				int div; 
@@ -259,8 +263,8 @@ public class Testbed_tm {
 					
 			
 			} 
-			
-			setSpriteSheet(buf, 1, 1, newWidth, newHeight);
+			*/
+			setSpriteSheet(buf, sheetRows, sheetCols, (int)Math.floor(buf.getWidth()/sheetCols), (int)Math.floor(buf.getHeight()/sheetRows));
 			
 			setXPosWorld(x);
 			setYPosWorld(y);
@@ -301,7 +305,9 @@ public class Testbed_tm {
 		public double getYVel() {
 			return yRate;
 		}
-		
+		public void animate() {
+			cycleAnimation();
+		}
 		public void move(int x1, int y1, int x2, int y2) {
 			
 			

@@ -1,4 +1,5 @@
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.ActionEvent;
@@ -30,6 +31,7 @@ public class RenderEngine_tm extends JPanel{
 	private ArrayList<RenderObj> renderables;
 	private int delay;
 	private long runTime; 
+	private Color refreshColor;
 	/**
 	 * Creates a new RenderEngine_tm of size x and y, which makes a frame every frameDelay ms
 	 * @param x The width of the viewport
@@ -41,12 +43,26 @@ public class RenderEngine_tm extends JPanel{
 		viewportYPos = 0.0 - y/2;
 		viewportWidth = x;
 		viewportHeight = y;
+		setSize(new Dimension(x, y));
+		setPreferredSize(new Dimension(x, y));
 		viewport = new BufferedImage(viewportWidth, viewportHeight, BufferedImage.TYPE_INT_ARGB);
 		gameGraphics = viewport.createGraphics();
 		delay = frameDelay;
 		gameTimer = new Timer(delay, new framePaintingListener());
 		renderables = new ArrayList<RenderObj>();
-		
+		refreshColor = new Color(180, 105, 100);
+	}
+	
+	/**
+	 * Sets the color for the refresh- what the background of the scene will be.
+	 * @param c The new color
+	 */
+	public void setRefreshColor(Color c) {
+		refreshColor = c;
+	}
+	
+	public Dimension getPreferredSize() {
+		return new Dimension(viewportWidth, viewportHeight);
 	}
 	
 	
@@ -123,7 +139,7 @@ public class RenderEngine_tm extends JPanel{
 	public void paintComponent(Graphics g) {
 		
 		int i;
-		gameGraphics.setColor(new Color(180, 105, 100));
+		gameGraphics.setColor(refreshColor);
 		gameGraphics.fillRect(0, 0, viewportWidth, viewportHeight);
 		int renderSize = renderables.size();
 		RenderObj curr;

@@ -102,6 +102,7 @@ public abstract class RenderObj {
 	 */
 	public int  cycleAnimation() {
 		int ret = 1;
+		/*System.out.println("CurrSpriteCol before: " + currSpriteCol);
 		if(currSpriteCol + 2 == spriteSheetCols) {
 			if(currSpriteRow + 1 == spriteSheetRows) {
 				ret = 3;
@@ -109,7 +110,7 @@ public abstract class RenderObj {
 			else
 				ret = 2;
 		}
-		else if(currSpriteCol + 1 == spriteSheetCols) {
+		if(currSpriteCol + 1 == spriteSheetCols) {
 			currSpriteCol = 0;
 			
 			if(currSpriteRow + 1 == spriteSheetRows) {
@@ -120,7 +121,23 @@ public abstract class RenderObj {
 		}
 		else
 			currSpriteCol++;
+		System.out.println("Iterate currSpriteCol please " + currSpriteCol);
 		setCurrSprite(currSpriteRow, currSpriteCol);
+		*/
+		currSpriteCol++;
+		//If currSpriteCol = spriteSheetCols, then the end of a row has been reached
+		if(currSpriteCol == spriteSheetCols) {
+			currSpriteCol = 0;
+			ret = 2;
+			currSpriteRow++;
+			//If currSpriteRow = spriteSheetCols, then the end of the sheet has been reached
+			if(currSpriteRow == spriteSheetRows) {
+				currSpriteRow = 0;
+				ret = 3;
+			}
+		}
+		setCurrSprite(currSpriteRow, currSpriteCol);
+		
 		return ret;
 	}
 	
@@ -139,18 +156,24 @@ public abstract class RenderObj {
 	 * @param col
 	 */
 	public void setCurrSprite(int row, int col) {
+		System.out.println("Presenting sprite at " + row + ", " + col); 
 		if(row > spriteSheetRows || row < 0 || col > spriteSheetCols || col < 0) {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
 		else {
 			int spriteSheetY = modelSpriteHeight * row;
 			int spriteSheetX = modelSpriteWidth * col;
-			currSprite = spriteSheet.getSubimage(spriteSheetX, spriteSheetY, spriteSheetX + modelSpriteWidth, spriteSheetY + modelSpriteHeight);
+			currSprite = spriteSheet.getSubimage(spriteSheetX, spriteSheetY, modelSpriteWidth, modelSpriteHeight);
 			rotateCurrSprite();
 		}
 	}
  
- 
+	/**
+	 * Returns whether or not one object, local, is colliding with another, other. 
+	 * @param local The first object possibly colliding
+	 * @param other The second object possibly colliding
+	 * @return True if the two objects are colliding, false otherwise
+	 */
 	
 	public static boolean isColliding(RenderObj local, RenderObj other) {
 		
@@ -173,6 +196,7 @@ public abstract class RenderObj {
 		double localLeftX = (local.getXPosWorld() - local.getSpriteWidth()/2);
 		double localBottomY = (local.getYPosWorld() + local.getSpriteHeight()/2);
 		double localTopY = (local.getYPosWorld() - local.getSpriteHeight()/2);
+		
 		double localAngle = Math.toRadians(local.getAngle());
 		double localSin = Math.sin(localAngle);
 		double localCos = Math.cos(localAngle);
@@ -401,7 +425,7 @@ public abstract class RenderObj {
 			
 			int spriteSheetY = modelSpriteHeight * currSpriteRow;
 			int spriteSheetX = modelSpriteWidth * currSpriteCol;
-			return spriteSheet.getSubimage(spriteSheetX, spriteSheetY, spriteSheetX + modelSpriteWidth, spriteSheetY + modelSpriteHeight);
+			return spriteSheet.getSubimage(spriteSheetX, spriteSheetY, modelSpriteWidth, modelSpriteHeight);
 	}
  
 
