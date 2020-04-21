@@ -7,6 +7,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 
@@ -20,14 +21,13 @@ import java.util.ArrayList;
  * And the world system. The RenderEngine system is the Java standard, while the world system places
  * Its origin at its center. RenderObj keeps track of its position in the world space. It 
  * may seamlessly transition from worldspace to viewport space using the renderXPos and renderYPos
- * Systems
  * @author Bb Peterson
  *
  */
 public abstract class RenderObj {
+	private String objName = "Render Obj"; 
 	private BufferedImage spriteSheet; //The spriteSheet of an object- i.e., all states of its animation.  
-	private BufferedImage currSprite; //The currently displayed sprite of an object, including its rotation. 
-	
+	private BufferedImage currSprite; //The currently displayed sprite of an object, including its rotation.  
 	private int spriteSheetCols; //The number of columns on the sprite sheet
 	private int spriteSheetRows; //The number of rows on the sprite sheet 
 	
@@ -42,9 +42,9 @@ public abstract class RenderObj {
 	private double xPosWorld; 
 	private double yPosWorld;
 	
-	private double xPos; //The horizontal (x) position of the object 
-	private double yPos; //The vertical (y) position of the object 
-	private int zPos; //The "depth" (z?) position of the object; used to determine the draw order
+	private double xPos = 0; //The horizontal (x) position of the object 
+	private double yPos = 0; //The vertical (y) position of the object 
+	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
 	
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
 
@@ -88,6 +88,7 @@ public abstract class RenderObj {
 	
 	/**
 	 * Changes the sprite sheet to newSS- it only has one sprite in it, and its width/height is the width/height of newSS
+	 * If you wish to use a null sprite sheet, do not use this method- it will not work. 
 	 * @param newSS The new sprite sheet
 	 */
 	protected void setSpriteSheet(BufferedImage newSS) {
@@ -102,28 +103,6 @@ public abstract class RenderObj {
 	 */
 	public int  cycleAnimation() {
 		int ret = 1;
-		/*System.out.println("CurrSpriteCol before: " + currSpriteCol);
-		if(currSpriteCol + 2 == spriteSheetCols) {
-			if(currSpriteRow + 1 == spriteSheetRows) {
-				ret = 3;
-			}
-			else
-				ret = 2;
-		}
-		if(currSpriteCol + 1 == spriteSheetCols) {
-			currSpriteCol = 0;
-			
-			if(currSpriteRow + 1 == spriteSheetRows) {
-				currSpriteRow = 0;
-			}
-			else 
-				currSpriteRow++;
-		}
-		else
-			currSpriteCol++;
-		System.out.println("Iterate currSpriteCol please " + currSpriteCol);
-		setCurrSprite(currSpriteRow, currSpriteCol);
-		*/
 		currSpriteCol++;
 		//If currSpriteCol = spriteSheetCols, then the end of a row has been reached
 		if(currSpriteCol == spriteSheetCols) {
@@ -141,6 +120,45 @@ public abstract class RenderObj {
 		return ret;
 	}
 	
+
+	/**
+	 * An alternative method of animation, where it cycles the animation across a single row. 
+	 * Returns 1 if the animation proceeds as normal, 2 if the animation has swapped rows, and
+	 * 3 if the animation has reached the end and restarted
+	 * @param row The row of the sprite sheet on which to animate
+	 * @param col The column of the sprite sheet to start the animation on 
+	 */
+	public int cycleAnimation(int row, int col) {
+		int ret = 1;
+		
+			if(currSpriteRow != row) {
+				currSpriteRow = row;
+				currSpriteCol = col;
+				ret = 2;
+			}
+			else {
+				currSpriteCol++;
+				//If currSpriteCol = spriteSheetCols, then the end of a row has been reached
+				if(currSpriteCol == spriteSheetCols) {
+					currSpriteCol = 0;
+					ret = 3;
+				}
+			}
+			setCurrSprite(currSpriteRow, currSpriteCol);
+		
+		return ret;
+	}
+	
+	/**
+	 * An alternative method of animation, where it cycles the animation across a single row.
+	 * Returns 1 if the animation proceeds as normal, 2 if the animation swapped rows first,
+	 * and 3 if the animation has reached the end and restarted
+	 * @param row
+	 * @return
+	 */
+	public int cycleAnimation(int row) {
+		return cycleAnimation(row, 0);
+	}
 	
 	/**
 	 * Returns the current sprite.
@@ -161,9 +179,6 @@ public abstract class RenderObj {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
 		else {
-			int spriteSheetY = modelSpriteHeight * row;
-			int spriteSheetX = modelSpriteWidth * col;
-			currSprite = spriteSheet.getSubimage(spriteSheetX, spriteSheetY, modelSpriteWidth, modelSpriteHeight);
 			rotateCurrSprite();
 		}
 	}
@@ -402,13 +417,12 @@ public abstract class RenderObj {
 		rotator.rotate(radsAngle, w/2, h/2);
 		g2D.setTransform(rotator);
 		g2D.drawImage(modelSprite, 0, 0, null);
-		g2D.setColor(Color.RED);
-		g2D.drawRect(0, 0, rotatedSprite.getWidth(), rotatedSprite.getHeight());
 		g2D.dispose();
-		currSprite = rotatedSprite;
-		
+
 		currSpriteWidth = (int) newWidth;
 		currSpriteHeight = (int) newHeight; 
+		currSprite = rotatedSprite;
+		
  
 		 
 	}
@@ -422,12 +436,27 @@ public abstract class RenderObj {
 	 * @return The model sprite, an unrotated version of the current sprite
 	 */
 	private BufferedImage getModelSprite() {
-			
-			int spriteSheetY = modelSpriteHeight * currSpriteRow;
-			int spriteSheetX = modelSpriteWidth * currSpriteCol;
-			return spriteSheet.getSubimage(spriteSheetX, spriteSheetY, modelSpriteWidth, modelSpriteHeight);
-	}
+			if(spriteSheet != null) {
+				int spriteSheetY = modelSpriteHeight * currSpriteRow;
+				int spriteSheetX = modelSpriteWidth * currSpriteCol;
+				return spriteSheet.getSubimage(spriteSheetX, spriteSheetY, modelSpriteWidth, modelSpriteHeight);
+			}
+			else {
+				return generateModelSprite();
+			}
+		}
  
+	
+	/**
+	 * Use this if you are working without a sprite sheet. As the name implies, it generates a new sprite as a red rectangle 
+	 */
+	private BufferedImage generateModelSprite() {
+		BufferedImage newSprite = new BufferedImage(modelSpriteWidth, modelSpriteHeight, BufferedImage.TYPE_INT_ARGB);
+	 	Graphics2D g2D = newSprite.createGraphics(); 
+		g2D.setColor(Color.RED);
+		g2D.drawRect(0, 0, modelSpriteHeight - 1, modelSpriteWidth -1);
+		return newSprite;
+	}
 
  
 	
@@ -640,6 +669,26 @@ public abstract class RenderObj {
 		currSpriteWidth = modelSpriteWidth;
 		currSpriteHeight = modelSpriteHeight;
 		angle = 0;
+	}
+	
+	/**
+	 * Sets the object's name (what is returned by toString) to newName
+	 * @param newName The new name of the object
+	 */
+	public void setObjName(String newName) {
+		objName = newName;
+	}
+	
+	public String getObjName() {
+		return objName; 
+	}
+	
+	/**
+	 * Returns a string representation of the object's name and world coordinate position
+	 */
+	public String toString() {
+		DecimalFormat formatter = new DecimalFormat("#.###");
+		return objName + "(" + formatter.format(getXPosWorld()) + ", " + formatter.format(getYPosWorld()) + ", " + getZPos() + ")";
 	}
 
 

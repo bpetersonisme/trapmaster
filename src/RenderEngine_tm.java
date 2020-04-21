@@ -30,7 +30,7 @@ public class RenderEngine_tm extends JPanel{
 	private Timer gameTimer; 
 	private ArrayList<RenderObj> renderables;
 	private int delay;
-	private long runTime; 
+	private int runTime; 
 	private Color refreshColor;
 	/**
 	 * Creates a new RenderEngine_tm of size x and y, which makes a frame every frameDelay ms
@@ -99,21 +99,35 @@ public class RenderEngine_tm extends JPanel{
 		gameTimer.setDelay(delay);
 	}
 	
-	private void sortRenderables() {
+	private void sortRenderables() { 
+		for(RenderObj curr: renderables) 
+			System.out.println(curr);
+		
 		int i, j;
 		i = 1;
 		RenderObj jObjLessOne, jObj;
 		while(i < renderables.size()) {
 			j = i;
 			jObj = renderables.get(j);
-			jObjLessOne = renderables.get(j-1);
+			jObjLessOne = renderables.get(j-1); 
 			while(j > 0 && jObjLessOne.getZPos() > jObj.getZPos()) {
+				
+ 
 				renderables.set(j, jObjLessOne);
 				renderables.set(j-1, jObj);
 				j = j-1;
+				if(j > 0) {
+					jObj = renderables.get(j);
+					jObjLessOne = renderables.get(j-1);
+				}
 			}
 			i++;
 		}
+		
+		System.out.println("Post sort!");
+		for(RenderObj curr: renderables) 
+			System.out.println(curr);
+		System.out.println("\n\n\n");
 	}
 	public double getViewportX() {
 		return viewportXPos;
@@ -136,6 +150,10 @@ public class RenderEngine_tm extends JPanel{
 		return absY - viewportYPos;
 	}
 	
+	public double getRunTime() {
+		return runTime;
+	}
+	
 	public void paintComponent(Graphics g) {
 		
 		int i;
@@ -144,7 +162,9 @@ public class RenderEngine_tm extends JPanel{
 		int renderSize = renderables.size();
 		RenderObj curr;
 		for(i = 0; i < renderSize; i++) {
+			
 			curr = renderables.get(i);
+			System.out.println("Rendering " + curr);
 			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getXPosRender(viewportXPos), (int)curr.getYPosRender(viewportYPos), null);
 		}
 		
@@ -153,14 +173,14 @@ public class RenderEngine_tm extends JPanel{
 	}
 	
 	private class framePaintingListener implements ActionListener {
-		public void actionPerformed(ActionEvent arg0) {
-			runTime = System.nanoTime();
-			
+		public synchronized void actionPerformed(ActionEvent arg0) {
+			long nanoTime = System.nanoTime();
+	
 			repaint();
-			runTime = (System.nanoTime() - runTime)/1000000;
-			if(delay < runTime) {
-				setDelay((int)runTime);
-			}
+			runTime = (int)(System.nanoTime() - nanoTime)/1000000;
+			if(delay <= runTime) { 
+				setDelay(runTime);
+			} 
 		}
 	}
  
