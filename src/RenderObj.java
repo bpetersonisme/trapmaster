@@ -7,8 +7,11 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
 
 
 /**
@@ -39,15 +42,17 @@ public abstract class RenderObj {
 	private int modelSpriteHeight; //The (y) height of each sprite on the sprite sheet
 	private int modelSpriteWidth; //The (x) width of each sprite on the sprite sheet
 	
-	private double xPosWorld; 
-	private double yPosWorld;
+	private double xPosWorld; //The horizontal coordinate of the renderObj center
+	private double yPosWorld; //The vertical coordinate of the renderObj center
 	
 	private double xPos = 0; //The horizontal (x) position of the object 
 	private double yPos = 0; //The vertical (y) position of the object 
 	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
-	
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
 
+	private boolean doFilter;
+	private Color filterColor; 
+	private int filterOpacity = 100;
 	
 	 
 	
@@ -72,7 +77,35 @@ public abstract class RenderObj {
 	 * @param spriteHeight The height of sprites on the new sprite sheet
 	 */
 	protected void setSpriteSheet(BufferedImage newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) {
+		
 		spriteSheet = newSS;
+		spriteSheetRows = numRows;
+		spriteSheetCols = numCols;
+		modelSpriteWidth = spriteWidth;
+		modelSpriteHeight = spriteHeight;
+		currSpriteWidth = spriteWidth;
+		currSpriteHeight = spriteHeight;	
+		currSpriteRow = 0;
+		currSpriteCol = 0;
+		setCurrSprite(0, 0);
+		if(angle > 0)
+			rotateCurrSprite();
+	}
+	/**
+	 * Sets the sprite sheet to a bufferedImage defined by newSS, which has numRows rows- 
+	 */
+	/**
+	 * Changes the sprite sheet to newSS, which has numRows rows- each row being spriteHeight tall,
+	 * and numCols columns- each column being spriteWidth wide
+	 * @param newSS The new sprite sheet
+	 * @param numRows The number of rows in the new sprite sheet
+	 * @param numCols The number of columns in the new sprite sheet
+	 * @param spriteWidth The width of sprites on the new sprite sheet
+	 * @param spriteHeight The height of sprites on the new sprite sheet
+	 */
+	protected void setSpriteSheet(String newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) throws IOException {
+		
+		spriteSheet = ImageIO.read(this.getClass().getResourceAsStream(newSS));
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
@@ -94,6 +127,7 @@ public abstract class RenderObj {
 	protected void setSpriteSheet(BufferedImage newSS) {
 		setSpriteSheet(newSS, 1, 1, newSS.getWidth(), newSS.getHeight());
 	}
+	
 	
 	
 	/**
@@ -174,7 +208,6 @@ public abstract class RenderObj {
 	 * @param col
 	 */
 	public void setCurrSprite(int row, int col) {
-		System.out.println("Presenting sprite at " + row + ", " + col); 
 		if(row > spriteSheetRows || row < 0 || col > spriteSheetCols || col < 0) {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
@@ -400,6 +433,12 @@ public abstract class RenderObj {
 			degree = 360 + degree;
 		angle = degree;
 	
+		if(doFilter == true) {
+			Graphics2D model2D = modelSprite.createGraphics();
+			model2D.setColor(filterColor);
+			model2D.fillRect(0,  0, getSpriteWidth(), getSpriteHeight());
+			model2D.dispose();
+		}
 		
 		double radsAngle = Math.toRadians(degree);
 		double sin = Math.abs(Math.sin(radsAngle));
@@ -413,10 +452,14 @@ public abstract class RenderObj {
 		BufferedImage rotatedSprite = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB); 
 		Graphics2D g2D = rotatedSprite.createGraphics(); 
 		AffineTransform rotator = new AffineTransform();
+	
 		rotator.translate((newWidth - w)/2, (newHeight-h)/2);
 		rotator.rotate(radsAngle, w/2, h/2);
 		g2D.setTransform(rotator);
 		g2D.drawImage(modelSprite, 0, 0, null);
+		
+	
+		
 		g2D.dispose();
 
 		currSpriteWidth = (int) newWidth;
@@ -427,6 +470,9 @@ public abstract class RenderObj {
 		 
 	}
 	
+	/**
+	 * Rotates the sprite by however many degrees its angle is set to. Sort of a "reset" function.
+	 */
 	protected void rotateCurrSprite() {
 		rotateCurrSprite(angle);
 	}
@@ -449,16 +495,47 @@ public abstract class RenderObj {
 	
 	/**
 	 * Use this if you are working without a sprite sheet. As the name implies, it generates a new sprite as a red rectangle 
+	 * @return A new sprite with a rectangle about its edge
 	 */
 	private BufferedImage generateModelSprite() {
 		BufferedImage newSprite = new BufferedImage(modelSpriteWidth, modelSpriteHeight, BufferedImage.TYPE_INT_ARGB);
 	 	Graphics2D g2D = newSprite.createGraphics(); 
 		g2D.setColor(Color.RED);
-		g2D.drawRect(0, 0, modelSpriteHeight - 1, modelSpriteWidth -1);
+		g2D.drawRect(0, 0, modelSpriteWidth - 1, modelSpriteHeight - 1);
 		return newSprite;
 	}
 
  
+	/**
+	 * Adds a filter of color col at opacity op to the sprite
+	 * @param col The color of the sprite
+	 * @param op The opacity of the sprite
+	 */
+	public void addFilter(Color col, int op) {
+		doFilter = true;
+		filterColor = new Color(col.getRed(), col.getGreen(), col.getBlue(), op);
+		filterOpacity = op;
+		rotateCurrSprite();
+	}
+	
+	/**
+	 * Adds a filter of color col at the current filterOpacity to the sprite
+	 * @param col The color of the sprite filter
+	 */
+	public void addFilter(Color col) {
+		addFilter(col, filterOpacity);
+	}
+	
+	
+	/**
+	 * Removes the filter from the sprite 
+	 */
+	public void removeFilter() {
+		doFilter = false;
+		rotateCurrSprite();
+	}
+	
+	
 	
 	/**
 	 * Returns the ideal, unrotated height of the sprite
@@ -502,8 +579,7 @@ public abstract class RenderObj {
 	public double getXPosRender() {
 		double xPosRotated = xPos;
 		xPosRotated -= currSprite.getWidth();
-		xPosRotated /= 2;
-		System.out.println("But now, it's " + xPosRotated);
+		xPosRotated /= 2; 
 		return xPosRotated;
 	}
 	
@@ -515,7 +591,7 @@ public abstract class RenderObj {
 	 * @return The 'apparent' position of the sprite along the x axis 
 	 */
 	public double getXPosRender(double viewportXPos) {
-		double xPosRotated = Math.abs(viewportXPos - xPosWorld);
+		double xPosRotated = xPosWorld - viewportXPos;  
 		xPosRotated -= currSprite.getWidth()/2;
 		//xPosRotated /= 2; 
 		return xPosRotated;
@@ -545,10 +621,9 @@ public abstract class RenderObj {
 	 * @return The 'apparent' position of the sprite along the y axis 
 	 */
 	public double getYPosRender(double viewportYPos) {
-		double yPosRotated = Math.abs(viewportYPos - yPosWorld);
+		double yPosRotated = yPosWorld - viewportYPos;  
+
 		yPosRotated -= currSprite.getHeight()/2;
-		//yPosRotated /= 2;
-		//System.out.println("But now, it's " + yPosRotated);
 		return yPosRotated;
 	}
 	
@@ -625,7 +700,7 @@ public abstract class RenderObj {
 	
 	/**
 	 * Returns the depth position of sprite- determines draw order/hierarchy
-	 * @return
+	 * @return The sprite's depth position
 	 */
 	public int getZPos() {
 		return zPos;
@@ -638,6 +713,21 @@ public abstract class RenderObj {
 	public void setZPos(int newZPos) {
 		zPos = newZPos;
 	}
+	
+	/**
+	 * Equivalent to getZPos
+	 * @return The sprite's depth position
+	 */
+	 public int getZPosWorld() {
+		 return zPos;
+	 }
+	 /**
+	  * Equivalent to setZPos
+	  * @param The sprite's new depth position
+	  */
+	 public void setZPosWorld(int newZPos) {
+		 zPos = newZPos;
+	 }
 	
 	/**
 	 * Returns the angle of current sprite from the normal, clockwise. 
@@ -679,9 +769,17 @@ public abstract class RenderObj {
 		objName = newName;
 	}
 	
+	/**
+	 * Returns the 'name' of the object- usually the name of its class, really.
+	 * @return The name of the object.
+	 */
 	public String getObjName() {
 		return objName; 
 	}
+	
+	 
+	
+	
 	
 	/**
 	 * Returns a string representation of the object's name and world coordinate position

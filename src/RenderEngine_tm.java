@@ -61,16 +61,24 @@ public class RenderEngine_tm extends JPanel{
 		refreshColor = c;
 	}
 	
+	/**
+	 * Overloading for getPreferredSize- necessary for formatting reasons.
+	 */
 	public Dimension getPreferredSize() {
 		return new Dimension(viewportWidth, viewportHeight);
 	}
 	
-	
+	/**
+	 * startRender begins the rendering process. It will redraw every gameDelay seconds
+	 */
 	public void startRender() {
 		if(!gameTimer.isRunning())
 			gameTimer.start();
 	}
 	
+	/**
+	 * stopRender Stops the rendering process. 
+	 */
 	public void stopRender() {
 		if(gameTimer.isRunning())
 			gameTimer.stop();
@@ -100,9 +108,7 @@ public class RenderEngine_tm extends JPanel{
 	}
 	
 	private void sortRenderables() { 
-		for(RenderObj curr: renderables) 
-			System.out.println(curr);
-		
+ 
 		int i, j;
 		i = 1;
 		RenderObj jObjLessOne, jObj;
@@ -124,10 +130,7 @@ public class RenderEngine_tm extends JPanel{
 			i++;
 		}
 		
-		System.out.println("Post sort!");
-		for(RenderObj curr: renderables) 
-			System.out.println(curr);
-		System.out.println("\n\n\n");
+ 
 	}
 	public double getViewportX() {
 		return viewportXPos;
@@ -139,7 +142,7 @@ public class RenderEngine_tm extends JPanel{
 	public void setViewportX(double newX) {
 		viewportXPos = newX;
 	}
-	public void setViewport(double newY) {
+	public void setViewportY(double newY) {
 		viewportYPos = newY;
 	}
 	
@@ -149,6 +152,23 @@ public class RenderEngine_tm extends JPanel{
 	public double getRelY(double absY) {
 		return absY - viewportYPos;
 	}
+	
+	/**
+	 * Returns the width of the viewport
+	 * @return The viewport's width
+	 */
+	public int getViewportWidth() {
+		return viewportWidth;
+	}
+	
+	/**
+	 * Returns the hieght of the viewport
+	 * @return The viewport's height
+	 */
+	public int getViewportHeight() {
+		return viewportHeight;
+	}
+	
 	
 	public double getRunTime() {
 		return runTime;
@@ -162,9 +182,7 @@ public class RenderEngine_tm extends JPanel{
 		int renderSize = renderables.size();
 		RenderObj curr;
 		for(i = 0; i < renderSize; i++) {
-			
-			curr = renderables.get(i);
-			System.out.println("Rendering " + curr);
+			curr = renderables.get(i); 
 			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getXPosRender(viewportXPos), (int)curr.getYPosRender(viewportYPos), null);
 		}
 		

@@ -33,12 +33,18 @@ public class HUD_tm extends JPanel {
 	private int hudWidth;
 	DecimalFormat goldFormatter;
 	private JLabel playerGoldAmt; 
+	private Main_tm gameRef;
+	private JButton trapA, trapB, trapC, trapD, btnSell, btnRepair;
+	private boolean buttonsActive;
 	
 	/**
 	 * Create the panel.
 	 */
-	public HUD_tm(int screenWidth, int screenHeight) {
+	public HUD_tm(Main_tm ref, int screenWidth, int screenHeight) {
 		
+		buttonsActive = true;
+		gameRef = ref;
+	
 		goldFormatter = new DecimalFormat("00000");
 		setBackground(SystemColor.activeCaption);
 		
@@ -103,7 +109,7 @@ public class HUD_tm extends JPanel {
 		
 		
 		
-		JButton trapA = new JButton("Pit Trap");
+		trapA = new JButton("Pit Trap");
 		trapA.setBackground(new Color(169, 169, 169));
 		trapA.setSize(buttonSize);
 		trapA.setPreferredSize(buttonSize);
@@ -121,7 +127,7 @@ public class HUD_tm extends JPanel {
 		trapMenuPanel.add(trapA, gbc_trapA);
 		
 		
-		JButton trapB = new JButton("Wind Trap");
+		trapB = new JButton("Wind Trap");
 		trapB.setBackground(new Color(245, 245, 245));
 		trapB.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -138,7 +144,7 @@ public class HUD_tm extends JPanel {
 		
 		
 		
-		JButton trapC = new JButton("Flame Thrower");
+		trapC = new JButton("Flame Thrower");
 		trapC.setBackground(new Color(255, 127, 80));
 		trapC.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -155,7 +161,7 @@ public class HUD_tm extends JPanel {
 		
 		
 		
-		JButton trapD = new JButton("Freeze Rune");
+		trapD = new JButton("Freeze Rune");
 		trapD.setBackground(new Color(135, 206, 235));
 		trapD.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -178,11 +184,23 @@ public class HUD_tm extends JPanel {
 		gbc_sellRepairButtonPanel.gridy = 4;
 		add(sellRepairButtonPanel, gbc_sellRepairButtonPanel);
 		
-		JButton btnSell = new JButton("Sell");
+		btnSell = new JButton("Sell");
+		btnSell.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				gameRef.setMode(Main_tm.SELL_MODE);
+			}
+		});
 		btnSell.setBackground(new Color(50, 205, 50));
 		sellRepairButtonPanel.add(btnSell);
 		
-		JButton btnRepair = new JButton("Repair");
+		 
+		
+		btnRepair = new JButton("Repair");
+		btnRepair.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				gameRef.setMode(Main_tm.REPAIR_MODE);
+			}
+		});
 		btnRepair.setBackground(new Color(255, 255, 0));
 		sellRepairButtonPanel.add(btnRepair);
 
@@ -192,9 +210,31 @@ public class HUD_tm extends JPanel {
 		return new Dimension(hudWidth, hudHeight);
 	}
 	
-	
+	/**
+	 * Sets the gold counter to newAmt
+	 * @param newAmt The amount of gold displayed on the gold counter
+	 */
 	public void setGold(int newAmt) {
-		System.out.println("This happening?");
 		playerGoldAmt.setText(goldFormatter.format(newAmt));
 	}
+	
+	/**
+	 * Spawns an object in the usual button-spawning fashion- i.e., green if it can be placed in the indicated place, and red otherwise.
+	 * @param obj The object to be placed
+	 * @param cost The amount of gold to be taken 
+	 */
+	public void spawnObj(RenderObj obj, int cost) {
+		gameRef.setMode(Main_tm.BUY_MODE, obj, cost);
+	}
+	
+	/**
+	 * Turns all the buttons on or off- when off, they cannot be clicked. 
+	 */
+	public void toggleButtons() {
+		buttonsActive = !buttonsActive;
+		trapA.setEnabled(buttonsActive);
+		btnRepair.setEnabled(buttonsActive);
+		btnSell.setEnabled(buttonsActive);
+	}
+	
 }

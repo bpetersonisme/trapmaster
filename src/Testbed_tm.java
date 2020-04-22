@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import javax.swing.JLabel;
 
@@ -50,6 +51,7 @@ public class Testbed_tm {
 	private JLabel lblViewportXPos;
 	private JLabel lblCorners;
 	private Insets bounds;
+	private ArrayList<RenderObj> testers;
 	/**
 	 * Launch the application.
 	 */
@@ -154,8 +156,15 @@ public class Testbed_tm {
 		
 		gameFramer.addRenderObj(tester4);
 		gameFramer.addRenderObj(tester5);
-
-		System.exit(0);
+ 
+		
+		testers = new ArrayList<RenderObj>();
+		
+		testers.add(tester);
+		testers.add(tester2);
+		testers.add(tester3); 
+		testers.add(tester4);
+		testers.add(tester5);
 		
 		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
@@ -174,15 +183,19 @@ public class Testbed_tm {
 		});
 		
 
+		testers.get(0).addFilter(Color.GREEN, 20);
 
 		 
 		
 		Thread testThread = new Thread() {
 			public void run() {
+				int j = 0;
+				
 				double i = -50; 
 				double rightX, leftX, bottomY, topY, cos, sin;
 				int time = (int)(System.nanoTime()/1000000);
 				//tester2.rotateCurrSprite(50);
+				
 				while(true) { 
 					
 						//tester.move(0, 0, gamex, gamey);
@@ -190,12 +203,15 @@ public class Testbed_tm {
 //								gamex/2 - tester2.getRotatedSpriteWidth()/2, gamey/2 - tester2.getRotatedSpriteWidth()/2);
 
 						
-						//tester.rotateCurrSprite(i);
-						//tester2.rotateCurrSprite(i*-1);
-						tester3.rotateCurrSprite(i);
+						testers.get(0).rotateCurrSprite(i);
+						testers.get(1).rotateCurrSprite(i*-1);
+						testers.get(2).rotateCurrSprite(i);
+						testers.get(0).addFilter(Color.PINK, 25);
 							
-							time = tester2.animate(time);
+						//testers.get(0).addFilter(new Color(j%255, (j > 255 ? j%255 : 0), (j > 511 ? j%255 : 0)), 25);
+						time = tester2.animate(time);
 		
+						j++;
 						
 						i -= 1;
 						i %= 360;
@@ -244,7 +260,7 @@ public class Testbed_tm {
 	private class invisibleRender extends RenderObj {
 		
 		public invisibleRender(double xWorldPos, double yWorldPos, int x, int y) {
-			setSpriteSheet(null, 1, 1, x, y);	 
+			setSpriteSheet((BufferedImage)null, 1, 1, x, y);	 
 			setXPosWorld(xWorldPos);
 			setYPosWorld(yWorldPos);
 			setZPos(0);
