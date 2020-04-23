@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
@@ -27,6 +28,7 @@ import java.awt.SystemColor;
 
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+
 import java.awt.Font;
 
 
@@ -36,8 +38,6 @@ public class Main_tm {
 	private JFrame game_frame; 
 	private Thread monsterThread, trapThread, mapThread;
 	private RenderEngine_tm gameEngine;
-	private RenderObj purchase;
-	private int goldAmt;
 	private Map_tm gameMap;
 	private HUD_tm gameHud; 
 	private boolean doMonsterThread, doTrapThread, doMapThread;
@@ -45,6 +45,14 @@ public class Main_tm {
 	private final int SCREEN_WIDTH = 1920;
 	private int gameWidth;
 	private int gameHeight;
+	
+
+	private int goldAmt;
+	
+	//Buy mode stuff
+	private RenderObj purchase;
+	private int purchaseCost; 
+	private boolean canPlace;
 	
 	//Object Instantiation Arrays
 	private ArrayList<Trap_tm> traps;
@@ -92,16 +100,55 @@ public class Main_tm {
 	}
 
 	/**
-	 * Set the mode for the game
-	 * Can be STD_MODE, where the game proceeds as expected
+	 * Set the mode for the game. The modes are as follows: 
+	 * STD_MODE, where the game proceeds as expected
 	 * SELL_MODE, where clicking will sell traps
 	 * REPAIR_MODE, where clicking will repair traps
+	 * BUY_MODE, where clicking will place an object
+	 * PAUSE_MODE, where the game. Is paused. 
+	 * @param The mode the game will be in. 
+	 * 
 	 */
 	public void setMode(int newMode) {
-		if(newMode <=2)
-			mode = newMode;
-		else
-			mode = 0;
+		int oldMode = mode; 
+		mode = newMode;
+		if(mode != REPAIR_MODE || mode != SELL_MODE) 
+			lblMouse.setText("");
+		if(mode == REPAIR_MODE) 
+			lblMouse.setText("REPAIR");
+		else if(mode == SELL_MODE) 
+			lblMouse.setText("SELL"); 
+		if(mode == PAUSE_MODE) { 
+			lblPause.setVisible(true);
+			gameEngine.togglePaused();
+			gameEngine.stopRender(); 
+			doTrapThread = false;
+			doMonsterThread = false;
+			doMapThread = false;
+			gameHud.toggleButtons();
+		}
+		if(oldMode == PAUSE_MODE && mode != PAUSE_MODE) {
+			gameHud.toggleButtons();
+			gameEngine.togglePaused();
+			gameEngine.startRender();
+			doTrapThread = true;
+			doMonsterThread = true;
+			doMapThread = true;
+			lblPause.setVisible(false);
+		}
+	}
+	
+	/**
+	 * 
+	 * @param obj
+	 * @param cost
+	 */
+	public void makePurchase(RenderObj obj, int cost) {
+		setMode(BUY_MODE);
+		purchase = obj;
+		purchase.addFilter(Color.GREEN, 45);
+		purchaseCost = cost;
+		gameEngine.addRenderObj(purchase);
 	}
 	
 	/**
@@ -127,11 +174,12 @@ public class Main_tm {
 		game_frame.getContentPane().add(gameEngine); 
 		gameEngine.setLayout(null);
 		
-		lblPause = new JLabel ("DEBUG");
+		lblPause = new JLabel ("PAUSE");
 		lblPause.setFont(new Font("Tahoma", Font.PLAIN, 60));
 		lblPause.setHorizontalAlignment(SwingConstants.CENTER);
 		lblPause.setSize(375, 104);
 		gameEngine.add(lblPause);
+		lblPause.setVisible(false);
 		
 		
 		lblMouse = new JLabel("Mouse: ");
@@ -141,6 +189,25 @@ public class Main_tm {
 		gameHud = new HUD_tm(this, SCREEN_WIDTH, SCREEN_HEIGHT);
 		game_frame.getContentPane().add(gameHud);
 		game_frame.pack();
+		
+		
+		/***************************************************************
+		 *                      Game Variables                         *
+		 ***************************************************************/
+		gameWidth = gameEngine.getViewportWidth();
+		gameHeight = gameEngine.getViewportHeight();
+		screenScrollXZone = gameWidth/50;
+		screenScrollYZone = gameHeight/50; 
+		moveCamLeft = false;
+		moveCamRight = false;
+		moveCamUp = false;
+		moveCamDown = false; 
+		canPlace = false;
+		mouseX = 0;
+		mouseY = 0;
+		mode = 0;
+		goldAmt = 421;
+
 		
 		/***************************************************************
 		 *            Game Object References & Initializations         *
@@ -162,27 +229,24 @@ public class Main_tm {
 		
 		int i, arraySize;
 		
-		Trap_tm currTrap; 
-		Tile_tm currTile;
-		Monster_tm currMonster;
-		
+		RenderObj curr;
 		
 		arraySize = traps.size();
 		for(i = 0; i < arraySize; i++) {
-			currTrap = traps.get(i);
-			gameEngine.addRenderObj(currTrap);
+			curr = traps.get(i);
+			gameEngine.addRenderObj(curr);
 		}
 		
 		arraySize = tiles.size(); 
 		for(i = 0; i < arraySize; i++) {
-			currTile = tiles.get(i);
-			gameEngine.addRenderObj(currTile);
+			curr = tiles.get(i);
+			gameEngine.addRenderObj(curr);
 		}
 		
 		arraySize = monsters.size();
 		for(i = 0; i < arraySize; i++) {
-			currMonster = monsters.get(i);
-			gameEngine.addRenderObj(currMonster);
+			curr = monsters.get(i);
+			gameEngine.addRenderObj(curr);
 		}
 		
 		
@@ -192,19 +256,7 @@ public class Main_tm {
 		/****************************************************
 		 *                Game Listeners                    *
 		 ****************************************************/
-		gameWidth = gameEngine.getViewportWidth();
-		gameHeight = gameEngine.getViewportHeight();
-		screenScrollXZone = gameWidth/50;
-		screenScrollYZone = gameHeight/50; 
-		moveCamLeft = false;
-		moveCamRight = false;
-		moveCamUp = false;
-		moveCamDown = false; 
-		mouseX = 0;
-		mouseY = 0;
-		mode = 0;
-		goldAmt = 421;
-
+	
 		lblPause.setLocation(672, 454); 
 		
 		testBound = ActionBox.makeActionBox(0, 0, 10, 10);
@@ -219,13 +271,45 @@ public class Main_tm {
 				mouseY = e.getY();
 
 				lblMouse.setLocation(mouseX + 8, mouseY - 5);
-				if(mode==0) 
+				if(mode== STD_MODE) {
 					lblMouse.setText("");
-				if(mode == 1) 
+				}
+				if(mode == REPAIR_MODE) {
 					lblMouse.setText("REPAIR");
-				else if(mode == 2) 
+				}
+				else if(mode == SELL_MODE) {
 					lblMouse.setText("SELL");
-	 
+				}
+				else if(mode == BUY_MODE) {
+					purchase.setXPosWorld(gameEngine.getViewportX() + mouseX);
+					purchase.setYPosWorld(gameEngine.getViewportY() + mouseY);
+					if(getGoldAmt() >= purchaseCost) {
+						canPlace = true;
+						int i, size; 
+						size = traps.size();
+						RenderObj thing;
+					
+						for(i = 0; i < size; i++) {
+							thing = traps.get(i);
+							if(purchase.isColliding(thing)) {
+								canPlace = false;
+								i = size;
+							}
+						}
+						for(i = 0; i < size; i++) {
+							thing = monsters.get(i);
+							if(purchase.isColliding(thing)) {
+								canPlace = false;
+								i = size;
+							}
+						}
+					}
+					else {
+						canPlace = false;
+					}
+					if(canPlace == false)
+						purchase.addFilter(Color.RED, 45);
+				}
 				
 				//lblMouse.setText("Mouse X: " + mouseX + " ScrollX: " + screenScrollXZone + " MouseY: " + mouseY + " ScrollY: " + screenScrollYZone);
 				if(mouseX < screenScrollXZone) {
@@ -255,6 +339,18 @@ public class Main_tm {
 			}
 		}); 
 		
+		gameEngine.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				mouseX = e.getX();
+				mouseY = e.getY();
+				if(canPlace == true) {
+					purchase.removeFilter();
+					setMode(STD_MODE);
+					setGoldAmt(getGoldAmt() - purchaseCost);
+				}
+			}
+		});
+		
 		gameHud.addMouseMotionListener(new MouseMotionAdapter() {
 			public void mouseMoved(MouseEvent e) {
 				moveCamRight = false;
@@ -265,7 +361,6 @@ public class Main_tm {
 
 			public void keyPressed(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
-					System.out.println("Hallo?");
 					moveCamLeftKey = true;
 				}
 				if(e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_W) {
@@ -278,17 +373,16 @@ public class Main_tm {
 					moveCamDownKey = true;
 				}
 				if(e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-						
-					if(mode == 3) {
-						mode = STD_MODE;
-						
-					}
-					else if(mode != 0) {
-						mode = STD_MODE;
+					
+					
+					 if(mode != STD_MODE) {
+						 if(mode == BUY_MODE) 
+							 gameEngine.removeRenderObj(purchase);
+						 setMode(STD_MODE);
 						
 					}
 					else {
-						mode = PAUSE_MODE;
+						setMode(PAUSE_MODE);
 					}
 				}
 			}
@@ -322,11 +416,13 @@ public class Main_tm {
 		//The monster thread handles everything related to monsters- their movements, their health, possible additions or removals...
 		monsterThread = new Thread() {
 			public void run() {
-				while(doMonsterThread) {
-					/*
-					 * Put monster actions here
-					 * 
-					 */
+				while(true) {
+					if(doMonsterThread) {
+						/*
+						 * Put monster actions here
+						 * 
+						 */
+					}
 					try {
 						sleep(20);
 					}
@@ -339,10 +435,12 @@ public class Main_tm {
 		//Trap Thread handles trap working- placing or removing damage zones, etc. 
 		trapThread = new Thread() {
 			public void run() {
-				while(doTrapThread) {
-					/*
-					 * Put Trap actions here
-					 */
+				while(true) {
+					if(doTrapThread) {
+						/*
+						 * Put Trap actions here
+						 */
+					}
 					try {
 						sleep(20);
 					}
@@ -355,40 +453,47 @@ public class Main_tm {
 		//mapThread handles the workings of the map- routing, viewport adjustments, all that. 
 		mapThread = new Thread() {
 			public void run() {
-				while(doMapThread) {
-				/*
-				 * Put map actions(?) here
-				 */
-					gameHud.setGold(getGoldAmt());
+				while(true) {
+					if(doMapThread) {
+					/*
+					 * Put map actions(?) here
+					 */
+						gameHud.setGold(getGoldAmt());
+						/*********************
+						 * Scrolling options *
+						 *********************/
+						if(moveCamLeft) 
+							gameEngine.setViewportX(gameEngine.getViewportX() - (screenScrollXZone - mouseX)/3.8);
+						else if(moveCamRight) 
+							gameEngine.setViewportX(gameEngine.getViewportX() + (mouseX%(gameWidth - screenScrollXZone))/3.8);
 					
-					if(moveCamLeft) 
-						gameEngine.setViewportX(gameEngine.getViewportX() - (screenScrollXZone - mouseX)/3.8);
-					else if(moveCamRight) 
-						gameEngine.setViewportX(gameEngine.getViewportX() + (mouseX%(gameWidth - screenScrollXZone))/3.8);
-				
-					
-					if(moveCamLeftKey) {
-						gameEngine.setViewportX(gameEngine.getViewportX() - 8);
+						
+						if(moveCamLeftKey) {
+							gameEngine.setViewportX(gameEngine.getViewportX() - 8);
+						}
+						else if(moveCamRightKey) 
+							gameEngine.setViewportX(gameEngine.getViewportX() + 8);
+						
+						
+						if(moveCamUp) {
+							gameEngine.setViewportY(gameEngine.getViewportY() - (screenScrollYZone - mouseY)/3.8); 
+						}
+						else if(moveCamDown) {
+							gameEngine.setViewportY(gameEngine.getViewportY() + (mouseY%(gameHeight - screenScrollYZone))/3.8);
+						}
+						
+	
+						if(moveCamUpKey) {
+							gameEngine.setViewportY(gameEngine.getViewportY() - 8); 
+						}
+						else if(moveCamDownKey) {
+							gameEngine.setViewportY(gameEngine.getViewportY() + 8);
+						}
+						
+						/*************************
+						 * End Scrolling Options *
+						 *************************/
 					}
-					else if(moveCamRightKey) 
-						gameEngine.setViewportX(gameEngine.getViewportX() + 8);
-					
-					
-					if(moveCamUp) {
-						gameEngine.setViewportY(gameEngine.getViewportY() - (screenScrollYZone - mouseY)/3.8); 
-					}
-					else if(moveCamDown) {
-						gameEngine.setViewportY(gameEngine.getViewportY() + (mouseY%(gameHeight - screenScrollYZone))/3.8);
-					}
-					
-
-					if(moveCamUpKey) {
-						gameEngine.setViewportY(gameEngine.getViewportY() - 8); 
-					}
-					else if(moveCamDownKey) {
-						gameEngine.setViewportY(gameEngine.getViewportY() + 8);
-					}
-					
 					try {
 						sleep(20);
 					}
@@ -413,6 +518,27 @@ public class Main_tm {
 	 */
 	public int getGoldAmt() {
 		return goldAmt;
+	}
+	/**
+	 * Sets the amount of gold the player has, both the value 
+	 * And the counter
+	 * @param newAmt The new amount of gold the player has
+	 */
+	public void setGoldAmt(int newAmt) {
+		goldAmt = newAmt;
+		gameHud.setGold(goldAmt);
+	}
+	/**
+	 * Takes amtTaken gold from the player
+	 */
+	public void takeGold(int amtTaken) {
+		setGoldAmt(getGoldAmt() - amtTaken);
+	}
+	/**
+	 * Adds amtGiven to the amount of gold the player has
+	 */
+	public void giveGold(int amtGiven) {
+		setGoldAmt(getGoldAmt() + amtGiven);
 	}
 }
 

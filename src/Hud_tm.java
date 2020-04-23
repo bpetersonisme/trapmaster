@@ -109,13 +109,17 @@ public class HUD_tm extends JPanel {
 		
 		
 		
-		trapA = new JButton("Pit Trap");
+		trapA = new JButton("Ballista\n500 gp");
 		trapA.setBackground(new Color(169, 169, 169));
 		trapA.setSize(buttonSize);
 		trapA.setPreferredSize(buttonSize);
 		trapA.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
+				/**
+				 * This will be an actual thing some day, don't worry about it
+				 */
+				ActionBox actionBox = ActionBox.makeActionBox(0, 0, 25);
+				spawnObj(actionBox, 500);
 			}
 		});
 		
@@ -224,15 +228,18 @@ public class HUD_tm extends JPanel {
 	 * @param cost The amount of gold to be taken 
 	 */
 	public void spawnObj(RenderObj obj, int cost) {
-		gameRef.setMode(Main_tm.BUY_MODE, obj, cost);
+		gameRef.makePurchase(obj, cost);
 	}
 	
 	/**
 	 * Turns all the buttons on or off- when off, they cannot be clicked. 
 	 */
 	public void toggleButtons() {
-		buttonsActive = !buttonsActive;
+		buttonsActive = !buttonsActive; 
 		trapA.setEnabled(buttonsActive);
+		trapB.setEnabled(buttonsActive);
+		trapC.setEnabled(buttonsActive);
+		trapD.setEnabled(buttonsActive);
 		btnRepair.setEnabled(buttonsActive);
 		btnSell.setEnabled(buttonsActive);
 	}

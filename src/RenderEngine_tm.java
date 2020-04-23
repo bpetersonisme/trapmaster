@@ -32,6 +32,7 @@ public class RenderEngine_tm extends JPanel{
 	private int delay;
 	private int runTime; 
 	private Color refreshColor;
+	private boolean paused;
 	/**
 	 * Creates a new RenderEngine_tm of size x and y, which makes a frame every frameDelay ms
 	 * @param x The width of the viewport
@@ -43,6 +44,7 @@ public class RenderEngine_tm extends JPanel{
 		viewportYPos = 0.0 - y/2;
 		viewportWidth = x;
 		viewportHeight = y;
+		paused = false;
 		setSize(new Dimension(x, y));
 		setPreferredSize(new Dimension(x, y));
 		viewport = new BufferedImage(viewportWidth, viewportHeight, BufferedImage.TYPE_INT_ARGB);
@@ -105,6 +107,13 @@ public class RenderEngine_tm extends JPanel{
 	public void setDelay(int newTime) {
 		delay = newTime;
 		gameTimer.setDelay(delay);
+	}
+	
+	/**
+	 * Toggles the pause mode, which puts a filter over everything.
+	 */
+	public void togglePaused() {
+		paused = !paused;
 	}
 	
 	private void sortRenderables() { 
@@ -177,6 +186,7 @@ public class RenderEngine_tm extends JPanel{
 	public void paintComponent(Graphics g) {
 		
 		int i;
+		
 		gameGraphics.setColor(refreshColor);
 		gameGraphics.fillRect(0, 0, viewportWidth, viewportHeight);
 		int renderSize = renderables.size();
@@ -184,6 +194,11 @@ public class RenderEngine_tm extends JPanel{
 		for(i = 0; i < renderSize; i++) {
 			curr = renderables.get(i); 
 			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getXPosRender(viewportXPos), (int)curr.getYPosRender(viewportYPos), null);
+		}
+		
+		if(paused == true) {
+			gameGraphics.setColor(new Color(Color.GRAY.getRed(), Color.GRAY.getGreen(), Color.GRAY.getBlue(), 45));
+			gameGraphics.fillRect(0,  0,  viewportWidth,  viewportHeight);
 		}
 		
 		g.drawImage(viewport,  0,  0, viewportWidth, viewportHeight, null);

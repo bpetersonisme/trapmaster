@@ -271,7 +271,7 @@ public class Testbed_tm {
 	}
 
 	//testRender is special- it niavely assumes it has been given a one image sprite sheet. 
-	private class testRender extends RenderObj {
+	public class testRender extends RenderObj {
 		private double xRate;
 		private double yRate;
 		private long frameDelay;
