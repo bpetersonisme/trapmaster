@@ -192,8 +192,16 @@ public class RenderEngine_tm extends JPanel{
 		int renderSize = renderables.size();
 		RenderObj curr;
 		for(i = 0; i < renderSize; i++) {
-			curr = renderables.get(i); 
-			gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getXPosRender(viewportXPos), (int)curr.getYPosRender(viewportYPos), null);
+			curr = renderables.get(i);
+			int spriteWidth = curr.getRotatedSpriteWidth()/2;
+			int spriteHeight = curr.getRotatedSpriteHeight()/2;
+			if(	(viewportXPos < curr.getXPosWorld() + spriteWidth) && 
+				(viewportXPos + viewportWidth > curr.getXPosWorld() - spriteWidth) && 
+				(viewportYPos < curr.getYPosWorld() + spriteHeight) && 
+				(viewportYPos + viewportHeight > curr.getYPosWorld() - spriteHeight)) {
+				gameGraphics.drawImage(curr.getCurrSprite(), (int)curr.getXPosRender(viewportXPos), (int)curr.getYPosRender(viewportYPos), null);
+			}
+			
 		}
 		
 		if(paused == true) {

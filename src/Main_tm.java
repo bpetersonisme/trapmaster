@@ -45,19 +45,21 @@ public class Main_tm {
 	private final int SCREEN_WIDTH = 1920;
 	private int gameWidth;
 	private int gameHeight;
-	
+	private boolean debug;
 
 	private int goldAmt;
 	
 	//Buy mode stuff
 	private RenderObj purchase;
 	private int purchaseCost; 
+	private int purchaseType;
 	private boolean canPlace;
 	
 	//Object Instantiation Arrays
 	private ArrayList<Trap_tm> traps;
 	private ArrayList<Monster_tm> monsters;
 	private ArrayList<Tile_tm> tiles;
+	private ArrayList<ActionBox> gameBounds;
 	
 	//Game Interaction Variables
 	private int screenScrollXZone;
@@ -75,15 +77,23 @@ public class Main_tm {
 	public static final int PAUSE_MODE = 3;
 	public static final int BUY_MODE = 4;
 	
+	
+	//Object Types
+	public static final int MONSTER = 0;
+	public static final int TRAP = 1;
+	public static final int TILE = 2;
+	
 	private ActionBox testBound;
 	private JLabel lblMouse;
 	private JLabel lblPause;
 	
 	public static void main(String[] args) {
+		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Main_tm window = new Main_tm();
+					
+					Main_tm window = new Main_tm(false);
 					window.game_frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -95,7 +105,8 @@ public class Main_tm {
 	/**
 	 * Create the application.
 	 */
-	public Main_tm() {
+	public Main_tm(boolean debug) {
+		this.debug = debug;
 		initialize();
 	}
 
@@ -121,7 +132,7 @@ public class Main_tm {
 		if(mode == PAUSE_MODE) { 
 			lblPause.setVisible(true);
 			gameEngine.togglePaused();
-			gameEngine.stopRender(); 
+			//gameEngine.stopRender(); 
 			doTrapThread = false;
 			doMonsterThread = false;
 			doMapThread = false;
@@ -130,25 +141,64 @@ public class Main_tm {
 		if(oldMode == PAUSE_MODE && mode != PAUSE_MODE) {
 			gameHud.toggleButtons();
 			gameEngine.togglePaused();
-			gameEngine.startRender();
+			//gameEngine.startRender();
 			doTrapThread = true;
 			doMonsterThread = true;
 			doMapThread = true;
 			lblPause.setVisible(false);
 		}
+		
+		if(oldMode == BUY_MODE) {
+			purchase = null;
+			
+		}
+		
 	}
 	
 	/**
-	 * 
-	 * @param obj
-	 * @param cost
+	 * As the name implies, this puts the game into buy mode and makes obj follow the mouse. 
+	 * If the player has enough gold, they will be able to purchase the object. 
+	 * @param obj The object to be purchased
+	 * @param objType The type of the object- probably a trap
+	 * @param cost The cost of the object, in gold. Whole numbers only. 
 	 */
-	public void makePurchase(RenderObj obj, int cost) {
+	public void makePurchase(RenderObj obj, int objType, int cost) {
 		setMode(BUY_MODE);
 		purchase = obj;
 		purchase.addFilter(Color.GREEN, 45);
 		purchaseCost = cost;
+		purchaseType = objType;
 		gameEngine.addRenderObj(purchase);
+	}
+	
+	
+	/**
+	 * Returns the amount of gold the player has
+	 * @return The amount of gold the player has
+	 */
+	public int getGoldAmt() {
+		return goldAmt;
+	}
+	/**
+	 * Sets the amount of gold the player has, both the value 
+	 * And the counter
+	 * @param newAmt The new amount of gold the player has
+	 */
+	public void setGoldAmt(int newAmt) {
+		goldAmt = newAmt;
+		gameHud.setGold(goldAmt);
+	}
+	/**
+	 * Takes amtTaken gold from the player
+	 */
+	public void takeGold(int amtTaken) {
+		setGoldAmt(getGoldAmt() - amtTaken);
+	}
+	/**
+	 * Adds amtGiven to the amount of gold the player has
+	 */
+	public void giveGold(int amtGiven) {
+		setGoldAmt(getGoldAmt() + amtGiven);
 	}
 	
 	/**
@@ -178,12 +228,13 @@ public class Main_tm {
 		lblPause.setFont(new Font("Tahoma", Font.PLAIN, 60));
 		lblPause.setHorizontalAlignment(SwingConstants.CENTER);
 		lblPause.setSize(375, 104);
+		lblPause.setLocation(672, 454); 
 		gameEngine.add(lblPause);
 		lblPause.setVisible(false);
 		
 		
 		lblMouse = new JLabel("Mouse: ");
-		lblMouse.setBounds(834, 5, 38, 14);
+		lblMouse.setBounds(834, 5, 80, 14);
 		gameEngine.add(lblMouse); 
 		
 		gameHud = new HUD_tm(this, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -206,8 +257,9 @@ public class Main_tm {
 		mouseX = 0;
 		mouseY = 0;
 		mode = 0;
-		goldAmt = 421;
+		goldAmt = 1000;
 
+		
 		
 		/***************************************************************
 		 *            Game Object References & Initializations         *
@@ -226,6 +278,17 @@ public class Main_tm {
 		 */
 		
 		monsters = new ArrayList<Monster_tm>();
+		/*
+		 * Some code/method call to populate the monsters
+		 */
+		
+		gameBounds = new ArrayList<ActionBox>();
+		/*
+		 * Some code/method call to populate the ActionBox (psst: base it off the tile list)
+		 */
+		testBound = ActionBox.makeActionBox(0, 0, 10, 10);
+		gameBounds.add(testBound);
+		
 		
 		int i, arraySize;
 		
@@ -249,6 +312,12 @@ public class Main_tm {
 			gameEngine.addRenderObj(curr);
 		}
 		
+		arraySize = gameBounds.size(); 
+		for(i = 0; i < arraySize; i++) {
+			curr = gameBounds.get(i);
+			gameEngine.addRenderObj(curr);
+		}
+		
 		
 		
 		
@@ -257,16 +326,18 @@ public class Main_tm {
 		 *                Game Listeners                    *
 		 ****************************************************/
 	
-		lblPause.setLocation(672, 454); 
+	
 		
-		testBound = ActionBox.makeActionBox(0, 0, 10, 10);
+
 		
-		gameEngine.addRenderObj(testBound);
 		
+		/*
+		 * The mouse motion listener handles functions related to the motion of the mouse 
+		 */
 		gameEngine.addMouseMotionListener(new MouseMotionAdapter() {
 			
-			public void mouseMoved(MouseEvent e) {
-				
+			public void mouseMoved(MouseEvent e) { 
+				gameEngine.requestFocus();
 				mouseX = e.getX(); 
 				mouseY = e.getY();
 
@@ -296,8 +367,17 @@ public class Main_tm {
 								i = size;
 							}
 						}
+						size = monsters.size();
 						for(i = 0; i < size; i++) {
 							thing = monsters.get(i);
+							if(purchase.isColliding(thing)) {
+								canPlace = false;
+								i = size;
+							}
+						}
+						size = gameBounds.size();
+						for(i = 0; i < size; i++) {
+							thing = gameBounds.get(i);
 							if(purchase.isColliding(thing)) {
 								canPlace = false;
 								i = size;
@@ -343,10 +423,31 @@ public class Main_tm {
 			public void mouseClicked(MouseEvent e) {
 				mouseX = e.getX();
 				mouseY = e.getY();
-				if(canPlace == true) {
+				
+				/**
+				 * TODO: Implement Sell Mode
+				 */
+				/**
+				 * TODO: Implement Repair Mode
+				 */
+				
+				if(canPlace == true && mode == BUY_MODE) {
 					purchase.removeFilter();
 					setMode(STD_MODE);
-					setGoldAmt(getGoldAmt() - purchaseCost);
+					takeGold(purchaseCost);
+					
+					switch(purchaseType) {
+					case MONSTER:
+						monsters.add((Monster_tm)purchase);
+					break;
+					case TRAP:
+						traps.add((Trap_tm)purchase);
+					break;
+					case TILE:
+						tiles.add((Tile_tm)purchase);
+					break;
+					default:
+				}
 				}
 			}
 		});
@@ -373,12 +474,21 @@ public class Main_tm {
 					moveCamDownKey = true;
 				}
 				if(e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-					
-					
-					 if(mode != STD_MODE) {
-						 if(mode == BUY_MODE) 
-							 gameEngine.removeRenderObj(purchase);
-						 setMode(STD_MODE);
+					if(debug) {
+						switch(mode) {
+							case STD_MODE: System.out.println("Standard mode");
+							break;
+							case REPAIR_MODE: System.out.println("Repair Mode");break ;
+							case SELL_MODE: System.out.println("Sell Mode"); break;
+							case PAUSE_MODE: System.out.println("Pause Mode"); break;
+							case BUY_MODE: System.out.println("BUY_MODE");
+						}
+					}
+					if(mode != STD_MODE) {
+						if(mode == BUY_MODE) {
+							gameEngine.removeRenderObj(purchase);
+						}
+						setMode(STD_MODE);
 						
 					}
 					else {
@@ -386,6 +496,8 @@ public class Main_tm {
 					}
 				}
 			}
+			
+			
 
 			public void keyReleased(KeyEvent e) {
 				if(e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_A) {
@@ -421,7 +533,7 @@ public class Main_tm {
 						/*
 						 * Put monster actions here
 						 * 
-						 */
+						 */ 
 					}
 					try {
 						sleep(20);
@@ -512,34 +624,7 @@ public class Main_tm {
 		mapThread.start();
 	}
 	
-	/**
-	 * Returns the amount of gold the player has
-	 * @return The amount of gold the player has
-	 */
-	public int getGoldAmt() {
-		return goldAmt;
-	}
-	/**
-	 * Sets the amount of gold the player has, both the value 
-	 * And the counter
-	 * @param newAmt The new amount of gold the player has
-	 */
-	public void setGoldAmt(int newAmt) {
-		goldAmt = newAmt;
-		gameHud.setGold(goldAmt);
-	}
-	/**
-	 * Takes amtTaken gold from the player
-	 */
-	public void takeGold(int amtTaken) {
-		setGoldAmt(getGoldAmt() - amtTaken);
-	}
-	/**
-	 * Adds amtGiven to the amount of gold the player has
-	 */
-	public void giveGold(int amtGiven) {
-		setGoldAmt(getGoldAmt() + amtGiven);
-	}
+
 }
 
 
