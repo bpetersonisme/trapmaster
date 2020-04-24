@@ -20,6 +20,11 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.swing.JSplitPane;
+
+import java.awt.Color;
+import java.awt.SystemColor;
+
 
 import javax.swing.JSplitPane;
 
@@ -30,6 +35,25 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import java.awt.Font;
+
+	private Insets bounds;
+	private JFrame game_frame; 
+	private Thread monsterThread;
+	private Thread trapThread;
+	private Thread mapThread;
+	private ArrayList<Trap_tm> traps;
+	private ArrayList<Monster_tm> monsters;
+	private ArrayList<Tile_tm> tiles;
+	private Map_tm gameMap;
+	private boolean doMonsterThread, doTrapThread, doMapThread;
+	/**
+	 * Launch the application.
+	 */
+	
+	private final int SCREEN_HEIGHT = 1080;
+	private final int SCREEN_WIDTH = 1920;
+	private RenderEngine_tm gameEngine;
+	private Hud_tm gameHud; 
 
 
 public class Main_tm {
@@ -112,7 +136,9 @@ public class Main_tm {
 
 	/**
 	 * Create the application.
+	 * @throws IOException 
 	 */
+
 	public Main_tm(boolean deb) {
 		debug = deb;
 		initialize();
@@ -122,8 +148,11 @@ public class Main_tm {
 	
 	/**
 	 * Initialize the contents of the frame.
+	 * @throws IOException 
 	 */
+
 	private void initialize() {
+
 		
 		/***************************************************
 		 *                  Frame Setup                    *
@@ -137,6 +166,7 @@ public class Main_tm {
 		doMonsterThread = true;
 		doTrapThread = true;
 		doMapThread = true;
+
 		//1668
 		gameEngine = new RenderEngine_tm(1668, 1080, 16, 5000);
 		gameEngine.setRefreshColor(Color.LIGHT_GRAY);
@@ -188,20 +218,21 @@ public class Main_tm {
 		/***************************************************************
 		 *            Game Object References & Initializations         *
 		 ***************************************************************/
+
 		
 		traps = new ArrayList<Trap_tm>(); 
 		/*
 		 * Some code/method call to populate the traps
 		 */
 		
-		
-		
+
 		tiles = new ArrayList<Tile_tm>(); 
 		/*
 		 * Some code/method call to populate the tiles
 		 */
 		
 		monsters = new ArrayList<Monster_tm>();
+
 		/*
 		 * Some code/method call to populate the monsters
 		 */
@@ -234,6 +265,8 @@ public class Main_tm {
 		
 		arraySize = monsters.size();
 		for(i = 0; i < arraySize; i++) {
+
+=======
 			curr = monsters.get(i);
 			gameEngine.addRenderObj(curr);
 		}
@@ -469,6 +502,8 @@ public class Main_tm {
 				}
 			}
 
+
+=======
 			public void keyTyped(KeyEvent arg0) { }
 			
 		});
@@ -614,13 +649,15 @@ public class Main_tm {
 			}
 		};
 		
-		
-		
+
+    
 		gameEngine.startRender(); 
 		monsterThread.start();
 		trapThread.start();
 		mapThread.start();
 	}
+
+=======
 	
 	/**********************************************************
 	 *                     Helper Methods                     *
@@ -727,6 +764,3 @@ public class Main_tm {
 	}
 
 }
-
-
-

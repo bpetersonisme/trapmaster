@@ -46,13 +46,22 @@ public abstract class RenderObj {
 	private int modelSpriteHeight; //The (y) height of each sprite on the sprite sheet
 	private int modelSpriteWidth; //The (x) width of each sprite on the sprite sheet
 	
+
+	private double xPosWorld; 
+	private double yPosWorld;
+	
+	private double xPos = 0; //The horizontal (x) position of the object 
+	private double yPos = 0; //The vertical (y) position of the object 
+	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
 	private double xPosWorld; //The horizontal coordinate of the renderObj center
 	private double yPosWorld; //The vertical coordinate of the renderObj center
+
 	
 	private double xPos = 0; //The horizontal (x) position of the object 
 	private double yPos = 0; //The vertical (y) position of the object 
 	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
+
 	private boolean noFilterYet = true;
 	private boolean doFilter;
 	private Color filterColor; 
@@ -186,7 +195,36 @@ public abstract class RenderObj {
 		
 		return ret;
 	}
+
+  /**
+  * An alternative method of animation, where it cycles across a smaller portion
+  * Of a given row
+  * @param row The row of the sprite sheet
+  * @param col The current sprite within the sheet
+  * @param stop The "end" of the animation set
+  */
+	public int cycleAnimation(int row, int col, int stop) {
+		int ret = 1;
+		
+			if(currSpriteRow != row) {
+				currSpriteRow = row;
+				currSpriteCol = col;
+				ret = 2;
+			}
+			else {
+				currSpriteCol++;
+				//If currSpriteCol = spriteSheetCols, then the end of a row has been reached
+				if(currSpriteCol == stop) {
+					currSpriteCol = 0;
+					ret = 3;
+				}
+			}
+			setCurrSprite(currSpriteRow, currSpriteCol);
+		
+		return ret;
+	}
 	
+ 
 	/**
 	 * An alternative method of animation, where it cycles the animation across a single row.
 	 * Returns 1 if the animation proceeds as normal, 2 if the animation swapped rows first,
@@ -212,6 +250,7 @@ public abstract class RenderObj {
 	 * @param col
 	 */
 	public void setCurrSprite(int row, int col) {
+		//System.out.println("Presenting sprite at " + row + ", " + col); 
 		if(row > spriteSheetRows || row < 0 || col > spriteSheetCols || col < 0) {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
@@ -271,6 +310,12 @@ public abstract class RenderObj {
 	}
  
 	/**
+	 * Returns whether or not one object, local, is colliding with another, other. 
+	 * @param local The first object possibly colliding
+	 * @param other The second object possibly colliding
+	 * @return True if the two objects are colliding, false otherwise
+	 */
+ 
 	 * Tests to see if a point, (x,y), is inside of the shape formed by local
 	 * @param local The shape whose bounds shall be defined
 	 * @param x The x coordinate to be tested
@@ -292,7 +337,7 @@ public abstract class RenderObj {
 	 * @param other The second object possibly colliding
 	 * @return True if the two objects are colliding, false otherwise
 	 */
-	
+ 
 	public static boolean isColliding(RenderObj local, RenderObj other) {
 		
 		double centerDistances = Math.pow(local.getXPosWorld() - other.getXPosWorld(), 2);
@@ -310,6 +355,8 @@ public abstract class RenderObj {
 		if(centerDistances > localExtent + otherExtent)
 			return false;
 		
+
+
 		CollideEntry localHolder = getObjBounds(local);
 		CollideEntry otherHolder = getObjBounds(other);
 		
@@ -350,10 +397,12 @@ public abstract class RenderObj {
 					m = 0;
 				else 
 					m = k+1;		
+
 				if(Line2D.linesIntersect(localHolder.getCoords()[i][0], localHolder.getCoords()[i][1], 
 										 localHolder.getCoords()[j][0], localHolder.getCoords()[j][1], 
 										 otherHolder.getCoords()[k][0], otherHolder.getCoords()[k][1], 
 										 otherHolder.getCoords()[m][0], otherHolder.getCoords()[m][1])) { 
+
 					return true;
 					
 				}
@@ -462,6 +511,8 @@ public abstract class RenderObj {
 		rotator.rotate(radsAngle, w/2, h/2);
 		g2D.setTransform(rotator);
 		g2D.drawImage(modelSprite, 0, 0, null);
+
+    
 		if(doFilter == true) {
 			filter = new BufferedImage(getSpriteWidth(), getSpriteHeight(), BufferedImage.TYPE_INT_ARGB); 
 			Graphics2D model2D = filter.createGraphics();
@@ -471,7 +522,7 @@ public abstract class RenderObj {
 			g2D.drawImage(filter, 0,  0, null);
 		} 
 	
-		
+
 		g2D.dispose();
 
 		currSpriteWidth = (int) newWidth;
@@ -518,6 +569,7 @@ public abstract class RenderObj {
 	}
 
  
+
 	/**
 	 * Adds a filter of color col at opacity op to the sprite
 	 * @param col The color of the sprite
@@ -783,18 +835,19 @@ public abstract class RenderObj {
 		objName = newName;
 	}
 	
+
 	/**
 	 * Returns the 'name' of the object- usually the name of its class, really.
 	 * @return The name of the object.
 	 */
+
 	public String getObjName() {
 		return objName; 
 	}
-	
-	 
-	
+
 	
 	
+
 	/**
 	 * Returns a string representation of the object's name and world coordinate position
 	 */
