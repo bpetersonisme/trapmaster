@@ -25,6 +25,7 @@ public class RenderEngine_tm extends JPanel{
 	private double viewportYPos;
 	private int viewportWidth;
 	private int viewportHeight;
+	private int boundary;
 	private BufferedImage viewport;
 	private Graphics2D gameGraphics;
 	private Timer gameTimer; 
@@ -38,12 +39,14 @@ public class RenderEngine_tm extends JPanel{
 	 * @param x The width of the viewport
 	 * @param y The height of the viewport
 	 * @param frameDelay the time between frames 
+	 * @param bound The furthest distance the viewport is allowed to go from the origin
 	 */
-	public RenderEngine_tm(int x, int y, int frameDelay) {
+	public RenderEngine_tm(int x, int y, int frameDelay, int bound) {
 		viewportXPos = 0.0 - x/2;
 		viewportYPos = 0.0 - y/2;
 		viewportWidth = x;
 		viewportHeight = y;
+		boundary = bound;
 		paused = false;
 		setSize(new Dimension(x, y));
 		setPreferredSize(new Dimension(x, y));
@@ -54,6 +57,23 @@ public class RenderEngine_tm extends JPanel{
 		renderables = new ArrayList<RenderObj>();
 		refreshColor = new Color(180, 105, 100);
 	}
+	
+	
+	/**
+	 * Gets the boundary- The greatest possible distance from the origin
+	 * @return The viewport's maximum distance from the boundary
+	 */
+	public int getBoundary() {
+		return boundary;
+	}
+	
+	/**
+	 * Sets the boundary to newBound
+	 * @param newBound The new boundary
+	 */
+	 public void setBoundary(int newBound) {
+		 boundary = newBound;
+	 }
 	
 	/**
 	 * Sets the color for the refresh- what the background of the scene will be.
@@ -97,7 +117,8 @@ public class RenderEngine_tm extends JPanel{
 	}
 	
 	public boolean removeRenderObj(RenderObj target) {
-		renderables.remove(target);
+		if(renderables.contains(target)) 
+			renderables.remove(target);
 		if(renderables.contains(target)) {
 			return false;
 		}
@@ -149,10 +170,20 @@ public class RenderEngine_tm extends JPanel{
 	}
 	
 	public void setViewportX(double newX) {
-		viewportXPos = newX;
+		if(-boundary > newX)
+			viewportXPos = -boundary;
+		else if(boundary < newX + viewportWidth)
+			viewportXPos = boundary - viewportWidth;
+		else
+			viewportXPos = newX;
 	}
 	public void setViewportY(double newY) {
-		viewportYPos = newY;
+		if(-boundary > newY) 
+			viewportYPos = -boundary;
+		else if(boundary < newY + viewportHeight)
+			viewportYPos = boundary-viewportWidth;
+		else
+			viewportYPos = newY;
 	}
 	
 	public double getRelX(double absX) {

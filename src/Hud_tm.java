@@ -119,8 +119,8 @@ public class HUD_tm extends JPanel {
 				/**
 				 * This will be an actual thing some day, don't worry about it
 				 */
-				ActionBox actionBox = ActionBox.makeActionBox(0, 0, 25);
-				spawnObj(actionBox, trapACost);
+				Trap_Ballista nuBallista = new Trap_Ballista(gameRef.getGameBoundary() - 100, gameRef.getGameBoundary() - 100, 0);
+				spawnObj(nuBallista, nuBallista.getTr_cost());
 			}
 		});
 		
@@ -230,7 +230,7 @@ public class HUD_tm extends JPanel {
 	 * @param cost The amount of gold to be taken 
 	 */
 	public void spawnObj(RenderObj obj, int cost) {
-		gameRef.makePurchase(obj, -1, cost);
+		gameRef.makePurchase(obj, Main_tm.TRAP, cost);
 	}
 	
 	/**
