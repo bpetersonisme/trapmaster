@@ -1,16 +1,35 @@
 import java.awt.image.BufferedImage;
-import java.util.Timer;
+import javax.swing.Timer;
 
+/**
+ * @author Joseph Grieser
+ */
 public final class SpawnTile extends Tile_tm{
 
     private Timer timer;
 
-    public SpawnTile(Tile_tm[] neighbors, BufferedImage texture, int xPos, int yPos, int treasureDist, int entranceDist) {
-        super(neighbors, texture, xPos, yPos, treasureDist, entranceDist);
-        timer = new Timer();
+    public SpawnTile(BufferedImage texture, double xPos, double yPos) {
+        super(texture, xPos, yPos);
+        timer = new Timer(0,null);
     }
 
-    public void spawn(){
+    /**
+     * spawns monsters into this; may need to be changed to better version
+     * @param num number of monsters to be spawned
+     */
+    public void spawn(int num){
+        for(int i = 0; i < num; i++){
+            addMonster(new Monster_tm(){});
+            timer.start();
+        }
+    }
 
+    /**
+     * sets the delay time on timer
+     * @param ms number of milliseconds of new delay time
+     */
+    public void setDelay(int ms){
+        timer.setInitialDelay(ms);
+        timer.setDelay(ms);
     }
 }
