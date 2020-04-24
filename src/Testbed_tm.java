@@ -18,6 +18,7 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 import javax.swing.JLabel;
 
@@ -30,7 +31,8 @@ import java.awt.GridLayout;
 public class Testbed_tm {
 
 	private JFrame game_frame;
-	private testRender tester, tester2;
+	private testRender tester, tester2, tester4, tester5;
+	private invisibleRender tester3;
 	private Thread testThread;
 	private Thread monsterThread;
 	private Thread trapThread;
@@ -47,7 +49,10 @@ public class Testbed_tm {
 	private JLabel viewportPos;
 	private 	RenderEngine_tm gameFramer;
 	private JLabel lblViewportXPos;
+	private JLabel lblCorners;
 	private Insets bounds;
+	private JLabel lblViewportPos; 
+	private ArrayList<RenderObj> testers;
 	/**
 	 * Launch the application.
 	 */
@@ -84,15 +89,20 @@ public class Testbed_tm {
 		tester = null;
 		tester2 = null;
 		try { 
-			tester = new testRender("/test.png", 1, 1, 200, -200, 0);
-			tester2 = new testRender("/Enterprise.jpg", 1, 1, 0, 0, 1); 
+			tester = new testRender("/test.png", 1, 1, 200, -200, 3);
+			tester2 = new testRender("/Enterprise.jpg", 4, 4, -1, 1, 2); 
+
+			tester4 = new testRender("/Enterprise.jpg", 4, 4, -55, 29, 2); 
+
+			tester5 = new testRender("/Enterprise.jpg", 4, 4, 420, 158, 1); 
+			tester3 = new invisibleRender(-200, -200, 200, 200);
 			}
 		catch(IOException e) {
 			e.printStackTrace();
 		}
 		game_frame.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
 		
-		gameFramer = new RenderEngine_tm(gamex, gamey, 16);
+		gameFramer = new RenderEngine_tm(gamex, gamey, 16, 2000);
 		
 		
 		formatter = new DecimalFormat("#.##");
@@ -128,14 +138,34 @@ public class Testbed_tm {
 		gameFramer.add(mousePos_1);
 		
 		viewportPos = new JLabel("Viewport x pos: Viewport y pos: ");
-		viewportPos.setBounds(29, 243, 272, 14);
+		viewportPos.setBounds(967, 197, 631, 14);
 		gameFramer.add(viewportPos);
 		
-		JLabel lblViewportPos = new JLabel("Viewport Position: (" + gameFramer.getViewportX() + ", " + gameFramer.getViewportY() + ")");
+		lblViewportPos = new JLabel("Viewport Position: (" + gameFramer.getViewportX() + ", " + gameFramer.getViewportY() + ")");
 		lblViewportPos.setBounds(29, 51, 285, 22);
 		gameFramer.add(lblViewportPos);
+		
+		lblCorners = new JLabel("corners");
+		lblCorners.setBounds(29, 311, 716, 14);
+		gameFramer.add(lblCorners);
+		
 		gameFramer.addRenderObj(tester);
+
 		gameFramer.addRenderObj(tester2);
+
+		gameFramer.addRenderObj(tester3);
+		
+		gameFramer.addRenderObj(tester4);
+		gameFramer.addRenderObj(tester5);
+ 
+		
+		testers = new ArrayList<RenderObj>();
+		
+		testers.add(tester);
+		testers.add(tester2);
+		testers.add(tester3); 
+		testers.add(tester4);
+		testers.add(tester5);
 		
 		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
@@ -145,27 +175,60 @@ public class Testbed_tm {
 				
 				mousePos_1.setText("Mouse viewport x is: " + (e.getX()) + 
 						"Mouse viewport Y is: " + e.getY());
+				
+				if(e.getX() < 10) {
+					gameFramer.setViewportX((double)(gameFramer.getViewportX() - 1));
+				}
 			}
 			
 		});
 		
 
+		testers.get(0).addFilter(Color.GREEN, 20);
 
 		 
 		
 		Thread testThread = new Thread() {
 			public void run() {
-				double i = 0; 
+				int j = 0;
+				
+				double i = -50; 
+				double rightX, leftX, bottomY, topY, cos, sin;
+				int time = (int)(System.nanoTime()/1000000);
+				//tester2.rotateCurrSprite(50);
+				
 				while(true) { 
 					
-					//	tester.move(0, 0, gamex, gamey);
-						tester2.move(-gamex/2 + tester2.getRotatedSpriteWidth()/2, -gamey/2 + tester2.getRotatedSpriteHeight()/2,
-								gamex/2 - tester2.getRotatedSpriteWidth()/2, gamey/2 - tester2.getRotatedSpriteWidth()/2);
+						//tester.move(0, 0, gamex, gamey);
+						//tester2.move(-gamex/2 + tester2.getRotatedSpriteWidth()/2, -gamey/2 + tester2.getRotatedSpriteHeight()/2,
+//								gamex/2 - tester2.getRotatedSpriteWidth()/2, gamey/2 - tester2.getRotatedSpriteWidth()/2);
 
-						tester.rotateCurrSprite(i);
-						//tester2.rotateCurrSprite(i);
+						
+						testers.get(0).rotateCurrSprite(i);
+						testers.get(1).rotateCurrSprite(i*-1);
+						testers.get(2).rotateCurrSprite(i);
+						testers.get(0).addFilter(Color.PINK, 25);
+							
+						//testers.get(0).addFilter(new Color(j%255, (j > 255 ? j%255 : 0), (j > 511 ? j%255 : 0)), 25);
+						time = tester2.animate(time);
+		
+						j++;
+						
 						i -= 1;
-						entPosLabel.setText("Ent pos: (" + formatter.format(tester2.getXPosWorld()) + ", " + formatter.format(tester2.getYPosWorld()) + ")"); 
+						i %= 360;
+						if(i < 0) {
+							i = 360 + i;
+						}
+						
+						rightX = (tester2.getXPosWorld() + tester2.getSpriteWidth()/2); 
+						leftX = (tester2.getXPosWorld() - tester2.getSpriteWidth()/2);
+						bottomY = (tester2.getYPosWorld() + tester2.getSpriteHeight()/2);
+						topY = (tester2.getYPosWorld() - tester2.getSpriteHeight()/2);
+						cos = Math.cos(Math.toRadians(i));
+						sin = Math.sin(Math.toRadians(i));
+						
+						lblViewportPos.setText("Viewport Position: (" + gameFramer.getViewportX() + ", " + gameFramer.getViewportY() + ")");
+						entPosLabel.setText("Test pos: (" + formatter.format(tester.getXPosWorld()) + ", " + formatter.format(tester.getYPosWorld()) + ")"); 
 						centerLabel.setText("Ent renderPos: (" + formatter.format(tester2.getXPosRender(gameFramer.getViewportX())) + ", " +
 								formatter.format(tester2.getYPosRender(gameFramer.getViewportY())) + ")" +
 								"- Ought to be (" + (tester2.getXPosWorld() - gameFramer.getViewportX()) + ", " + (tester2.getYPosWorld() - gameFramer.getViewportY()) + ")");
@@ -173,7 +236,12 @@ public class Testbed_tm {
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
 						entVelLabel.setText("Ent velocity: " + tester2.getVelocity() + "(" + formatter.format(tester2.getXVel()) + ", " + 
 						formatter.format(tester2.getYVel()) + ")"); 
-						viewportPos.setText("Viewport X Pos: " + gameFramer.getViewportX() + " Viewport Y Pos: " + gameFramer.getViewportY());
+						viewportPos.setText("Testers colliding? Tester-tester2: " + tester2.isColliding(tester) + "Tester-tester3: " + tester2.isColliding(tester3));
+						lblCorners.setText(
+								"Upper Left: (" + (leftX*cos - topY*sin) + ", " + (leftX*sin + topY*cos) + ") " +
+								"Upper Right: (" + (rightX*cos - topY*sin) + ", " + (rightX*sin + topY*cos) + ") " +
+								"Lower Left: (" + (tester2.getXPosWorld() - tester2.getRotatedSpriteWidth()/2) + ", " + (tester2.getYPosWorld() + (tester2.getRotatedSpriteHeight()/2)) + ") " +
+								"Lower Right: (" + (tester2.getXPosWorld() + tester2.getRotatedSpriteWidth()/2) + ", " + (tester2.getYPosWorld() + (tester2.getRotatedSpriteHeight()/2)) + ")");
 						
 					try {
 						sleep(20);
@@ -191,19 +259,32 @@ public class Testbed_tm {
 	}
 	
 
+	private class invisibleRender extends RenderObj {
+		
+		public invisibleRender(double xWorldPos, double yWorldPos, int x, int y) {
+			setSpriteSheet((BufferedImage)null, 1, 1, x, y);	 
+			setXPosWorld(xWorldPos);
+			setYPosWorld(yWorldPos);
+			setZPos(0);
+		}
+		
+		
+	
+	}
 
 	//testRender is special- it niavely assumes it has been given a one image sprite sheet. 
-	private class testRender extends RenderObj {
+	public class testRender extends RenderObj {
 		private double xRate;
 		private double yRate;
+		private long frameDelay;
 		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y, int z) throws IOException {
 			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(fileName));
 		 
+			frameDelay = 250; //Number of ms
 			int newWidth = buf.getWidth(); 
 			int newHeight = buf.getHeight(); 
 			
-			System.out.println("Width is: " + buf.getWidth() + " Height is: " + buf.getHeight());
-			if(buf.getWidth() > 256 || buf.getHeight() > 256) {
+			/*if(buf.getWidth() > 256 || buf.getHeight() > 256) {
 				
  
 				int div; 
@@ -229,17 +310,19 @@ public class Testbed_tm {
 					
 			
 			} 
-			
-			setSpriteSheet(buf, 1, 1, newWidth, newHeight);
+			*/
+			setSpriteSheet(buf, sheetRows, sheetCols, (int)Math.floor(buf.getWidth()/sheetCols), (int)Math.floor(buf.getHeight()/sheetRows));
 			
 			setXPosWorld(x);
 			setYPosWorld(y);
 			setZPos(z);
 			yRate = Math.random() * 5.0 - 5.0;
 			
-			xRate = Math.random() * 5.0 - 5.0;
+			xRate = Math.random() * 5.0;
 			setAngle(0);
 		}
+		
+		
 		public String getVelocity() {
 			String heading = "No motion"; 
 			double velocity = Math.sqrt(Math.pow(xRate, 2) + Math.pow(yRate, 2));
@@ -265,12 +348,30 @@ public class Testbed_tm {
 			return heading;
 		}
 		
+		
+		
 		public double getXVel() {
 			return xRate;
 		}
 		public double getYVel() {
 			return yRate;
 		}
+		
+		
+		
+		public int animate(int timeSinceFrame) {
+			int newTime = (int)(System.nanoTime()/1000000);
+				if(newTime - timeSinceFrame > frameDelay) 
+					cycleAnimation();
+				else 
+					newTime = timeSinceFrame;
+			return newTime;
+		}
+		
+		
+		
+		
+		
 		
 		public void move(int x1, int y1, int x2, int y2) {
 			

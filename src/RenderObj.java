@@ -1,3 +1,4 @@
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -7,8 +8,14 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+
+import javax.imageio.ImageIO;
 
 
 /**
@@ -39,15 +46,26 @@ public abstract class RenderObj {
 	private int modelSpriteHeight; //The (y) height of each sprite on the sprite sheet
 	private int modelSpriteWidth; //The (x) width of each sprite on the sprite sheet
 	
+
 	private double xPosWorld; 
 	private double yPosWorld;
 	
 	private double xPos = 0; //The horizontal (x) position of the object 
 	private double yPos = 0; //The vertical (y) position of the object 
 	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
+	private double xPosWorld; //The horizontal coordinate of the renderObj center
+	private double yPosWorld; //The vertical coordinate of the renderObj center
+
 	
+	private double xPos = 0; //The horizontal (x) position of the object 
+	private double yPos = 0; //The vertical (y) position of the object 
+	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
 
+	private boolean noFilterYet = true;
+	private boolean doFilter;
+	private Color filterColor; 
+	private int filterOpacity = 100;
 	
 	 
 	
@@ -72,7 +90,35 @@ public abstract class RenderObj {
 	 * @param spriteHeight The height of sprites on the new sprite sheet
 	 */
 	protected void setSpriteSheet(BufferedImage newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) {
+		
 		spriteSheet = newSS;
+		spriteSheetRows = numRows;
+		spriteSheetCols = numCols;
+		modelSpriteWidth = spriteWidth;
+		modelSpriteHeight = spriteHeight;
+		currSpriteWidth = spriteWidth;
+		currSpriteHeight = spriteHeight;	
+		currSpriteRow = 0;
+		currSpriteCol = 0;
+		setCurrSprite(0, 0);
+		if(angle > 0)
+			rotateCurrSprite();
+	}
+	/**
+	 * Sets the sprite sheet to a bufferedImage defined by newSS, which has numRows rows- 
+	 */
+	/**
+	 * Changes the sprite sheet to newSS, which has numRows rows- each row being spriteHeight tall,
+	 * and numCols columns- each column being spriteWidth wide
+	 * @param newSS The new sprite sheet
+	 * @param numRows The number of rows in the new sprite sheet
+	 * @param numCols The number of columns in the new sprite sheet
+	 * @param spriteWidth The width of sprites on the new sprite sheet
+	 * @param spriteHeight The height of sprites on the new sprite sheet
+	 */
+	protected void setSpriteSheet(String newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) throws IOException {
+		
+		spriteSheet = ImageIO.read(this.getClass().getResourceAsStream(newSS));
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
@@ -94,6 +140,7 @@ public abstract class RenderObj {
 	protected void setSpriteSheet(BufferedImage newSS) {
 		setSpriteSheet(newSS, 1, 1, newSS.getWidth(), newSS.getHeight());
 	}
+	
 	
 	
 	/**
@@ -148,7 +195,14 @@ public abstract class RenderObj {
 		
 		return ret;
 	}
-	
+
+  /**
+  * An alternative method of animation, where it cycles across a smaller portion
+  * Of a given row
+  * @param row The row of the sprite sheet
+  * @param col The current sprite within the sheet
+  * @param stop The "end" of the animation set
+  */
 	public int cycleAnimation(int row, int col, int stop) {
 		int ret = 1;
 		
@@ -170,6 +224,7 @@ public abstract class RenderObj {
 		return ret;
 	}
 	
+ 
 	/**
 	 * An alternative method of animation, where it cycles the animation across a single row.
 	 * Returns 1 if the animation proceeds as normal, 2 if the animation swapped rows first,
@@ -203,6 +258,56 @@ public abstract class RenderObj {
 			rotateCurrSprite();
 		}
 	}
+	
+	/**
+	 * Returns a boundary polygon for local
+	 * @param local The RenderObj which this method translates into a polygon
+	 */
+	private static CollideEntry getObjBounds(RenderObj local) {
+		CollideEntry result = null;
+		if(local != null) {
+			double localRightX = (local.getXPosWorld() + local.getSpriteWidth()/2); 
+			double localLeftX = (local.getXPosWorld() - local.getSpriteWidth()/2);
+			double localBottomY = (local.getYPosWorld() + local.getSpriteHeight()/2);
+			double localTopY = (local.getYPosWorld() - local.getSpriteHeight()/2);
+			
+			double localAngle = Math.toRadians(local.getAngle());
+			double localSin = Math.sin(localAngle);
+			double localCos = Math.cos(localAngle);
+			
+			double[][] localCoords = new double[4][2];
+			
+			//TopLeft
+			localCoords[0][0] = localLeftX*localCos - localTopY*localSin;
+			localCoords[0][1] = localLeftX*localSin + localTopY*localCos;
+			//TopRight
+			localCoords[1][0] = localRightX*localCos - localTopY*localSin;
+			localCoords[1][1] = localRightX*localSin + localTopY*localCos;
+			//BottomRight
+			localCoords[2][0] = localRightX*localCos - localBottomY*localSin;
+			localCoords[2][1] = localRightX*localSin + localBottomY*localCos;
+			//BottomLeft
+			localCoords[3][0] = localLeftX*localCos - localBottomY*localSin;
+			localCoords[3][1] = localLeftX*localSin + localBottomY*localCos;
+			
+			int xPolyArray[] = {(int)localCoords[0][0], (int)localCoords[1][0], (int) localCoords[2][0], (int)localCoords[3][0]};
+			int yPolyArray[] = {(int)localCoords[0][1], (int)localCoords[1][1], (int) localCoords[2][1], (int) localCoords[3][1]};
+			
+			xPolyArray[0] = (int)localCoords[0][0];
+			xPolyArray[1] = (int)localCoords[1][0];
+			xPolyArray[2] = (int)localCoords[2][0];
+			xPolyArray[3] = (int)localCoords[3][0];
+			
+			yPolyArray[0] = (int)localCoords[0][1];
+			yPolyArray[1] = (int)localCoords[1][1];
+			yPolyArray[2] = (int)localCoords[2][1];
+			yPolyArray[3] = (int)localCoords[3][1];
+		
+			
+			result = new CollideEntry(new Polygon(xPolyArray, yPolyArray, 4), localCoords);
+		}
+		return result;
+	}
  
 	/**
 	 * Returns whether or not one object, local, is colliding with another, other. 
@@ -210,7 +315,29 @@ public abstract class RenderObj {
 	 * @param other The second object possibly colliding
 	 * @return True if the two objects are colliding, false otherwise
 	 */
+ 
+	 * Tests to see if a point, (x,y), is inside of the shape formed by local
+	 * @param local The shape whose bounds shall be defined
+	 * @param x The x coordinate to be tested
+	 * @param y The y coordinate to be tested
+	 * @return
+	 */
+	public boolean contains(double x, double y) { 
+		CollideEntry objBounds = getObjBounds(this);
+		if(this != null) {
+			System.out.println("Does objBounds contain (" + x + ", " + y + ")? " + objBounds.getShape().contains(x, y));
+			return objBounds.getShape().contains(x, y);
+		}
+		return false;
+	}
 	
+	/**
+	 * Returns whether or not one object, local, is colliding with another, other. 
+	 * @param local The first object possibly colliding
+	 * @param other The second object possibly colliding
+	 * @return True if the two objects are colliding, false otherwise
+	 */
+ 
 	public static boolean isColliding(RenderObj local, RenderObj other) {
 		
 		double centerDistances = Math.pow(local.getXPosWorld() - other.getXPosWorld(), 2);
@@ -228,95 +355,36 @@ public abstract class RenderObj {
 		if(centerDistances > localExtent + otherExtent)
 			return false;
 		
-		double localRightX = (local.getXPosWorld() + local.getSpriteWidth()/2); 
-		double localLeftX = (local.getXPosWorld() - local.getSpriteWidth()/2);
-		double localBottomY = (local.getYPosWorld() + local.getSpriteHeight()/2);
-		double localTopY = (local.getYPosWorld() - local.getSpriteHeight()/2);
-		
-		double localAngle = Math.toRadians(local.getAngle());
-		double localSin = Math.sin(localAngle);
-		double localCos = Math.cos(localAngle);
-		
-		double[][] localCoords = new double[4][2];
-		
-		//TopLeft
-		localCoords[0][0] = localLeftX*localCos - localTopY*localSin;
-		localCoords[0][1] = localLeftX*localSin + localTopY*localCos;
-		//TopRight
-		localCoords[1][0] = localRightX*localCos - localTopY*localSin;
-		localCoords[1][1] = localRightX*localSin + localTopY*localCos;
-		//BottomRight
-		localCoords[2][0] = localRightX*localCos - localBottomY*localSin;
-		localCoords[2][1] = localRightX*localSin + localBottomY*localCos;
-		//BottomLeft
-		localCoords[3][0] = localLeftX*localCos - localBottomY*localSin;
-		localCoords[3][1] = localLeftX*localSin + localBottomY*localCos;
-		
-		double otherRightX = (other.getXPosWorld() + other.getSpriteWidth()/2); 
-		double otherLeftX = (other.getXPosWorld() - other.getSpriteWidth()/2);
-		double otherBottomY = (other.getYPosWorld() + other.getSpriteHeight()/2);
-		double otherTopY = (other.getYPosWorld() - other.getSpriteHeight()/2);
-		double otherAngle = Math.toRadians(other.getAngle());
-		double otherSin = Math.sin(otherAngle);
-		double otherCos = Math.cos(otherAngle);
-		
-		
-		double otherCoords[][] = new double[4][2];
-		//TopLeft
-		otherCoords[0][0] = otherLeftX*otherCos - otherTopY*otherSin;
-		otherCoords[0][1] = otherLeftX*otherSin + otherTopY*otherCos;
-		//TopRight
-		otherCoords[1][0] = otherRightX*otherCos - otherTopY*otherSin;
-		otherCoords[1][1] = otherRightX*otherSin + otherTopY*otherCos;
-		
-		//BottomRight
-		otherCoords[2][0] = otherRightX*otherCos - otherBottomY*otherSin;
-		otherCoords[2][1] = otherRightX*otherSin + otherBottomY*otherCos;
-		//BottomLeft
-		otherCoords[3][0] = otherLeftX*otherCos - otherBottomY*otherSin;
-		otherCoords[3][1] = otherLeftX*otherSin + otherBottomY*otherCos;
 
-		int xPolyArray[] = {(int)otherCoords[0][0], (int)otherCoords[1][0], (int) otherCoords[2][0], (int)otherCoords[3][0]};
-		int yPolyArray[] = {(int)otherCoords[0][1], (int)otherCoords[1][1], (int) otherCoords[2][1], (int) otherCoords[3][1]};
-		
-		Polygon containmentTest = new Polygon(xPolyArray, yPolyArray, 4);
 
-		if(containmentTest.contains(local.getXPosWorld(), local.getYPosWorld()))
-			return true;
-		if(containmentTest.contains(localCoords[0][0], localCoords[0][1])) 
-			return true;
-		if(containmentTest.contains(localCoords[1][0], localCoords[1][1]))
-			return true;
-		if(containmentTest.contains(localCoords[2][0], localCoords[2][1]))
-			return true;
-		if(containmentTest.contains(localCoords[3][0], localCoords[3][1]))
-			return true;
+		CollideEntry localHolder = getObjBounds(local);
+		CollideEntry otherHolder = getObjBounds(other);
 		
-		xPolyArray[0] = (int)localCoords[0][0];
-		xPolyArray[1] = (int)localCoords[1][0];
-		xPolyArray[2] = (int)localCoords[2][0];
-		xPolyArray[3] = (int)localCoords[3][0];
+ 
 		
-		yPolyArray[0] = (int)localCoords[0][1];
-		yPolyArray[1] = (int)localCoords[1][1];
-		yPolyArray[2] = (int)localCoords[2][1];
-		yPolyArray[3] = (int)localCoords[3][1];
-		
-		containmentTest = new Polygon(xPolyArray, yPolyArray, 4);
-		if(containmentTest.contains(other.getXPosWorld(), other.getYPosWorld()))
+		if(otherHolder.getShape().contains(local.getXPosWorld(), local.getYPosWorld()))
 			return true;
-		if(containmentTest.contains(otherCoords[0][0], otherCoords[0][1])) 
+		if(otherHolder.getShape().contains(localHolder.getCoords()[0][0], localHolder.getCoords()[0][1])) 
 			return true;
-		if(containmentTest.contains(otherCoords[1][0], otherCoords[1][1]))
+		if(otherHolder.getShape().contains(localHolder.getCoords()[1][0], localHolder.getCoords()[1][1]))
 			return true;
-		if(containmentTest.contains(otherCoords[2][0], otherCoords[2][1]))
+		if(otherHolder.getShape().contains(localHolder.getCoords()[2][0], localHolder.getCoords()[2][1]))
 			return true;
-		if(containmentTest.contains(otherCoords[3][0], otherCoords[3][1]))
+		if(otherHolder.getShape().contains(localHolder.getCoords()[3][0], localHolder.getCoords()[3][1]))
 			return true;
-		
-		xPolyArray = null;
-		yPolyArray = null;
-		containmentTest = null;
+ 
+		if(localHolder.getShape().contains(other.getXPosWorld(), other.getYPosWorld()))
+			return true;
+		if(localHolder.getShape().contains(otherHolder.getCoords()[0][0], otherHolder.getCoords()[0][1])) 
+			return true;
+		if(localHolder.getShape().contains(otherHolder.getCoords()[1][0], otherHolder.getCoords()[1][1]))
+			return true;
+		if(localHolder.getShape().contains(otherHolder.getCoords()[2][0], otherHolder.getCoords()[2][1]))
+			return true;
+		if(localHolder.getShape().contains(otherHolder.getCoords()[3][0], otherHolder.getCoords()[3][1]))
+			return true;
+
+
 		
 		int i, j, k, m;
 		for(i = 0; i < 4; i++) {
@@ -329,10 +397,12 @@ public abstract class RenderObj {
 					m = 0;
 				else 
 					m = k+1;		
-				if(Line2D.linesIntersect(localCoords[i][0], localCoords[i][1], 
-										 localCoords[j][0], localCoords[j][1], 
-										 otherCoords[k][0], otherCoords[k][1], 
-										 otherCoords[m][0], otherCoords[m][1])) { 
+
+				if(Line2D.linesIntersect(localHolder.getCoords()[i][0], localHolder.getCoords()[i][1], 
+										 localHolder.getCoords()[j][0], localHolder.getCoords()[j][1], 
+										 otherHolder.getCoords()[k][0], otherHolder.getCoords()[k][1], 
+										 otherHolder.getCoords()[m][0], otherHolder.getCoords()[m][1])) { 
+
 					return true;
 					
 				}
@@ -416,11 +486,13 @@ public abstract class RenderObj {
 	 */
 	protected void rotateCurrSprite(double degree) {
 		BufferedImage modelSprite = getModelSprite();
+		BufferedImage filter = null;
 		degree = degree % 360;
 		if(degree < 0) 
 			degree = 360 + degree;
 		angle = degree;
 	
+		
 		
 		double radsAngle = Math.toRadians(degree);
 		double sin = Math.abs(Math.sin(radsAngle));
@@ -434,10 +506,23 @@ public abstract class RenderObj {
 		BufferedImage rotatedSprite = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB); 
 		Graphics2D g2D = rotatedSprite.createGraphics(); 
 		AffineTransform rotator = new AffineTransform();
+	
 		rotator.translate((newWidth - w)/2, (newHeight-h)/2);
 		rotator.rotate(radsAngle, w/2, h/2);
 		g2D.setTransform(rotator);
 		g2D.drawImage(modelSprite, 0, 0, null);
+
+    
+		if(doFilter == true) {
+			filter = new BufferedImage(getSpriteWidth(), getSpriteHeight(), BufferedImage.TYPE_INT_ARGB); 
+			Graphics2D model2D = filter.createGraphics();
+			model2D.setColor(filterColor);
+			model2D.fillRect(0,  0, getSpriteWidth(), getSpriteHeight());
+			model2D.dispose();
+			g2D.drawImage(filter, 0,  0, null);
+		} 
+	
+
 		g2D.dispose();
 
 		currSpriteWidth = (int) newWidth;
@@ -448,6 +533,9 @@ public abstract class RenderObj {
 		 
 	}
 	
+	/**
+	 * Rotates the sprite by however many degrees its angle is set to. Sort of a "reset" function.
+	 */
 	protected void rotateCurrSprite() {
 		rotateCurrSprite(angle);
 	}
@@ -470,16 +558,50 @@ public abstract class RenderObj {
 	
 	/**
 	 * Use this if you are working without a sprite sheet. As the name implies, it generates a new sprite as a red rectangle 
+	 * @return A new sprite with a rectangle about its edge
 	 */
 	private BufferedImage generateModelSprite() {
 		BufferedImage newSprite = new BufferedImage(modelSpriteWidth, modelSpriteHeight, BufferedImage.TYPE_INT_ARGB);
 	 	Graphics2D g2D = newSprite.createGraphics(); 
 		g2D.setColor(Color.RED);
-		g2D.drawRect(0, 0, modelSpriteHeight - 1, modelSpriteWidth -1);
+		g2D.drawRect(0, 0, modelSpriteWidth - 1, modelSpriteHeight - 1);
 		return newSprite;
 	}
 
  
+
+	/**
+	 * Adds a filter of color col at opacity op to the sprite
+	 * @param col The color of the sprite
+	 * @param op The opacity of the sprite
+	 */
+	public void addFilter(Color col, int op) {
+		if(filterColor != col || filterOpacity != op) {
+			doFilter = true; 
+			filterColor = new Color(col.getRed(), col.getGreen(), col.getBlue(), op);
+			filterOpacity = op;
+			rotateCurrSprite();
+		}
+	}
+	
+	/**
+	 * Adds a filter of color col at the current filterOpacity to the sprite
+	 * @param col The color of the sprite filter
+	 */
+	public void addFilter(Color col) {
+		addFilter(col, filterOpacity);
+	}
+	
+	
+	/**
+	 * Removes the filter from the sprite 
+	 */
+	public void removeFilter() {
+		doFilter = false;
+		rotateCurrSprite();
+	}
+	
+	
 	
 	/**
 	 * Returns the ideal, unrotated height of the sprite
@@ -523,8 +645,7 @@ public abstract class RenderObj {
 	public double getXPosRender() {
 		double xPosRotated = xPos;
 		xPosRotated -= currSprite.getWidth();
-		xPosRotated /= 2;
-		System.out.println("But now, it's " + xPosRotated);
+		xPosRotated /= 2; 
 		return xPosRotated;
 	}
 	
@@ -536,7 +657,7 @@ public abstract class RenderObj {
 	 * @return The 'apparent' position of the sprite along the x axis 
 	 */
 	public double getXPosRender(double viewportXPos) {
-		double xPosRotated = Math.abs(viewportXPos - xPosWorld);
+		double xPosRotated = xPosWorld - viewportXPos;  
 		xPosRotated -= currSprite.getWidth()/2;
 		//xPosRotated /= 2; 
 		return xPosRotated;
@@ -566,10 +687,9 @@ public abstract class RenderObj {
 	 * @return The 'apparent' position of the sprite along the y axis 
 	 */
 	public double getYPosRender(double viewportYPos) {
-		double yPosRotated = Math.abs(viewportYPos - yPosWorld);
+		double yPosRotated = yPosWorld - viewportYPos;  
+
 		yPosRotated -= currSprite.getHeight()/2;
-		//yPosRotated /= 2;
-		//System.out.println("But now, it's " + yPosRotated);
 		return yPosRotated;
 	}
 	
@@ -646,7 +766,7 @@ public abstract class RenderObj {
 	
 	/**
 	 * Returns the depth position of sprite- determines draw order/hierarchy
-	 * @return
+	 * @return The sprite's depth position
 	 */
 	public int getZPos() {
 		return zPos;
@@ -659,6 +779,21 @@ public abstract class RenderObj {
 	public void setZPos(int newZPos) {
 		zPos = newZPos;
 	}
+	
+	/**
+	 * Equivalent to getZPos
+	 * @return The sprite's depth position
+	 */
+	 public int getZPosWorld() {
+		 return zPos;
+	 }
+	 /**
+	  * Equivalent to setZPos
+	  * @param The sprite's new depth position
+	  */
+	 public void setZPosWorld(int newZPos) {
+		 zPos = newZPos;
+	 }
 	
 	/**
 	 * Returns the angle of current sprite from the normal, clockwise. 
@@ -700,10 +835,19 @@ public abstract class RenderObj {
 		objName = newName;
 	}
 	
+
+	/**
+	 * Returns the 'name' of the object- usually the name of its class, really.
+	 * @return The name of the object.
+	 */
+
 	public String getObjName() {
 		return objName; 
 	}
+
 	
+	
+
 	/**
 	 * Returns a string representation of the object's name and world coordinate position
 	 */
@@ -713,4 +857,42 @@ public abstract class RenderObj {
 	}
 
 
+	/**
+	 * CollideEntry is a helper method to return both a polygon, as well as the points which compose it. 
+	 * This is a slightly hacky workaround to a problem I was having, don't worry about it. 
+	 * @author Bradley 'Bb' Peterson
+	 */
+	private static class CollideEntry {
+		private Polygon shape;
+		private double[][] coords;
+		
+		/**
+		 * Creates a new collideEntry of shape sh, xArray x, and yArray y
+		 * @param sh The shape of the polygon
+		 * @param x Shape's constituent x coordinates
+		 * @param y Shape's constituent y coordinates
+		 */
+		public CollideEntry(Polygon sh, double[][] coo) {
+			shape = sh;
+			coords = coo;
+		}
+
+		/**
+		 * Returns shape
+		 * @return The polygon collideEntry contains
+		 */
+		public Polygon getShape() {
+			return shape;
+		}
+		/**
+		 * Returns The (x,y) coordinate array for shape
+		 * @return The (x,y) coordinate array for shape. As many as it takes.
+		 */
+		public double[][] getCoords() {
+			return coords;
+		}
+		
+		
+		
+	}
 }
