@@ -60,6 +60,11 @@ public class Main_tm {
 	private ArrayList<Monster_tm> monsters;
 	private ArrayList<Tile_tm> tiles;
 	private ArrayList<ActionBox> gameBounds;
+	private int trapIt, monsterIt, tileIt, aBIt; 
+	private Trap_tm trap;
+	private Monster_tm monster;
+	private Tile_tm tile;
+	private ActionBox aB;
 	
 	//Game Interaction Variables
 	private int screenScrollXZone;
@@ -70,6 +75,7 @@ public class Main_tm {
 	private int mouseY, mouseYClick;
 	private int mode;
 	
+	
 	//Game modes
 	public static final int STD_MODE = 0;
 	public static final int REPAIR_MODE = 1;
@@ -77,13 +83,15 @@ public class Main_tm {
 	public static final int PAUSE_MODE = 3;
 	public static final int BUY_MODE = 4;
 	
+	//Debug Stuff
+	private ActionBox testBound;
+	private JLabel lblMouseLocation;
 	
 	//Object Types
 	public static final int MONSTER = 0;
 	public static final int TRAP = 1;
 	public static final int TILE = 2;
 	
-	private ActionBox testBound;
 	private JLabel lblMouse;
 	private JLabel lblPause;
 	
@@ -93,7 +101,7 @@ public class Main_tm {
 			public void run() {
 				try {
 					
-					Main_tm window = new Main_tm(false);
+					Main_tm window = new Main_tm(true);
 					window.game_frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -105,8 +113,8 @@ public class Main_tm {
 	/**
 	 * Create the application.
 	 */
-	public Main_tm(boolean debug) {
-		this.debug = debug;
+	public Main_tm(boolean deb) {
+		debug = deb;
 		initialize();
 	}
 
@@ -148,6 +156,11 @@ public class Main_tm {
 		lblMouse.setBounds(834, 5, 80, 14);
 		gameEngine.add(lblMouse); 
 		
+		if(debug) {
+			lblMouseLocation = new JLabel("Mouse x: Mouse Y:");
+			lblMouseLocation.setBounds(900, 10, 80, 14);
+			lblMouseLocation.setLocation(10, 10);
+		}
 		gameHud = new HUD_tm(this, SCREEN_WIDTH, SCREEN_HEIGHT);
 		game_frame.getContentPane().add(gameHud);
 		game_frame.pack();
@@ -197,9 +210,11 @@ public class Main_tm {
 		/*
 		 * Some code/method call to populate the ActionBox (psst: base it off the tile list)
 		 */
-		testBound = ActionBox.makeActionBox(0, 0, 10, 10);
-		gameBounds.add(testBound);
 		
+		if(debug) {
+			testBound = ActionBox.makeActionBox(0, 0, 10, 10);
+			gameBounds.add(testBound);
+		}
 		
 		int i, arraySize;
 		
@@ -303,7 +318,7 @@ public class Main_tm {
 					}
 				}
 				
-				//lblMouse.setText("Mouse X: " + mouseX + " ScrollX: " + screenScrollXZone + " MouseY: " + mouseY + " ScrollY: " + screenScrollYZone);
+				lblMouseLocation.setText("Mouse X: " + mouseX + " ScrollX: " + screenScrollXZone + " MouseY: " + mouseY + " ScrollY: " + screenScrollYZone);
 				if(mouseX < screenScrollXZone) {
 					moveCamRight = false;
 					moveCamLeft = true;
@@ -343,21 +358,27 @@ public class Main_tm {
 					Trap_tm currTrap;
 					int i; 
 					for(i = 0; i < traps.size(); i++) {
-						currTrap = traps.get(i);
-						System.out.println("currTrap is: " + currTrap);
-						System.out.println("GameEngine Coords: (" + gameEngine.getViewportX() + ", " + gameEngine.getViewportY() + ")");
+						currTrap = traps.get(i); 
 						if(currTrap.contains(mouseXClick + gameEngine.getViewportX(), mouseYClick + gameEngine.getViewportY())) {
-							
-							traps.remove(i);
-							System.out.println("This doing anything?: " + gameEngine.removeRenderObj(currTrap));
+							traps.remove(i); 
+							gameEngine.removeRenderObj(currTrap);
 							giveGold(currTrap.tr_sell());
 							i = traps.size();
 						}
 					} 
 				}
-				/**
-				 * TODO: Implement Repair Mode
-				 */
+				else if(mode == REPAIR_MODE) {
+					Trap_tm currTrap;
+					int i; 
+					for(i = 0; i < traps.size(); i++) {
+						currTrap = traps.get(i); 
+						if(currTrap.contains(mouseXClick + gameEngine.getViewportX(), mouseYClick + gameEngine.getViewportY())) {
+							
+							//currTrap.toggleRepair(); 
+							i = traps.size();
+						}
+					} 
+				}
 				
 				if(canPlace == true && mode == BUY_MODE) {
 					purchase.removeFilter();
@@ -460,17 +481,39 @@ public class Main_tm {
 		
 		
 		/******************************************************
+		 *                                                    *
+		 *                                                    *
 		 *              GAME EXECUTION THREADS                *
+		 *                                                    *              
+		 *                                                    *
 		 ******************************************************/
 		//The monster thread handles everything related to monsters- their movements, their health, possible additions or removals...
 		monsterThread = new Thread() {
 			public void run() {
 				while(true) {
 					if(doMonsterThread) {
+						for(monsterIt = 0; monsterIt < monsters.size(); monsterIt++) {
+							monster = monsters.get(monsterIt);
+							if(monster != null) {
+								/*
+								 * Monster Move action
+								 */
+								/*
+								 * Monster damage-taking actions
+								 */
+								/*
+								 * Monster attack actions
+								 */
+								/*
+								 * Monster treasure-taking actions
+								 */
+								
+							}
+						}
 						/*
 						 * Put monster actions here
-						 * 
 						 */ 
+						
 					}
 					try {
 						sleep(20);
@@ -485,13 +528,26 @@ public class Main_tm {
 		trapThread = new Thread() {
 			public void run() {
 				while(true) {
-					if(doTrapThread) {
-						/*
-						 * Put Trap actions here
-						 */
-						int trapIt;
+					if(doTrapThread) { 
 						for(trapIt = 0; trapIt < traps.size(); trapIt++) {
-							
+							trap = traps.get(trapIt);
+							if(trap != null) {
+								/*
+								 * Trap target actions
+								 */
+								/*
+								 * Trap Attack actions
+								 */
+								/*
+								 * Trap cooldown actions
+								 */
+								/*if(trap.isRepairable() && getGoldAmt() > 10) {
+									trap.setTr_currentHealth(trap.getTr_currentHealth() + 10);
+									takeGold(10);
+									if(trap.getTr_currentHelp() >= trap.getTr_maximumHealth()) 
+										trap.setRepairable(false);
+								}*/
+							}
 						}
 						 
 					}
