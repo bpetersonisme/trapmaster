@@ -45,7 +45,7 @@ public class Elf extends Monster_tm {
 		}
 	};
 
-	public void move(Ogre chest) {
+	/*public void move(Ogre chest) {
 		if (isColliding(this, chest) == false) {
 			up = false;
 			down = false;
@@ -67,7 +67,7 @@ public class Elf extends Monster_tm {
 		} else {
 			attack(right, left, up, down);
 		}
-	};
+	};*/
 
 	public int animate(int timeSinceFrame, Ogre og) {
 		int newTime = (int) (System.nanoTime() / 1000000);
