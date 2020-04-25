@@ -35,26 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import java.awt.Font;
-
-	private Insets bounds;
-	private JFrame game_frame; 
-	private Thread monsterThread;
-	private Thread trapThread;
-	private Thread mapThread;
-	private ArrayList<Trap_tm> traps;
-	private ArrayList<Monster_tm> monsters;
-	private ArrayList<Tile_tm> tiles;
-	private Map_tm gameMap;
-	private boolean doMonsterThread, doTrapThread, doMapThread;
-	/**
-	 * Launch the application.
-	 */
-	
-	private final int SCREEN_HEIGHT = 1080;
-	private final int SCREEN_WIDTH = 1920;
-	private RenderEngine_tm gameEngine;
-	private Hud_tm gameHud; 
-
+ 
 
 public class Main_tm {
  
@@ -63,7 +44,7 @@ public class Main_tm {
 	private Thread monsterThread, trapThread, mapThread;
 	private RenderEngine_tm gameEngine;
 	private Map_tm gameMap;
-	private HUD_tm gameHud; 
+	private Hud_tm gameHud; 
 	private boolean doMonsterThread, doTrapThread, doMapThread;
 	private final int SCREEN_HEIGHT = 1080;
 	private final int SCREEN_WIDTH = 1920;
@@ -191,7 +172,7 @@ public class Main_tm {
 			lblMouseLocation.setBounds(900, 10, 80, 14);
 			lblMouseLocation.setLocation(10, 10);
 		}
-		gameHud = new HUD_tm(this, SCREEN_WIDTH, SCREEN_HEIGHT);
+		gameHud = new Hud_tm(this, SCREEN_WIDTH, SCREEN_HEIGHT);
 		game_frame.getContentPane().add(gameHud);
 		game_frame.pack();
 		
@@ -266,7 +247,6 @@ public class Main_tm {
 		arraySize = monsters.size();
 		for(i = 0; i < arraySize; i++) {
 
-=======
 			curr = monsters.get(i);
 			gameEngine.addRenderObj(curr);
 		}
@@ -503,7 +483,6 @@ public class Main_tm {
 			}
 
 
-=======
 			public void keyTyped(KeyEvent arg0) { }
 			
 		});
@@ -657,7 +636,6 @@ public class Main_tm {
 		mapThread.start();
 	}
 
-=======
 	
 	/**********************************************************
 	 *                     Helper Methods                     *

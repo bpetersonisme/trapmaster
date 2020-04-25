@@ -26,7 +26,7 @@ import java.text.DecimalFormat;
 
 
 @SuppressWarnings("serial")
-public class HUD_tm extends JPanel {
+public class Hud_tm extends JPanel {
 
 	private final double ASPECT_RATIO = 168.0/720.0;
 	private int hudHeight;
@@ -41,7 +41,7 @@ public class HUD_tm extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public HUD_tm(Main_tm ref, int screenWidth, int screenHeight) {
+	public Hud_tm(Main_tm ref, int screenWidth, int screenHeight) {
 		
 		buttonsActive = true;
 		gameRef = ref;

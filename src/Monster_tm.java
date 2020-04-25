@@ -16,7 +16,7 @@ public class Monster_tm extends RenderObj {
 	 *            money pool.
 	 */
 
-	public void takeDmg(int dmgTaken, Player p) {
+	public void takeDmg(int dmgTaken) {
 		this.health -= dmgTaken;
 		if (this.health <= 0) {
 			 //death(p);

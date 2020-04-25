@@ -50,11 +50,7 @@ public abstract class RenderObj {
 	private double xPosWorld; 
 	private double yPosWorld;
 	
-	private double xPos = 0; //The horizontal (x) position of the object 
-	private double yPos = 0; //The vertical (y) position of the object 
-	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
-	private double xPosWorld; //The horizontal coordinate of the renderObj center
-	private double yPosWorld; //The vertical coordinate of the renderObj center
+	 
 
 	
 	private double xPos = 0; //The horizontal (x) position of the object 
@@ -309,19 +305,15 @@ public abstract class RenderObj {
 		return result;
 	}
  
-	/**
-	 * Returns whether or not one object, local, is colliding with another, other. 
-	 * @param local The first object possibly colliding
-	 * @param other The second object possibly colliding
-	 * @return True if the two objects are colliding, false otherwise
-	 */
+	 
  
-	 * Tests to see if a point, (x,y), is inside of the shape formed by local
+	 /** Tests to see if a point, (x,y), is inside of the shape formed by local
 	 * @param local The shape whose bounds shall be defined
 	 * @param x The x coordinate to be tested
 	 * @param y The y coordinate to be tested
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	public boolean contains(double x, double y) { 
 		CollideEntry objBounds = getObjBounds(this);
 		if(this != null) {
