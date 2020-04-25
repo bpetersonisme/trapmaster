@@ -741,4 +741,5 @@ public class Main_tm {
 		setGoldAmt(getGoldAmt() + amtGiven);
 	}
 
-}
+} 
+
