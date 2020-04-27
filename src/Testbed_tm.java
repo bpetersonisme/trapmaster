@@ -277,12 +277,19 @@ public class Testbed_tm {
 		private double xRate;
 		private double yRate;
 		private long frameDelay;
+		private final int ANGLEBAR = 0;
 		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y, int z) throws IOException {
 			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(fileName));
 		 
 			frameDelay = 250; //Number of ms
 			int newWidth = buf.getWidth(); 
 			int newHeight = buf.getHeight(); 
+			
+			setFocusable(true);
+			hasFocus(true);
+			instantiateStats();
+			addStat((int)getAngle(), 360, Color.RED, Color.GREEN); //This comes first, so I know it's 0. 
+			
 			
 			/*if(buf.getWidth() > 256 || buf.getHeight() > 256) {
 				
@@ -320,6 +327,10 @@ public class Testbed_tm {
 			
 			xRate = Math.random() * 5.0;
 			setAngle(0);
+		}
+		
+		public void setBars() {
+			setBarVal(ANGLEBAR, (int)getAngle());
 		}
 		
 		
