@@ -408,14 +408,17 @@ public class Main_tm {
 					switch(purchaseType) {
 						case MONSTER:
 							monsters.add((Monster_tm)purchase);
+							purchase = null;
 						break;
 						case TRAP:
 							traps.add((Trap_tm)purchase);
 							((Trap_tm)purchase).tr_place();
 							gameEngine.addRenderObj(((Trap_tm)purchase).getAOE());
+							purchase = null;
 						break;
 						case TILE:
 							tiles.add((Tile_tm)purchase);
+							purchase = null;
 						break;
 						default:
 					}
@@ -509,6 +512,10 @@ public class Main_tm {
                         }
                         purchase.setCurrSpriteCol(((Trap_tm)purchase).get_facing());
                     }
+                }
+                if(e.getKeyCode() == KeyEvent.VK_B) {
+                	Trap_Ballista nuBallista = new Trap_Ballista(getGameBoundary() - 100, getGameBoundary() - 100, 0);
+                	makePurchase(nuBallista, TRAP, nuBallista.getTr_cost());
                 }
 			}
 
@@ -737,6 +744,9 @@ public class Main_tm {
 	 */
 	public void makePurchase(RenderObj obj, int objType, int cost) {
 		setMode(BUY_MODE);
+		if(purchase != null) {
+			gameEngine.removeRenderObj(purchase);
+		}
 		purchase = obj;
 		purchase.addFilter(Color.GREEN, 45);
 		purchaseCost = cost;
