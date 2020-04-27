@@ -1,10 +1,4 @@
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.lang.ClassLoader;
-import java.util.ArrayList;
 
-import javax.imageio.ImageIO;
 /**
  * Trap_tm is the superclass for all individual trap classes.
  * It provides the necessary variables for all traps as well as 
@@ -103,6 +97,9 @@ public abstract class Trap_tm extends RenderObj{
 	public void setTarget(Monster_tm target) {
 		this.target = target;
 	}
+	public ActionBox getAOE() {
+		return AOE;
+	}
 	
 	/**
 	 * Allows a trap to select a monster to begin attacking.
@@ -160,5 +157,20 @@ public abstract class Trap_tm extends RenderObj{
 		return (int)total;
 	}
 	
-	
+	/**
+	 * Creates the trap's action box "AOE" when placed.
+	 */
+	public void tr_place() {
+		
+		if (facing == 0) {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() - (tr_range * 32), 64, tr_range * 64);
+		} else if (facing == 1) {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld() + (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64);
+		} else if (facing == 2) {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() + (tr_range * 32), 64, tr_range * 64);
+		} else {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld() - (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64);
+		}
+
+	}
 }

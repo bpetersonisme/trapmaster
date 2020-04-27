@@ -381,6 +381,7 @@ public class Main_tm {
 						if(currTrap.contains(mouseXClick + gameEngine.getViewportX(), mouseYClick + gameEngine.getViewportY())) {
 							traps.remove(i); 
 							gameEngine.removeRenderObj(currTrap);
+							gameEngine.removeRenderObj(currTrap.getAOE());
 							giveGold(currTrap.tr_sell());
 							i = traps.size();
 						}
@@ -410,6 +411,8 @@ public class Main_tm {
 						break;
 						case TRAP:
 							traps.add((Trap_tm)purchase);
+							((Trap_tm)purchase).tr_place();
+							gameEngine.addRenderObj(((Trap_tm)purchase).getAOE());
 						break;
 						case TILE:
 							tiles.add((Tile_tm)purchase);
@@ -486,6 +489,27 @@ public class Main_tm {
 				if(e.getKeyCode() == KeyEvent.VK_DOWN || e.getKeyCode() == KeyEvent.VK_S) {
 					moveCamDownKey = false;
 				}
+				if(e.getKeyCode() == KeyEvent.VK_Q) {
+                    if(purchase != null) {
+                        if (((Trap_tm)purchase).get_facing() != 0) {
+                            ((Trap_tm)purchase).set_facing(((Trap_tm)purchase).get_facing() - 1);
+                        } else {
+                            ((Trap_tm)purchase).set_facing(3);
+                        }
+                        purchase.setCurrSpriteCol(((Trap_tm)purchase).get_facing());
+                    }
+                }
+
+                if(e.getKeyCode() == KeyEvent.VK_E) {
+                    if(purchase != null) {
+                        if (((Trap_tm)purchase).get_facing() != 3) {
+                            ((Trap_tm)purchase).set_facing(((Trap_tm)purchase).get_facing() + 1);
+                        } else {
+                            ((Trap_tm)purchase).set_facing(0);
+                        }
+                        purchase.setCurrSpriteCol(((Trap_tm)purchase).get_facing());
+                    }
+                }
 			}
 
 
