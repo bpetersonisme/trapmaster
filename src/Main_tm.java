@@ -169,8 +169,9 @@ public class Main_tm {
 		
 		if(debug) {
 			lblMouseLocation = new JLabel("Mouse x: Mouse Y:");
-			lblMouseLocation.setBounds(900, 10, 80, 14);
+			lblMouseLocation.setSize(360, 28);
 			lblMouseLocation.setLocation(10, 10);
+			gameEngine.add(lblMouseLocation);
 		}
 		gameHud = new Hud_tm(this, SCREEN_WIDTH, SCREEN_HEIGHT);
 		game_frame.getContentPane().add(gameHud);
@@ -275,6 +276,11 @@ public class Main_tm {
 				mouseX = e.getX(); 
 				mouseY = e.getY();
 
+				
+				
+				
+				
+				
 				lblMouse.setLocation(mouseX + 8, mouseY - 5);
 				if(mode== STD_MODE) {
 					lblMouse.setText("");

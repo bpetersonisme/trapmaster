@@ -108,7 +108,7 @@ public class Hud_tm extends JPanel {
 		gbl_trapMenuPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0};
 		trapMenuPanel.setLayout(gbl_trapMenuPanel);
 		
-		trapACost = 500;
+		trapACost = 50;
 		
 		trapA = new JButton("<html><center>Ballista <br/>($" + trapACost + ")</center></html>");
 		trapA.setBackground(new Color(169, 169, 169));
@@ -131,7 +131,7 @@ public class Hud_tm extends JPanel {
 		gbc_trapA.gridy = 1;
 		trapMenuPanel.add(trapA, gbc_trapA);
 		
-		trapBCost = 850;
+		trapBCost = 85;
 		
 		trapB = new JButton("<html><center>Wind Trap <br/>($" + trapBCost + ")</center></html>");
 		trapB.setBackground(new Color(245, 245, 245));
@@ -148,7 +148,7 @@ public class Hud_tm extends JPanel {
 		gbc_trapB.gridy = 1;
 		trapMenuPanel.add(trapB, gbc_trapB);
 		
-		trapCCost = 1500;
+		trapCCost = 150;
 		
 		trapC = new JButton("<html><center>Flamethrower <br/>($" + trapCCost + ")</center></html>");
 		trapC.setBackground(new Color(255, 127, 80));
@@ -164,7 +164,7 @@ public class Hud_tm extends JPanel {
 		gbc_trapC.gridy = 2;
 		trapMenuPanel.add(trapC, gbc_trapC);
 		
-		trapDCost = 2000;
+		trapDCost = 200;
 		
 		
 		trapD = new JButton("<html><center>Freeze Rune <br/>($" + trapDCost + ")</center></html>");
@@ -232,6 +232,8 @@ public class Hud_tm extends JPanel {
 	public void spawnObj(RenderObj obj, int cost) {
 		gameRef.makePurchase(obj, Main_tm.TRAP, cost);
 	}
+	
+
 	
 	/**
 	 * Turns all the buttons on or off- when off, they cannot be clicked. 
