@@ -582,6 +582,9 @@ public class Main_tm {
 								/*
 								 * Trap Attack actions
 								 */
+								
+								trap.tr_attack(monsters);
+								
 								/*
 								 * Trap cooldown actions
 								 */

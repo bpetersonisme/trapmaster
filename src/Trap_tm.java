@@ -1,4 +1,4 @@
-
+import java.util.ArrayList;
 /**
  * Trap_tm is the superclass for all individual trap classes.
  * It provides the necessary variables for all traps as well as 
@@ -104,9 +104,19 @@ public abstract class Trap_tm extends RenderObj{
 	/**
 	 * Allows a trap to select a monster to begin attacking.
 	 * @param monsters The list of spawned monsters from Map_tm
-	 * @return The targeted monster
+	 * @return true if target found and false otherwise.
 	 */
-	public boolean acquireTarget (ActionBox AOE) {
+	public boolean acquireTarget (ArrayList<Monster_tm> monsters) {
+		Monster_tm tempmonster;
+		
+		for(int i = 0; i < monsters.size(); i++) {
+			tempmonster = monsters.get(i);
+			if(AOE.contains(tempmonster.getXPosWorld(), tempmonster.getYPosWorld())) {
+				target = tempmonster;
+				return true;
+			}
+		}
+		
 		return false;
 	}
 	
@@ -115,36 +125,21 @@ public abstract class Trap_tm extends RenderObj{
 	 * triggers an attack from the trap to its target.
 	 * If no, acquires a new target.
 	 */
-	public void tr_attack () {
-		if (this.timer == -1) {
-			if (acquireTarget(AOE)) {
+	public void tr_attack (ArrayList<Monster_tm> monsters) {
+		if (timer == 0) {
+			if (acquireTarget(monsters)) {
 				//fire at target
-				this.timer = tr_cooldown;
-				this.setCurrSpriteRow(1);
+				timer = tr_cooldown;
+				setCurrSpriteRow(1);
 			} else {
+				
 			}
-		} else if (this.timer == 0) {
-			if (acquireTarget(AOE)) {
-				//fire at target
-				this.timer = tr_cooldown;
-				this.setCurrSpriteRow(1);
-			} else {
-				this.timer = -1;
-			}
-		} else if (this.timer == (int)(tr_cooldown / 4)) {
-			this.setCurrSpriteRow(0);
-			this.timer = this.timer - 1;
+		} else if (timer == (int)(tr_cooldown / 4)) {
+			setCurrSpriteRow(0);
+			timer = timer - 1;
 		} else {
-			this.timer = this.timer - 1;
+			timer = timer - 1;
 		}
-	}
-	
-	/**
-	 * Called when the trap is destroyed.
-	 * Removes the trap from the map.
-	 */
-	public void tr_destroy() {
-		
 	}
 	
 	/**
