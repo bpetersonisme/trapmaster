@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.util.ArrayList;
 /**
  * Trap_tm is the superclass for all individual trap classes.
@@ -32,6 +33,7 @@ public abstract class Trap_tm extends RenderObj{
 		this.setZPos(2);
 		this.timer = this.tr_cooldown;
 		this.facing = facing;
+		this.setFocusable(true);
 		tr_ID = trap_count;
 		trap_count++;
 	}
@@ -167,5 +169,11 @@ public abstract class Trap_tm extends RenderObj{
 			AOE = ActionBox.makeActionBox(this.getXPosWorld() - (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64);
 		}
 
+	}
+	
+	public void setBars() {
+		instantiateStats();
+		addStat(tr_currentHealth, tr_maxHealth, Color.red, Color.green);
+		addStat(timer, tr_cooldown, Color.yellow, Color.yellow);
 	}
 }
