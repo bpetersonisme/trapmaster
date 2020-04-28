@@ -1,35 +1,18 @@
 import java.awt.EventQueue;
-import java.awt.FlowLayout;
-import java.awt.Insets;
-
-import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.Timer;
-
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.FlowLayout; 
+ 
+import javax.swing.JFrame; 
+ 
 import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent; 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
+import java.awt.event.MouseMotionAdapter; 
 import java.io.IOException;
-import java.util.ArrayList;
-import javax.swing.JSplitPane;
+import java.util.ArrayList; 
 
-import java.awt.Color;
-import java.awt.SystemColor;
-
-
-import javax.swing.JSplitPane;
-
-import java.awt.Color;
-import java.awt.SystemColor;
+import java.awt.Color; 
+  
 
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
@@ -370,15 +353,15 @@ public class Main_tm {
 		 */
 		gameEngine.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
-				mouseXClick = e.getX();
-				mouseYClick = e.getY();
+				mouseXClick = e.getX() + (int)gameEngine.getViewportX();
+				mouseYClick = e.getY() + (int)gameEngine.getViewportY();
 				
 				if(mode == SELL_MODE) {
 					Trap_tm currTrap;
 					int i; 
 					for(i = 0; i < traps.size(); i++) {
 						currTrap = traps.get(i); 
-						if(currTrap.contains(mouseXClick + gameEngine.getViewportX(), mouseYClick + gameEngine.getViewportY())) {
+						if(currTrap.contains(mouseXClick, mouseYClick)) {
 							traps.remove(i); 
 							gameEngine.removeRenderObj(currTrap);
 							gameEngine.removeRenderObj(currTrap.getAOE());
@@ -392,14 +375,51 @@ public class Main_tm {
 					int i; 
 					for(i = 0; i < traps.size(); i++) {
 						currTrap = traps.get(i); 
-						if(currTrap.contains(mouseXClick + gameEngine.getViewportX(), mouseYClick + gameEngine.getViewportY())) {
+						if(currTrap.contains(mouseXClick, mouseYClick)) {
 							
 							//currTrap.toggleRepair(); 
 							i = traps.size();
 						}
 					} 
 				}
-				
+				else if(mode == STD_MODE) {
+
+					Monster_tm currMonster;
+					Trap_tm currTrap; 
+					int i, len;
+					boolean oldState;
+					len = traps.size();
+					for(i = 0; i < len; i++) {
+						currTrap = traps.get(i);
+						if(currTrap.contains(mouseXClick, mouseYClick)) {
+							currTrap.setFocus(true);
+							currTrap.rotateCurrSprite();
+						}
+						else {
+							oldState = currTrap.isFocused();
+							if(oldState) {
+								currTrap.setFocus(false);
+								currTrap.rotateCurrSprite();
+							}
+						}
+					}
+					len = monsters.size();
+					for(i = 0; i < len; i++) {
+						currMonster = monsters.get(i);
+						if(currMonster.contains(mouseXClick, mouseYClick)) {
+							currMonster.setFocus(true);
+							currMonster.rotateCurrSprite();
+						}
+						else {
+							oldState = currMonster.isFocused();
+							if(oldState) {
+							currMonster.setFocus(false);
+							currMonster.rotateCurrSprite();
+							}
+						}
+					}
+					 
+				}
 				if(canPlace == true && mode == BUY_MODE) {
 					purchase.removeFilter();
 					setMode(STD_MODE);
@@ -783,6 +803,7 @@ public class Main_tm {
 	public void giveGold(int amtGiven) {
 		setGoldAmt(getGoldAmt() + amtGiven);
 	}
-
+	
+ 
 } 
 

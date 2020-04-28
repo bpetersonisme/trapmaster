@@ -1019,6 +1019,15 @@ public abstract class RenderObj {
 	 * Sets whether or not this has focus- if it does, it will have whatever dataBars it needs. 
 	 * @param foc The new focus state 
 	 */
+	public void setFocus(boolean foc) {
+		System.out.println("Ha ha, focus!");
+		hasFocus = foc;
+	}
+	
+	/**
+	 * Equivalent to setFocus
+	 * @param foc
+	 */
 	public void hasFocus(boolean foc) {
 		hasFocus = foc;
 	}

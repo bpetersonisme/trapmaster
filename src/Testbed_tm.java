@@ -286,7 +286,7 @@ public class Testbed_tm {
 			int newHeight = buf.getHeight(); 
 			
 			setFocusable(true);
-			hasFocus(true);
+			setFocus(true);
 			instantiateStats();
 			addStat((int)getAngle(), 360, Color.RED, Color.GREEN); //This comes first, so I know it's 0. 
 			
