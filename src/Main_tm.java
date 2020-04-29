@@ -1,18 +1,28 @@
 import java.awt.EventQueue;
 import java.awt.FlowLayout; 
- 
+import java.awt.Graphics2D;
+import java.awt.Toolkit;
+
+import javafx.scene.image.Image;
+
 import javax.swing.JFrame; 
- 
+
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent; 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter; 
+import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList; 
-
 import java.awt.Color; 
   
+
+
+
+
+
 
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
@@ -34,7 +44,7 @@ public class Main_tm {
 	private int gameWidth;
 	private int gameHeight;
 	private boolean debug;
-
+	
 	private int goldAmt;
 	
 	//Buy mode stuff
@@ -47,7 +57,7 @@ public class Main_tm {
 	private ArrayList<Trap_tm> traps;
 	private ArrayList<Monster_tm> monsters;
 	private ArrayList<Tile_tm> tiles;
-	private ArrayList<ActionBox> gameBounds;
+	private ArrayList<ActionBox> gameBounds; //Bounds should be... 1a1a1a this color?
 	private int trapIt, monsterIt, tileIt, aBIt; 
 	private Trap_tm trap;
 	private Monster_tm monster;
@@ -89,7 +99,7 @@ public class Main_tm {
 			public void run() {
 				try {
 					
-					Main_tm window = new Main_tm(true);
+					Main_tm window = new Main_tm(false);
 					window.game_frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -164,6 +174,8 @@ public class Main_tm {
 		/***************************************************************
 		 *                      Game Variables                         *
 		 ***************************************************************/
+		
+		gameMap = new Map_tm(-5000, -5000, 5000, 5000);
 		gameWidth = gameEngine.getViewportWidth();
 		gameHeight = gameEngine.getViewportHeight();
 		screenScrollXZone = gameWidth/50;
@@ -185,7 +197,7 @@ public class Main_tm {
 		 ***************************************************************/
 
 		
-		traps = new ArrayList<Trap_tm>(); 
+		traps = new ArrayList<Trap_tm>();  
 		/*
 		 * Some code/method call to populate the traps
 		 */
@@ -235,12 +247,13 @@ public class Main_tm {
 			gameEngine.addRenderObj(curr);
 		}
 		
-		arraySize = gameBounds.size(); 
-		for(i = 0; i < arraySize; i++) {
-			curr = gameBounds.get(i);
-			gameEngine.addRenderObj(curr);
+		if(debug) {
+			arraySize = gameBounds.size(); 
+			for(i = 0; i < arraySize; i++) {
+				curr = gameBounds.get(i);
+				gameEngine.addRenderObj(curr);
+			}
 		}
-		
 		
 		
 		
@@ -319,8 +332,8 @@ public class Main_tm {
 						purchase.addFilter(Color.GREEN, 45);
 					}
 				}
-				
-				lblMouseLocation.setText("Mouse X: " + mouseX + " ScrollX: " + screenScrollXZone + " MouseY: " + mouseY + " ScrollY: " + screenScrollYZone);
+				if(debug)
+					lblMouseLocation.setText("Mouse X: " + mouseX + " ScrollX: " + screenScrollXZone + " MouseY: " + mouseY + " ScrollY: " + screenScrollYZone);
 				if(mouseX < screenScrollXZone) {
 					moveCamRight = false;
 					moveCamLeft = true;
@@ -433,7 +446,9 @@ public class Main_tm {
 						case TRAP:
 							traps.add((Trap_tm)purchase);
 							((Trap_tm)purchase).tr_place();
-							gameEngine.addRenderObj(((Trap_tm)purchase).getAOE());
+							if(debug) { 
+								gameEngine.addRenderObj(((Trap_tm)purchase).getAOE());
+								}
 							purchase = null;
 						break;
 						case TILE:
@@ -804,6 +819,6 @@ public class Main_tm {
 		setGoldAmt(getGoldAmt() + amtGiven);
 	}
 	
- 
+	 
 } 
 

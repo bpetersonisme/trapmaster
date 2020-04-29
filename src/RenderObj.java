@@ -521,6 +521,10 @@ public abstract class RenderObj {
 				Graphics2D gee = currSprite.createGraphics();
 				gee.setColor(Color.GREEN);
 				
+				if(newWidth/16 < 30) {
+					focusBoundLength = newWidth/16;
+				}
+				
 				//Upper Left-hand corner
 				gee.drawLine(0, 0, focusBoundLength, 0); //Horizontal
 				gee.drawLine(0,  0, 0, focusBoundLength); //Vertical

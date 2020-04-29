@@ -279,8 +279,9 @@ public class Testbed_tm {
 		private long frameDelay;
 		private final int ANGLEBAR = 0;
 		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y, int z) throws IOException {
+			
 			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(fileName));
-		 
+			//BufferedImage buf = Main_tm.importImage(fileName);
 			frameDelay = 250; //Number of ms
 			int newWidth = buf.getWidth(); 
 			int newHeight = buf.getHeight(); 

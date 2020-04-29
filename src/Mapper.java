@@ -37,7 +37,49 @@ public final class Mapper {
         //}
         setTiles();
     }
+    
+    /**
+     * Gets the data of the tile path from direct input- mostly for debugging
+     * @param data The tile path 
+     */
+    public void setDataNoFile(String data) {
+    	this.data = data;
+    	setTiles();
+    }
 
+    /**
+     * An alternative method of map population. This reads our data string by going one 
+     * Token at a time- the token's length depends on which parcel of data is being analyzed.
+     */
+    public void setTilesAlt() {
+    	if(data.indexOf(';') == -1) {
+    		System.out.println("INVALID DATA- NO ACTION TAKEN");
+    		return;
+    	}
+    	String coord = ""; //The coordinate pair at the start of data- this will be the position of source.
+    	double xCoord = -1; //This is going to be the xCoordinate for the tile we are ~currently~ placing 
+    	double yCoord; //This is going to be the yCoordinate for the tile we are ~currently~ placing  
+    	int i = 0; 
+    	//Find source tile coordinates
+    	while(i < data.length()) {
+    		if((data.charAt(i) < 48 && data.charAt(i) > 57) &&(data.charAt(i) != ';')) {
+    			coord = data.substring(0, i);
+    			i = data.length();
+    		}
+    		i++;
+    	}
+    	if(coord == "") 
+    		coord = data;
+    	xCoord = Double.parseDouble(coord.substring(0, coord.indexOf(';')));
+    	yCoord = Double.parseDouble(coord.substring(coord.indexOf(';') + 1, coord.length()));
+    	
+    	//Create source tile
+    	
+    	//Create all subsequent tiles 
+    	
+    	
+    }
+    
     /**
      * sets tiles to path
      */

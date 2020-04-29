@@ -16,6 +16,8 @@ public abstract class Tile_tm extends RenderObj  {
     The original code is commented out in case it needs to be changed back.
      */
     private Tile_tm[] neighbors;
+    private int[] valueToTreasure;
+    private int[] valueToDoor;
     private List<Monster_tm> monsters;
     //private BufferedImage texture;
     //private int[] treasureDist;
@@ -41,9 +43,69 @@ public abstract class Tile_tm extends RenderObj  {
         setPosY(yPos);
         treasureDist = -1;
         entranceDist = -1;
+        valueToTreasure = new int[4];
+        valueToDoor = new int[4];
         //size = 256;
     }
 
+    /**
+     * Sets the value to the treasure for all four directions. Value will be 
+     * negative if the edge in question is inaccessible 
+     * @param vals The 'value,' that is the distance, between the treasure and the adjacent tiles
+     */
+    public void setTreasureVals(int[] vals) {
+    	if(vals.length >= 4) {
+    		for(int i = 0; i < vals.length; i++) {
+    			valueToTreasure[i] = vals[i];
+    		}
+    	}
+    }
+    
+    /**
+     * Sets the value to the treasure for dir. Value will be negative if the edge
+     * in question is inaccessible 
+     * @param val The 'value,' that is, the distance between the treasure and the adjacent tile
+     * @param dir The direction, represented by a single character. 
+     */
+    public void setTreasureVal(int val, char dir) {
+    	switch(dir) {
+    	case 'N': valueToTreasure[0] = val; break;
+    	case 'E': valueToTreasure[1] = val; break;
+    	case 'S': valueToTreasure[2] = val; break;
+    	case 'W': valueToTreasure[3] = val; break;
+    	default: System.out.println("UNKNOWN CHARACTER- NO ACTION TAKEN"); 
+    	}
+    }
+    
+    /**
+     * Sets the value to the door for all four directions. Value will be negative
+     * if the edge in question is inaccessible. 
+     * @param vals The 'values,' that is the distance, between the source and the adjacent tiles
+     */
+    public void setDoorVal(int[] vals) {
+    	if(vals.length >= 4) {
+    		for(int i = 0; i < vals.length; i++) {
+    			valueToDoor[i] = vals[i];
+    		}
+    	}
+    }
+    
+    /**
+     * Sets the value to the door for a specific direction. Value will be negative
+     * if the edge in question is inaccessible. 
+     * @param vals The 'values,' that is the distance, between the source and the adjacent tiles
+     * @param dir The direction being altered
+     */
+    public void setDoorVal(int val, char dir) {
+    	switch(dir) {
+    	case 'N': valueToDoor[0] = val; break;
+    	case 'E': valueToDoor[1] = val; break;
+    	case 'S': valueToDoor[2] = val; break;
+    	case 'W': valueToDoor[3] = val; break;
+    	default: System.out.println("UNKNOWN CHARACTER- NO ACTION TAKEN"); 
+    	}
+    }
+    
     /**
      * adds non-null monster to this
      * @param monster monster to be added to monsters
