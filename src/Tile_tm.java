@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.awt.image.BufferedImage;
 
 /**
- * @author Joseph Grieser
+ * @author Bradley Peterson/Joseph Grieser
  */
 public abstract class Tile_tm extends RenderObj  {
 
@@ -18,34 +18,31 @@ public abstract class Tile_tm extends RenderObj  {
     private Tile_tm[] neighbors;
     private int[] valueToTreasure;
     private int[] valueToDoor;
-    private List<Monster_tm> monsters;
-    //private BufferedImage texture;
-    //private int[] treasureDist;
-    //private int[] entranceDist;
-    private int treasureDist;
-    private int entranceDist;
-    //private int xPos;
-    //private int yPos;
-    private final int size = 256;
+    private List<Monster_tm> monsters; 
+    private int treasureDist; //Distance to the nearest treasure
+    private int entranceDist; //Distance to the entrance 
+    public static final int SIZE = 128;
+    private int TID; //The TID of the nearest TreasureTile
 
-    /*
-    Not sure how much of this needs to be passed in on initialization and how much can be added later with setters
+    /**
+     * Creates a new Tile_tm of spriteSheet texture, at position (xPos, yPos), with numRows animations,
+     * Each numCols long
+     * @param texture The sprite sheet for the Tile
+     * @param xPos The xPosition of the tile's center
+     * @param yPos The yPostiion of the tile's center
+     * @param numRows The number of animations available
+     * @param numCols The number of frames per animation
      */
-    public Tile_tm(BufferedImage texture, double xPos, double yPos){
-        //this.neighbors = neighbors;
+    public Tile_tm(BufferedImage texture, double xPos, double yPos, int numRows, int numCols) {
         neighbors = new Tile_tm[4];
-        monsters = new ArrayList<Monster_tm>();
-        //this.texture = texture;
-        //this.xPos = xPos;
-        //this.yPos = yPos;
-        setSpriteSheet(texture,size,size,texture.getWidth(),texture.getHeight());
+        monsters = new ArrayList<Monster_tm>(); 
+        setSpriteSheet(texture,numRows,numCols,SIZE,SIZE);
         setPosX(xPos);
         setPosY(yPos);
         treasureDist = -1;
         entranceDist = -1;
         valueToTreasure = new int[4];
-        valueToDoor = new int[4];
-        //size = 256;
+        valueToDoor = new int[4]; 
     }
 
     /**
@@ -78,11 +75,11 @@ public abstract class Tile_tm extends RenderObj  {
     }
     
     /**
-     * Sets the value to the door for all four directions. Value will be negative
+     * Sets the value to the spawn for all four directions. Value will be negative
      * if the edge in question is inaccessible. 
      * @param vals The 'values,' that is the distance, between the source and the adjacent tiles
      */
-    public void setDoorVal(int[] vals) {
+    public void setSpawnVal(int[] vals) {
     	if(vals.length >= 4) {
     		for(int i = 0; i < vals.length; i++) {
     			valueToDoor[i] = vals[i];
@@ -91,13 +88,13 @@ public abstract class Tile_tm extends RenderObj  {
     }
     
     /**
-     * Sets the value to the door for a specific direction. Value will be negative
+     * Sets the value to the spawn for a specific direction. Value will be negative
      * if the edge in question is inaccessible. 
      * @param vals The 'values,' that is the distance, between the source and the adjacent tiles
      * @param dir The direction being altered
      */
-    public void setDoorVal(int val, char dir) {
-    	switch(dir) {
+    public void setSpawnVal(int val, char dir) {
+    	switch(Character.toUpperCase(dir)) {
     	case 'N': valueToDoor[0] = val; break;
     	case 'E': valueToDoor[1] = val; break;
     	case 'S': valueToDoor[2] = val; break;
@@ -105,6 +102,57 @@ public abstract class Tile_tm extends RenderObj  {
     	default: System.out.println("UNKNOWN CHARACTER- NO ACTION TAKEN"); 
     	}
     }
+    
+    /**
+     * Returns the world X position of the neighbor at dir, even if it has no neighbor in that direction.
+     * Uses mapper's final direction ints. 
+     * @param dir The direction required. 
+     */
+    public double getNeighborX(int dir) {
+    	double result = 0;
+    	switch(dir) {
+    	case Mapper.NORTH: 
+    	case Mapper.SOUTH:  
+    		result = getXPosWorld(); 
+    	break;
+    	case Mapper.EAST: 
+    		result = getXPosWorld() + SIZE; 
+    	break;
+    	case Mapper.WEST:
+    		result = getXPosWorld() - SIZE;
+    	break;
+   		default: System.out.println("UNKNOWN DIRECTION");
+    	}
+    	return result;
+    }
+    
+    /**
+     * Returns the world Y position of the neighbor at dir, even if it has no neighbor in that direction.
+     * Uses mapper's final direction ints. 
+     * @param dir The direction required. 
+     */
+    public double getNeighborY(int dir) {
+    	double result = 0;
+    	switch(dir) {
+    	case Mapper.NORTH: 
+    		result = getYPosWorld() - SIZE; 
+    	break;
+    	case Mapper.SOUTH:   
+    		result = getYPosWorld() + SIZE;
+    	break;
+    	case Mapper.EAST: 
+    	case Mapper.WEST:
+    		result = getYPosWorld();
+    	break;
+   		default: System.out.println("UNKNOWN DIRECTION");
+    	}
+    	return result;
+    }
+    
+    
+    
+  //===================================================================
+    
     
     /**
      * adds non-null monster to this
@@ -115,18 +163,23 @@ public abstract class Tile_tm extends RenderObj  {
         monsters.add(monster);
     }
 
+    
+    
+    
+    
+    
     /**
      * passes monster from this to neighbor
      * @param monsterIndex index of monster to be passed in monsters
      * @param neighborIndex index of neighbor to be passed to; may replace with enum
-     */
+    
     public final void giveMonster(int monsterIndex, Map_tm.Direction neighborIndex){
         //if(monsterIndex < 0 || monsterIndex >= monsters.size() || neighborIndex < 0 || neighborIndex >= 4) throw new IndexOutOfBoundsException();
         //if(monsters.get(monsterIndex) == null || neighbors[neighborIndex] == null) return;
         //neighbors[neighborIndex].addMonster(monsters.remove(monsterIndex));
         neighbors[neighborIndex.index()].addMonster(monsters.remove(monsterIndex));
     }
-
+ */
     /**
      * gets monsters in this
      * @return monsters in this
@@ -192,7 +245,7 @@ public abstract class Tile_tm extends RenderObj  {
      * @return x-coordinate of end of tile
      */
     public final double getEndXPos(){
-        return getPosX() + size;
+        return getPosX() + SIZE;
     }
 
     /**
@@ -200,7 +253,7 @@ public abstract class Tile_tm extends RenderObj  {
      * @return y-coordinate of end of tile
      */
     public final double getEndYPos(){
-        return getPosY() + size;
+        return getPosY() + SIZE;
     }
 
     /**
@@ -239,7 +292,7 @@ public abstract class Tile_tm extends RenderObj  {
      * Sets other tile as neighbor of this and sets this as neighbor of the other tile
      * @param neighbor Tile to set as neighbor
      * @param index direction of neighbor from this
-     */
+     
     public final void setNeighbor(Tile_tm neighbor, Map_tm.Direction index){
         //this.neighbors = neighbors;
         //if(index < 0 || index >= 4) return;
@@ -267,5 +320,5 @@ public abstract class Tile_tm extends RenderObj  {
         neighbor.neighbors[index.reverse()] = this;
         neighbors[index.index()] = neighbor;
     }
-
+*/
  }

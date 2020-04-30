@@ -1,163 +1,103 @@
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 /**
- * @author Joseph Grieser
+ * @author Bradley Peterson
  */
 public final class Map_tm {
 
-    /*
-        Not sure if graph object is represented with RenderEngine, and if not, what I am supposed to use.
-        Also not sure how to make Mapper class
-     */
-    //private RenderEngine_tm engine;
-    private List<Tile_tm> tiles;
-    private Mapper mapper;
-    private int lowestX,lowestY,highestX,highestY;
-
-    public Map_tm(int lowestX, int lowestY, int highestX, int highestY){
-        this.lowestX = lowestX;
-        this.lowestY = lowestY;
-        this.highestX = highestX;
-        this.highestY = highestY;
-        tiles = new ArrayList<Tile_tm>();
-        Tile_tm spawn = new SpawnTile(null,0,0);
-        tiles.add(spawn);
-        //engine = null;
-        mapper = null;
-    }
-
-    /*
-    Not sure how to implement this method
-     */
-
+ 
+    private TreeMap<Integer, Tile_tm> tiles; 
+    private ArrayList<DoorTile> doorTiles;
+    private ArrayList<TreasureTile> treasureTiles;
+    private SpawnTile spawnTile; 
+    private int[] pivots;
+    
+    private final int SPAWN_INDEX = 0;
+    private final int NOR_INDEX = 1;
+    private final int SOU_INDEX = 2;
+    private final int MAX_INDEX = 3;
+    
+     
     /**
-     * sets path for tiles
-     * @param fileName file path will be read from
+     * Creates a new map object, starting at spawn, with all tiles. Doors and treasures from all are referenced where you'd expect
+     * @param spawn The spawn tile for the map object
+     * @param all The treeMap which holds all tiles
+     * @param doors The arrayList which holds references to all doorTiles
+     * @param treasures The arrayList which holds references to all TreasureTiles
+     * @param pivotVals The "control" values on the key map- SPAWN, NORTHERLIES, SOUTHERLIES, and MAX
      */
-    public void remap(String fileName) {
-        try {
-            mapper.setData(fileName);
-        }
-        catch(IOException e){
-            System.out.println(fileName + " not found");
-        }
-    }
-
+    public Map_tm(SpawnTile spawn, TreeMap<Integer, Tile_tm> all, ArrayList<DoorTile> doors, ArrayList<TreasureTile> treasures, int[] pivotVals) {
+        spawnTile = spawn;
+        tiles = all;
+        doorTiles = doors;
+        treasureTiles = treasures;
+        pivots = pivotVals;
+    } 
+    
+    
     /**
-     * gets lowest possible x value in map
-     * @return lowest possible x value in map
+     * Returns the spawn Tile
+     * @return The spawn tile, from which monsters (and the map) come
      */
-    public int getLowestX(){
-        return lowestX;
+    public SpawnTile getSpawnTile() {
+    	return spawnTile;
     }
-
+    
     /**
-     * gets lowest possible y value in map
-     * @return lowest possible y value in map
+     * Returns the tile tree, which holds all the tiles. Good for searching!
+     * @return The tile tree 
      */
-    public int getLowestY(){
-        return lowestY;
+    public TreeMap<Integer, Tile_tm> getTiles() {
+    	return tiles;
     }
-
+    
     /**
-     * gets highest possible x value in map
-     * @return highest possible x value in map
+     * Returns the doorTile arrayList, which holds references to all the door tiles.
+     * @return The doorTile tree
      */
-    public int getHighestX(){
-        return highestX;
+    public ArrayList<DoorTile> getDoorTiles() {
+    	return doorTiles;
     }
 
     /**
-     * gets highest possible y value in map
-     * @return highest possible y value in map
+     * Returns the treasureTile array list, which holds references to all the treasure tiles.
+     * @return The TreasureTile tree
      */
-    public int getHighestY(){
-        return highestY;
+    public ArrayList<TreasureTile> getTreasureTiles() {
+    	return treasureTiles;
     }
-
+    
     /**
-     * gets tile at coordinates
-     * @param x x-coordinate for tile
-     * @param y y-coordinate for tile
-     * @return tile at coordinates; null if coordinates out of bounds or no tile at coordinates
+     * @return Spawn's key in the tree
      */
-    public Tile_tm getTile(int x, int y){
-        if(x < lowestX || x > highestX || y < lowestY || y > highestY) return null;
-        for(Tile_tm t: tiles){
-            if(x > t.getPosX() && x < t.getEndXPos() && y > t.getPosY() && y < t.getEndYPos()) return t;
-        }
-        return null;
+    public int getSpawnKey() {
+    	return pivots[SPAWN_INDEX];
     }
-
+    
     /**
-     * Enum of directions to neighboring tiles; may move to Mapper class
+     * @return The key of northerly, a control value
      */
-    public enum Direction{
-
-        NORTH {
-            @Override
-            public int index() {
-                return 0;
-            }
-
-            @Override
-            public int reverse(){
-                return 2;
-            }
-        },
-
-        EAST{
-            public int index(){
-                return 1;
-            }
-
-            public int reverse(){
-                return 3;
-            }
-        },
-
-        SOUTH{
-            public int index(){
-                return 2;
-            }
-
-            public int reverse(){
-                return 0;
-            }
-        },
-
-        WEST{
-            public int index(){
-                return 3;
-            }
-
-            public int reverse(){
-                return 1;
-            }
-        };
-
-        /**
-         * gets index for neighbor array in tile
-         * @return index for neighbor array in tile
-         */
-        public abstract int index();
-
-        /**
-         * gets index of opposite direction for neighbor array in tile
-         * @return index of opposite direction for neighbor array in tile
-         */
-        public abstract int reverse();
-
-//        NORTH(0),EAST(1),SOUTH(2),WEST(3);
-//
-//        Direction(int index){
-//            this.index = index;
-//            reverse = 3 - index + 1;
-//        }
-//
-//        public int index;
-//        public int reverse;
+    public int getNortherlyKey() {
+    	return pivots[NOR_INDEX];
     }
+    /**
+     * @return The key of Southerly, a control value
+     */
+    
+    public int getSoutherlyKey() {
+    	return pivots[SOU_INDEX];
+    }
+    /**
+     * @return The value of max
+     */
+    public int getMax() {
+    	return pivots[MAX_INDEX];
+    }
+    
+    
+
+      
 }

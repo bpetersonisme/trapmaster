@@ -1,151 +1,164 @@
-import java.io.*;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.Scanner; 
+import java.util.TreeMap;
 
 /**
- * @author Joseph Grieser
+ * The Mapper, given a string representing the map, can create a map. A map can support a maximum of 65535 tiles. 
+ * @author Bradley Peterson
  */
 public final class Mapper {
-
-    private List<Tile_tm> tiles;
-    private String data;
-    private final int SIZE = 256;
-    private Tile_tm last;
-
-    public Mapper(String fileName) throws IOException{
-        tiles = new ArrayList<Tile_tm>();
-        try {
-            DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(fileName)));
-            data = in.readUTF();
-        } catch(FileNotFoundException e){
-            System.out.println(fileName + " not found");
-        }
-    }
-
+ 
+	public static final char NORTH = 'N';
+	public static final char SOUTH = 'S';
+	public static final char EAST = 'E';
+	public static final char WEST = 'W';
+	/*
+    public static final int SPAWN = 32767;
+	    public static final int NORTHERLIES = 16383;
+			public static final int NORTHWEST = 0;
+		    public static final int NORTHEAST = 16384;
+    	public static final int SOUTHERLIES = 49150;
+	        public static final int SOUTHEAST = 32768;
+	        public static final int SOUTHWEST = 49151;
+	        public static final int MAX = 65535;
+	 */
     /**
-     * gets data of tile path from file
-     * @param fileName file containing tile path
-     * @throws IOException file not found
+     * Given a string tileList and monsterList, returns a TreeMap containing the map's tiles, sorted by direction
+     * There are two types of token in tileList- Doubles and Strings. A Double token should only appear twice, at the 
+     * beginning of the file. If it appears more than once, there is a problem.  A String token will appear as many times 
+     * as there are tiles. Form is (R)BC, where R is the optional reset flag, B is the direction, and C is the tile type.
+     * R may or may not be present. 
+     * @param bounds The maximum distance between the origin and the edge of the map
+     * @param tileList A list of Tiles- used to construct a map
+     * @param monsterList A list of monsters- used for spawning monsters from the spawnTile.
      */
-    public void setData(String fileName) throws IOException{
-        //try {
-            DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(fileName)));
-            data = in.readUTF();
-        //} catch(IOException e){
-        //    System.out.println(fileName + " not found");
-        //}
-        setTiles();
-    }
-    
-    /**
-     * Gets the data of the tile path from direct input- mostly for debugging
-     * @param data The tile path 
-     */
-    public void setDataNoFile(String data) {
-    	this.data = data;
-    	setTiles();
-    }
-
-    /**
-     * An alternative method of map population. This reads our data string by going one 
-     * Token at a time- the token's length depends on which parcel of data is being analyzed.
-     */
-    public void setTilesAlt() {
-    	if(data.indexOf(';') == -1) {
-    		System.out.println("INVALID DATA- NO ACTION TAKEN");
-    		return;
+    public static Map_tm buildMap(int bounds, String tileList, String monsterList)  {
+    	
+    	
+    	final int MAX = (int)Math.floor(Math.pow(Math.floorDiv(bounds*2, Tile_tm.SIZE), 2));
+    	
+    	final int SPAWN = Math.floorDiv(MAX, 2);
+    	final int NORTHERLIES = Math.floorDiv(SPAWN, 2);
+	    	final int NORTHWEST = 0;
+	    	final int NORTHEAST = NORTHERLIES + 1;
+	    final int SOUTHERLIES = SPAWN + Math.floorDiv(SPAWN, 2);
+	    	final int SOUTHEAST = SPAWN+1;
+	    	final int SOUTHWEST = SOUTHERLIES + 1;
+	   
+	    int controls[] = {SPAWN, NORTHERLIES, SOUTHERLIES, MAX};
+	    
+		Map_tm map = null; 
+    	
+    	
+    	if(tileList != null) {
+    		
+    		
+        	String tileToken; 
+        	Tile_tm prevTile = null;
+        	Tile_tm currTile = null;
+        	char dirType;
+        	int originDirection = NORTH; //originDirection is relative to the origin. Obviously. 
+        	char currDirection = NORTH; //currDirection is relative to whatever the previous tile was
+        	char doorDirection = NORTH;
+        	
+        	boolean hasSpawned = false;
+        	boolean atSpawn = false;
+        	int treasureNumber = 0; 
+        	int tileNumber = -1;
+        	int tileKeyNorthwest = NORTHWEST;
+        	int tileKeyNortheast = NORTHEAST;
+        	int tileKeySoutheast = SOUTHEAST;
+        	int tileKeySouthwest = SOUTHWEST;
+	    	Scanner s = new Scanner(tileList);
+	    	
+	    	
+	    	TreeMap<Integer, Tile_tm> tiles = new TreeMap<Integer, Tile_tm>();
+	    	ArrayList<DoorTile> doorTiles = new ArrayList<DoorTile>();
+	    	ArrayList<TreasureTile> treasureTiles = new ArrayList<TreasureTile>();
+	    	
+	    	
+	    	while(s.hasNext()) {
+	    		if(s.hasNextDouble() && hasSpawned == false) {
+	    			prevTile = new SpawnTile(s.nextDouble(), s.nextDouble(), monsterList, s.next().charAt(0));
+	    			currTile = prevTile;
+	    			tiles.put(SPAWN, prevTile);
+	    			tiles.put(NORTHWEST, null);
+	    			tiles.put(SOUTHEAST, null);
+	    			hasSpawned = true;
+	    		}
+	    		else {
+	    			tileToken = s.next(); 
+	    			 
+	    			
+	    			dirType = Character.toUpperCase(tileToken.charAt(0));
+	    			 
+	    			switch(dirType) {
+	    				case 'N': currDirection = NORTH; break;
+	    				case 'E': currDirection = EAST; break;
+	    				case 'W': currDirection = WEST; break;
+	    				case 'S': currDirection = SOUTH; break;
+	    				default: System.out.println("INVALID CHARACTER FOUND");
+	    				System.exit(0);
+	    			}
+	    			
+	    			if(prevTile.getNeighborX(currDirection) > 5) {
+	    				
+	    			}
+	    			
+	    			dirType = Character.toUpperCase(tileToken.charAt(1));
+	    			switch(dirType) {
+	    			case 'D': //D for door
+	    				switch(currDirection) {
+	    				case NORTH: doorDirection = SOUTH; break;
+	    				case SOUTH: doorDirection = NORTH; break;
+	    				case WEST: doorDirection = EAST; break;
+	    				case EAST: doorDirection = WEST; break;
+	    				}
+	    				currTile = new DoorTile(prevTile.getNeighborX(currDirection), prevTile.getNeighborY(currDirection), doorDirection); 
+	    			break;
+	    			case 'T': //T for treasure
+	    				currTile = new TreasureTile(prevTile.getNeighborX(currDirection), prevTile.getNeighborY(currDirection), treasureNumber++); 
+	    			break;
+	    			case 'B': //B for basic  
+	    			default: 
+	    				currTile = new TileBasic(prevTile.getNeighborX(currDirection), prevTile.getNeighborY(currDirection));	    	 
+	    			}
+	    		}
+	    		if(currTile != null) {
+		    		if(currTile.getXPosWorld() > 0) {
+		    			if(currTile.getYPosWorld() > 0) { 
+		    				tileNumber = ++tileKeySoutheast;
+		    			}
+		    			else { 
+		    				tileNumber = ++tileKeyNortheast;
+		    			}
+		    		}
+		    		else {
+		    			if(currTile.getYPosWorld() > 0) { 
+		    				tileNumber = ++tileKeySouthwest;
+		    			}
+		    			else { 
+		    				tileNumber = ++tileKeyNorthwest;
+		    			}
+		    		}
+	    		 
+		    		if(tileKeyNorthwest == NORTHERLIES || tileKeyNortheast == SPAWN || tileKeySoutheast == SOUTHERLIES || tileKeySouthwest == MAX) {
+		    			System.out.println("TOO MANY TILES");
+		    			System.exit(0);
+		    		}
+	    		
+	    			tiles.put(tileNumber, currTile);
+	    			prevTile = currTile;
+	    		}
+	    		
+	    	}
+	    	s.close();
+	    	map = new Map_tm((SpawnTile)tiles.get(SPAWN), tiles, doorTiles, treasureTiles, controls);
     	}
-    	String coord = ""; //The coordinate pair at the start of data- this will be the position of source.
-    	double xCoord = -1; //This is going to be the xCoordinate for the tile we are ~currently~ placing 
-    	double yCoord; //This is going to be the yCoordinate for the tile we are ~currently~ placing  
-    	int i = 0; 
-    	//Find source tile coordinates
-    	while(i < data.length()) {
-    		if((data.charAt(i) < 48 && data.charAt(i) > 57) &&(data.charAt(i) != ';')) {
-    			coord = data.substring(0, i);
-    			i = data.length();
-    		}
-    		i++;
-    	}
-    	if(coord == "") 
-    		coord = data;
-    	xCoord = Double.parseDouble(coord.substring(0, coord.indexOf(';')));
-    	yCoord = Double.parseDouble(coord.substring(coord.indexOf(';') + 1, coord.length()));
     	
-    	//Create source tile
-    	
-    	//Create all subsequent tiles 
-    	
-    	
+    	return map;
     }
+     
     
-    /**
-     * sets tiles to path
-     */
-    public void setTiles(){
-        char[] chars = data.toCharArray();
-        //StringTokenizer tokenizer;
-        if(chars[1] != ';') return;
-        last = new SpawnTile(null,chars[0],chars[2]);
-        last.setEntranceDist(0);
-        tiles.add(last);
-        double x = last.getPosX();
-        double y = last.getPosY();
-        Tile_tm tm;
-        for(int i = 3; i < chars.length - 1; i+=2){
-            switch(chars[i+1]){
-                case 'N':
-                    tm = new TrapTile(null,x+SIZE,y+SIZE);
-                    tm.setEntranceDist(last.getEntranceDist()+1);
-                    last = tm;
-                    x = last.getPosX();
-                    y = last.getPosY();
-                    setTileType(tm,chars[i]);
-                    break;
-                case 'D':
-                    tm = new DoorTile(null,x+SIZE,y+SIZE);
-                    tm.setEntranceDist(last.getEntranceDist()+1);
-                    last = tm;
-                    x = last.getPosX();
-                    y = last.getPosY();
-                    setTileType(tm, chars[i]);
-                    break;
-                case 'T':
-                    tm = new TreasureTile(null,x+SIZE,y+SIZE);
-                    tm.setEntranceDist(last.getEntranceDist()+1);
-                    last = tm;
-                    x = last.getPosX();
-                    y = last.getPosY();
-                    setTileType(tm, chars[i]);
-                    break;
-            }
-        }
-    }
-
-    /**
-     * sets tile type and direction of tile from neighbor
-     * @param tile tile being added to tiles
-     * @param direction direction of tile compared to neighbor
-     */
-    private void setTileType(Tile_tm tile, char direction){
-        switch(direction){
-            case 'N':
-                last.setNeighbor(tile, Map_tm.Direction.NORTH);
-                tiles.add(tile);
-                break;
-            case 'E':
-                last.setNeighbor(tile, Map_tm.Direction.EAST);
-                tiles.add(tile);
-                break;
-            case 'S':
-                last.setNeighbor(tile, Map_tm.Direction.SOUTH);
-                tiles.add(tile);
-                break;
-            case 'W':
-                last.setNeighbor(tile, Map_tm.Direction.WEST);
-                tiles.add(tile);
-                break;
-        }
-    }
+     
 }

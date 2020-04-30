@@ -1,4 +1,5 @@
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 /**
  * @author Joseph Grieser
@@ -6,15 +7,34 @@ import java.awt.image.BufferedImage;
 public final class TreasureTile extends Tile_tm{
 
     private int treasure;
-
-    public TreasureTile(BufferedImage texture, double xPos, double yPos) {
-        super(texture, xPos,yPos);
+    private int TID;
+    /**
+     * Creates a new TreasureTile at (xPos, yPos). Will have a Mapper-assigned TID
+     * @param xPos The x (horizontal) position of the Treasure tile
+     * @param yPos The y (vertical) position of the Treasure tile
+     * @param tid The Treasure ID of 
+     * @throws IOException
+     */
+    public TreasureTile(double xPos, double yPos, int tid) {
+        super(importImage("/treasure_tile.png"), xPos,yPos, 1, 1);
         treasure = 0;
+        TID = tid;
     }
 
-    public TreasureTile(BufferedImage texture, double xPos, double yPos, int treasure){
-        super(texture, xPos, yPos);
-        this.treasure = treasure;
+    /**
+     * Returns the treasureTile's tid 
+     * @return tid The treasure ID of the treasureTile
+     */
+    public int getTID() {
+    	return TID;
+    }
+    
+    /**
+     * Sets the treasureTile's tid
+     * @param nuTID The NEW treasure ID
+     */
+    public void setTID(int nuTID) {
+    	TID = nuTID;
     }
 
     /**

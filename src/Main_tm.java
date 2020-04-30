@@ -16,8 +16,10 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList; 
+import java.util.TreeMap;
 import java.awt.Color; 
   
+
 
 
 
@@ -56,7 +58,8 @@ public class Main_tm {
 	//Object Instantiation Arrays
 	private ArrayList<Trap_tm> traps;
 	private ArrayList<Monster_tm> monsters;
-	private ArrayList<Tile_tm> tiles;
+	private TreeMap<Integer, Tile_tm> tiles;
+	private ArrayList<TreasureTile> treasures;
 	private ArrayList<ActionBox> gameBounds; //Bounds should be... 1a1a1a this color?
 	private int trapIt, monsterIt, tileIt, aBIt; 
 	private Trap_tm trap;
@@ -174,8 +177,11 @@ public class Main_tm {
 		/***************************************************************
 		 *                      Game Variables                         *
 		 ***************************************************************/
+		gameMap = null;
 		
-		gameMap = new Map_tm(-5000, -5000, 5000, 5000);
+		gameMap = Mapper.buildMap(5000, "0 0 S ND NB NT", "k k k");
+			
+		
 		gameWidth = gameEngine.getViewportWidth();
 		gameHeight = gameEngine.getViewportHeight();
 		screenScrollXZone = gameWidth/50;
@@ -195,51 +201,56 @@ public class Main_tm {
 		/***************************************************************
 		 *            Game Object References & Initializations         *
 		 ***************************************************************/
-
-		
-		traps = new ArrayList<Trap_tm>();  
-		/*
-		 * Some code/method call to populate the traps
-		 */
-		
-
-		tiles = new ArrayList<Tile_tm>(); 
-		/*
-		 * Some code/method call to populate the tiles
-		 */
-		
-		monsters = new ArrayList<Monster_tm>();
-
-		/*
-		 * Some code/method call to populate the monsters
-		 */
-		
-		gameBounds = new ArrayList<ActionBox>();
-		/*
-		 * Some code/method call to populate the ActionBox (psst: base it off the tile list)
-		 */
-		
-		if(debug) {
-			testBound = ActionBox.makeActionBox(0, 0, 10, 10);
-			gameBounds.add(testBound);
-		}
 		
 		int i, arraySize;
-		
 		RenderObj curr;
 		
-		arraySize = traps.size();
-		for(i = 0; i < arraySize; i++) {
-			curr = traps.get(i);
+		
+		/************************
+		 * Tile Initializations *
+		 ************************/
+		tiles = gameMap.getTiles();
+		
+		
+
+		int tileKey = 0;
+		curr = tiles.get(gameMap.getSpawnKey()); 
+		
+		while(curr != null) {
 			gameEngine.addRenderObj(curr);
+			tileKey = tiles.higherKey(tileKey);
+			if(tileKey == gameMap.getNortherlyKey() || tileKey == gameMap.getSoutherlyKey() || tileKey == gameMap.getSpawnKey()) 
+				tileKey++;
+			curr = tiles.get(tileKey);
 		}
+		
+		/* Some code/method call to populate the tiles
 		
 		arraySize = tiles.size(); 
 		for(i = 0; i < arraySize; i++) {
 			curr = tiles.get(i);
 			gameEngine.addRenderObj(curr);
 		}
+		 */
 		
+		/************************
+		 * Trap Initializations *
+		 ************************/
+		
+		traps = new ArrayList<Trap_tm>();  
+		/*
+		 * Some code/method call to populate the traps
+		 */
+		arraySize = traps.size();
+		for(i = 0; i < arraySize; i++) {
+			curr = traps.get(i);
+			gameEngine.addRenderObj(curr);
+		}
+
+		/***************************
+		 * Monster Initializations *
+		 ***************************/ 
+		monsters = new ArrayList<Monster_tm>();
 		arraySize = monsters.size();
 		for(i = 0; i < arraySize; i++) {
 
@@ -247,7 +258,23 @@ public class Main_tm {
 			gameEngine.addRenderObj(curr);
 		}
 		
+		/*
+		 * Some code/method call to populate the monsters
+		 */
+		/*****************************
+		 * GameBound Initializations *
+		 *****************************/
+		gameBounds = new ArrayList<ActionBox>();
+		/*
+		 * Some code/method call to populate the ActionBox (psst: base it off the tile list)
+		 */
+		
+		/*************************
+		 * debug Initializations *
+		 *************************/
 		if(debug) {
+			testBound = ActionBox.makeActionBox(0, 0, 10, 10);
+			gameBounds.add(testBound);
 			arraySize = gameBounds.size(); 
 			for(i = 0; i < arraySize; i++) {
 				curr = gameBounds.get(i);
@@ -255,8 +282,7 @@ public class Main_tm {
 			}
 		}
 		
-		
-		
+	
 		
 		/****************************************************
 		 *                Game Listeners                    *
@@ -272,10 +298,7 @@ public class Main_tm {
 				mouseX = e.getX(); 
 				mouseY = e.getY();
 
-				
-				
-				
-				
+ 
 				
 				lblMouse.setLocation(mouseX + 8, mouseY - 5);
 				if(mode== STD_MODE) {
@@ -452,7 +475,7 @@ public class Main_tm {
 							purchase = null;
 						break;
 						case TILE:
-							tiles.add((Tile_tm)purchase);
+							tiles.put(tiles.lastKey() + 1, (Tile_tm)purchase);
 							purchase = null;
 						break;
 						default:

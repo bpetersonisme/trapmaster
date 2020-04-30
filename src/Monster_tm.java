@@ -4,6 +4,7 @@ public class Monster_tm extends RenderObj {
 	protected int loot;
 	protected int attack;
 	int count = 0;
+	boolean lastMonster = false;
 	
 
 	/**
@@ -79,6 +80,20 @@ public class Monster_tm extends RenderObj {
 
 	public void setLoot(int loot) {
 		this.loot = loot;
+	}
+	/**
+	 * Returns whether or not this monster is the last one. Usually isn't.
+	 * @return True if this is the last monster, false otherwise
+	 */
+	public boolean isLastMonster() {
+		return lastMonster;
+	}
+	/**
+	 * Sets whether or not this monster is the last one. Used for spawning purposes.
+	 * @param isLast True if this is the last monster, false otherwise
+	 */
+	public void setLastMonster(boolean isLast) {
+		lastMonster = isLast;
 	}
 
 }

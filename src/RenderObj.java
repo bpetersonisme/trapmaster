@@ -5,6 +5,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D; 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.text.DecimalFormat; 
 import java.util.ArrayList; 
 
@@ -82,17 +84,24 @@ public abstract class RenderObj {
 	protected void setSpriteSheet(BufferedImage newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) {
 		
 		spriteSheet = newSS;
+		if(spriteSheet != null) {
+			if(spriteSheet.getWidth() != spriteWidth * numCols || spriteSheet.getHeight() != spriteHeight*numRows) {
+				spriteSheet = scaleImage(spriteSheet, spriteWidth*numCols, spriteHeight*numRows);
+			}
+		}
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
 		modelSpriteHeight = spriteHeight;
 		currSpriteWidth = spriteWidth;
 		currSpriteHeight = spriteHeight;	
+		
+		
+		
+		
 		currSpriteRow = 0;
 		currSpriteCol = 0;
 		setCurrSprite(0, 0);
-		if(angle > 0)
-			rotateCurrSprite();
 	}
 	/**
 	 * Sets the sprite sheet to a bufferedImage defined by newSS, which has numRows rows- 
@@ -106,9 +115,12 @@ public abstract class RenderObj {
 	 * @param spriteWidth The width of sprites on the new sprite sheet
 	 * @param spriteHeight The height of sprites on the new sprite sheet
 	 */
-	protected void setSpriteSheet(String newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) throws IOException {
+	protected void setSpriteSheet(String newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) {
 		
+		setSpriteSheet(importImage(newSS), numRows, numCols, spriteWidth, spriteHeight);
+		/*
 		spriteSheet = ImageIO.read(this.getClass().getResourceAsStream(newSS));
+		
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
@@ -120,6 +132,7 @@ public abstract class RenderObj {
 		setCurrSprite(0, 0);
 		if(angle > 0)
 			rotateCurrSprite();
+		*/
 	}
 	
 	/**
@@ -241,10 +254,13 @@ public abstract class RenderObj {
 	 */
 	public void setCurrSprite(int row, int col) {
 		//System.out.println("Presenting sprite at " + row + ", " + col); 
-		if(row > spriteSheetRows || row < 0 || col > spriteSheetCols || col < 0) {
+		System.out.println("Row is: " + row + ", max is " + spriteSheetRows + "\nCol is: " + col + ", max is " + spriteSheetCols);
+		if(row >= spriteSheetRows || row < 0 || col >= spriteSheetCols || col < 0) {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
 		else {
+			currSpriteRow = row;
+			currSpriteCol = col;
 			rotateCurrSprite();
 		}
 	}
@@ -442,9 +458,8 @@ public abstract class RenderObj {
 	 * animation
 	 * @param currSpriteCol The new column of the current sprite
 	 */
-	protected void setCurrSpriteCol(int newSpriteCol) {
-		currSpriteCol = newSpriteCol;
-		setCurrSprite(currSpriteRow, currSpriteCol);
+	protected void setCurrSpriteCol(int newSpriteCol) { 
+		setCurrSprite(currSpriteRow, newSpriteCol);
 	}
 	
 	/**
@@ -460,9 +475,8 @@ public abstract class RenderObj {
 	 * useful to skip frames of an animation
 	 * @param newSpriteRow The new row sprite 
 	 */
-	protected void setCurrSpriteRow(int newSpriteRow) {
-		currSpriteRow = newSpriteRow;
-		setCurrSprite(currSpriteRow, currSpriteCol);
+	protected void setCurrSpriteRow(int newSpriteRow) { 
+		setCurrSprite(newSpriteRow, currSpriteCol);
 	}
 	
 
@@ -771,7 +785,7 @@ public abstract class RenderObj {
 
 	/**
 	 * Changes the vertical position of sprite's upper left hand corner 
-	 * @param newXPos The new x position of sprite's upper left hand corner
+	 * @param newYPos The new y (vertical) position of sprite's upper left hand corner
 	 */
 	public void setPosY(double newYPos) {
 		yPosWorld = newYPos;
@@ -1067,8 +1081,56 @@ public abstract class RenderObj {
 		
 		
 	}
+	/**
+	 * Returns the BufferedImage, should one exist, at the location indicated by the filename. NOTE: For images located
+	 * within the project or jar file, you need only write "/NameOfFile" and place it within the sprites source-folder. 
+	 * For a file located on the disk, you will need to include the full filepath 
+	 * @param filename The string name of the file. Obviously. 
+	 * @return The BufferedImage this draws from
+	 */
+	public static BufferedImage importImage(String filename) {
+		
+		BufferedImage result = null;
+		try {
+		InputStream is = RenderObj.class.getResourceAsStream(filename);
+		if(is != null)
+			result = ImageIO.read(is);
+		}
+		catch(IOException e) {
+			System.out.println("FAILED TO IMPORT " + filename + ", STACK TRACE TO FOLLOW");
+			e.printStackTrace();
+		}
+		return result;
+	}
+ 
 	
-
+	/**
+	 * Returns the BufferedImage, should one exist, at the location indicated by URI. NOTE: For images located
+	 * within the project or jar file, you need only write "/NameOfFile" and place it within the sprites source-folder. 
+	 * For a file located on the disk, you will need to include the full filepath 
+	 * @param fileURI The URI of the file. Obviously. 
+	 * @return A BufferedImage of the file image
+	 */
+	public BufferedImage importImage(URI fileURI)  {
+		return importImage(fileURI.toString());
+	}
+	
+	/**
+	 * Returns a version of BufferedImage, scaled to be newWidth x newHeight 
+	 * @param img The old image which is to be scaled
+	 * @param newWidth The width of the scaled image
+	 * @param newHeight The height of the scaled image
+	 * @return A scaled version of img
+	 */
+	public static BufferedImage scaleImage(BufferedImage img, int newWidth, int newHeight) {
+		System.out.println("IMG IS " + img.getWidth() + " by " + img.getHeight());
+		System.out.println("New dimensions are: " + newWidth + " by " + newHeight);
+		BufferedImage result = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = result.createGraphics(); 
+		g2d.drawImage(img.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT), null, null);
+		g2d.dispose();
+		return result;
+	}
 	
 	/**
 	 * Sets the value of all the bars. Meant to be overridden by implementing classes.

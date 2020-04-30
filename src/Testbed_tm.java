@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.JLabel;
 
@@ -183,9 +184,12 @@ public class Testbed_tm {
 			
 		});
 		
-
+		String testString = "-55.555 a" ;
 		testers.get(0).addFilter(Color.GREEN, 20);
 
+		 Scanner s = new Scanner(testString);
+		 System.out.println(s.hasNextDouble() + " " + s.nextDouble() + s.next().charAt(0));
+		 s.close(); 
 		 
 		
 		Thread testThread = new Thread() {
@@ -214,7 +218,7 @@ public class Testbed_tm {
 		
 						j++;
 						
-						i -= 1;
+						i -= 5;
 						i %= 360;
 						if(i < 0) {
 							i = 360 + i;
