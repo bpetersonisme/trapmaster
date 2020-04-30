@@ -9,12 +9,9 @@ public abstract class Ammo_tm extends RenderObj {
 	private double speed;				//Speed of the projectile
 	
 	public Ammo_tm(String sprite, int damage, int range, double xPos, double yPos, int facing, double speed, Monster_tm target) {
-		try {
+ 
 			this.setSpriteSheet(sprite, 1, 4, 64, 64);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		 
 		this.damage = damage;
 		this.range = range;
 		setXPosWorld(xPos);
