@@ -3,8 +3,6 @@ import java.awt.FlowLayout;
 import java.awt.Graphics2D;
 import java.awt.Toolkit;
 
-import javafx.scene.image.Image;
-
 import javax.swing.JFrame; 
 
 import java.awt.event.KeyAdapter;
@@ -647,8 +645,10 @@ public class Main_tm {
 								/*
 								 * Trap Attack actions
 								 */
-								
-								trap.tr_attack(monsters);
+								Ammo_tm ammo = trap.tr_attack(monsters);
+								if (ammo != null) {
+									ammo.fire();
+								}
 								
 								/*
 								 * Trap cooldown actions

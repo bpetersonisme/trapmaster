@@ -17,12 +17,10 @@ public abstract class Trap_tm extends RenderObj{
 	private int tr_range;				//Trap range
 	private int tr_damage;				//Trap damage
 	private int tr_cost;				//Trap cost
-	private int tr_cooldown;			//Trap cooldown/firerate
-	private int timer;					//Used to keep track of cooldown
 	private int tr_ID;					//numerical ID of the trap
 	private int facing;					//direction trap is facing. 0 = north, 1 = east, 2 = south, 3 = west
 	private Monster_tm target;			//The target of the trap
-	private ActionBox AOE;		//The tiles covered by this trap.
+	private ActionBox AOE;				//The tiles covered by this trap.
 	
 	/**
 	 * Abstract constructor. Just to make things easier for the actual trap classes.
@@ -31,9 +29,10 @@ public abstract class Trap_tm extends RenderObj{
 		this.setXPosWorld(xPos);
 		this.setYPosWorld(yPos);
 		this.setZPos(2);
-		this.timer = this.tr_cooldown;
 		this.facing = facing;
 		this.setFocusable(true);
+		instantiateStats();
+		addStat(tr_currentHealth, tr_maxHealth, Color.red, Color.green);
 		tr_ID = trap_count;
 		trap_count++;
 	}
@@ -72,12 +71,6 @@ public abstract class Trap_tm extends RenderObj{
 	}
 	public void setTr_cost(int tr_cost) {
 		this.tr_cost = tr_cost;
-	}
-	public int getTr_cooldown() {
-		return tr_cooldown;
-	}
-	public void setTr_cooldown(int tr_cooldown) {
-		this.tr_cooldown = tr_cooldown;
 	}
 	public int getTr_ID() {
 		return tr_ID;
@@ -127,22 +120,7 @@ public abstract class Trap_tm extends RenderObj{
 	 * triggers an attack from the trap to its target.
 	 * If no, acquires a new target.
 	 */
-	public void tr_attack (ArrayList<Monster_tm> monsters) {
-		if (timer == 0) {
-			if (acquireTarget(monsters)) {
-				//fire at target
-				timer = tr_cooldown;
-				setCurrSpriteRow(1);
-			} else {
-				
-			}
-		} else if (timer == (int)(tr_cooldown / 4)) {
-			setCurrSpriteRow(0);
-			timer = timer - 1;
-		} else {
-			timer = timer - 1;
-		}
-	}
+	public abstract Ammo_tm tr_attack (ArrayList<Monster_tm> monsters);
 	
 	/**
 	 * Called when the trap is sold.
@@ -172,8 +150,6 @@ public abstract class Trap_tm extends RenderObj{
 	}
 	
 	public void setBars() {
-		instantiateStats();
-		addStat(tr_currentHealth, tr_maxHealth, Color.red, Color.green);
-		addStat(timer, tr_cooldown, Color.yellow, Color.yellow);
+		setBarVal(0, tr_currentHealth);
 	}
 }
