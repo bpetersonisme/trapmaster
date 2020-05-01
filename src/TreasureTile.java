@@ -19,6 +19,8 @@ public final class TreasureTile extends Tile_tm{
         super(importImage("/treasure_tile.png"), xPos,yPos, 1, 1);
         treasure = 0;
         TID = tid;
+        setObjName("Treasure Tile");
+        System.out.println("TREASURE TILE WITH TID " + tid);
     }
 
     /**

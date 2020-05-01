@@ -167,6 +167,7 @@ public class Testbed_tm {
 		testers.add(tester3); 
 		testers.add(tester4);
 		testers.add(tester5);
+		 
 		
 		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override

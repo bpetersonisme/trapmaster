@@ -12,6 +12,7 @@ public class TileBasic extends Tile_tm {
 	 */
 	public TileBasic(double xPos, double yPos) {
 		super(importImage("/basic_tile.png"), xPos, yPos, 1, 1);
+		setObjName("Basic Tile");
 	}
 	
 	

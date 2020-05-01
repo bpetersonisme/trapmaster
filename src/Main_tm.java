@@ -56,8 +56,9 @@ public class Main_tm {
 	//Object Instantiation Arrays
 	private ArrayList<Trap_tm> traps;
 	private ArrayList<Monster_tm> monsters;
-	private TreeMap<Integer, Tile_tm> tiles;
-	private ArrayList<TreasureTile> treasures;
+	private TreeMap<Double, Tile_tm> tiles;
+		private ArrayList<DoorTile> doors;
+		private ArrayList<TreasureTile> treasures; 
 	private ArrayList<ActionBox> gameBounds; //Bounds should be... 1a1a1a this color?
 	private int trapIt, monsterIt, tileIt, aBIt; 
 	private Trap_tm trap;
@@ -100,7 +101,7 @@ public class Main_tm {
 			public void run() {
 				try {
 					
-					Main_tm window = new Main_tm(false);
+					Main_tm window = new Main_tm(true);
 					window.game_frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -177,7 +178,7 @@ public class Main_tm {
 		 ***************************************************************/
 		gameMap = null;
 		
-		gameMap = Mapper.buildMap(5000, "0 0 S ND NB NT", "k k k");
+		gameMap = Mapper.buildMap(5000, "0 0 S ND NB NB NT NB SB WB EB EB NB WB WB", "k k k");
 			
 		
 		gameWidth = gameEngine.getViewportWidth();
@@ -201,26 +202,34 @@ public class Main_tm {
 		 ***************************************************************/
 		
 		int i, arraySize;
-		RenderObj curr;
-		
-		
+		RenderObj curr; 
 		/************************
 		 * Tile Initializations *
 		 ************************/
 		tiles = gameMap.getTiles();
-		
+		doors = gameMap.getDoorTiles();
+		treasures = gameMap.getTreasureTiles();
 		
 
-		int tileKey = 0;
-		curr = tiles.get(gameMap.getSpawnKey()); 
+		double tileKey = tiles.firstKey();
+		curr = tiles.get(tileKey);  
+		 
 		
-		while(curr != null) {
+		while(curr != null) {  
 			gameEngine.addRenderObj(curr);
-			tileKey = tiles.higherKey(tileKey);
-			if(tileKey == gameMap.getNortherlyKey() || tileKey == gameMap.getSoutherlyKey() || tileKey == gameMap.getSpawnKey()) 
-				tileKey++;
-			curr = tiles.get(tileKey);
+			if(tiles.higherKey(tileKey) != null) {
+				tileKey = tiles.higherKey(tileKey);
+				curr = tiles.get(tileKey);
+			}
+			else 
+				curr = null;
+			//while(curr == null && (tileKey == gameMap.getNortherlyKey() || tileKey == gameMap.getSoutherlyKey() || tileKey == 0)) {
+			//	tiles.higherKey(tileKey);
+			//	curr = tiles.get(tileKey);
+			//}
 		}
+		
+		
 		
 		/* Some code/method call to populate the tiles
 		
@@ -417,12 +426,14 @@ public class Main_tm {
 					} 
 				}
 				else if(mode == STD_MODE) {
-
-					Monster_tm currMonster;
 					Trap_tm currTrap; 
+					Monster_tm currMonster;
+					DoorTile currDoor;
+					
 					int i, len;
 					boolean oldState;
 					len = traps.size();
+					//Check if a trap has focus
 					for(i = 0; i < len; i++) {
 						currTrap = traps.get(i);
 						if(currTrap.contains(mouseXClick, mouseYClick)) {
@@ -437,6 +448,7 @@ public class Main_tm {
 							}
 						}
 					}
+					//Check if a monster has focus
 					len = monsters.size();
 					for(i = 0; i < len; i++) {
 						currMonster = monsters.get(i);
@@ -452,7 +464,63 @@ public class Main_tm {
 							}
 						}
 					}
+					//Check if a door has focus- also, a double click will open it or close it.
+					len = doors.size();
+					for(i = 0; i < len; i++) {
+						currDoor = doors.get(i);
+						if(currDoor.contains(mouseXClick, mouseYClick)) { 
+							currDoor.setFocus(true);
+							currDoor.redrawCurrSprite();
+							if(e.getClickCount() == 2)
+								currDoor.toggle();
+						}
+						else {
+							oldState = currDoor.isFocused();
+							if(oldState) {
+								currDoor.setFocus(false);
+								currDoor.redrawCurrSprite();
+							}
+						}
+					}
 					 
+					
+					if(debug) {
+						
+						
+						
+						
+						Tile_tm curr;  
+						
+						
+						
+
+						double tileKey = tiles.firstKey();
+						curr = tiles.get(tileKey);  
+						 
+						
+						while(curr != null) {   
+							if(curr.contains(mouseXClick, mouseYClick)) {
+								System.out.println("This tile's treasure value is: " + curr.getFScore(Tile_tm.TREASURE));
+								System.out.println("This tile's spawn value is: " + curr.getFScore(Tile_tm.SPAWN));
+								curr = null;
+							}
+							if(tiles.higherKey(tileKey) != null) {
+								tileKey = tiles.higherKey(tileKey);
+								curr = tiles.get(tileKey);
+							}
+							else 
+								curr = null;
+							//while(curr == null && (tileKey == gameMap.getNortherlyKey() || tileKey == gameMap.getSoutherlyKey() || tileKey == 0)) {
+							//	tiles.higherKey(tileKey);
+							//	curr = tiles.get(tileKey);
+							//}
+						}
+						
+						
+						
+						
+						
+					}
 				}
 				if(canPlace == true && mode == BUY_MODE) {
 					purchase.removeFilter();

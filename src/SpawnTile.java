@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Scanner;
@@ -14,6 +16,7 @@ public final class SpawnTile extends Tile_tm{
     private int currMonster;
     private long nextMonsterTime;
     Scanner s;
+    private char orientation;
     private int numTreasure; //Returns the number of treasureTiles on the current map
     /**
      * Creates a new Tile_tm of spriteSheet texture, at position (xPos, yPos), with numRows animations,
@@ -29,6 +32,7 @@ public final class SpawnTile extends Tile_tm{
         monsterList = list; 
         nextMonsterTime = System.nanoTime();
         numTreasure = 0;
+        orientation = orient;
         switch(orient) {
 	        case 'N': setAngle(180); break;
 	        case 'E': setAngle(90); break;
@@ -84,6 +88,30 @@ public final class SpawnTile extends Tile_tm{
     }
 
     /**
+     * Makes walls appear on any unconnected edge 
+     */
+    public void makeDecoration(BufferedImage currSprite) {
+    	Graphics2D g2d = currSprite.createGraphics();
+    	int wallThickness =(int)(SIZE * (32.0/256.0)); 
+    	g2d.setColor(new Color(74, 54, 51)/*makes kind of a brown. Same color as the door walls.*/); 
+    	if(getNeighbor(NORTH) == null && orientation != Mapper.NORTH) {
+    		g2d.fillRect(0, 0, SIZE, wallThickness);
+    	}
+    	if(getNeighbor(EAST) == null && orientation != Mapper.EAST) {
+    		g2d.fillRect(SIZE-wallThickness, 0, SIZE, SIZE);
+    	}
+    	if(getNeighbor(SOUTH) == null && orientation != Mapper.SOUTH) {
+    		g2d.fillRect(0, SIZE-wallThickness, SIZE, SIZE);
+    	}
+    	if(getNeighbor(WEST) == null && orientation != Mapper.NORTH) {
+    		g2d.fillRect(0, 0, wallThickness, SIZE);
+    	}
+    	
+    	
+    	g2d.dispose();
+    }
+    
+    /**
      * Creates a new monster dependent on the char selected by choice 
      * @param choice The new monster 
      * @return A new monster, type indicated by choice 
@@ -112,5 +140,9 @@ public final class SpawnTile extends Tile_tm{
      */
     public void setNumberOfTreasures(int nuNumTre) {
     	numTreasure = nuNumTre;
+    }
+    
+    public String getObjName() {
+    	return "Spawn Tile"; 
     }
 }

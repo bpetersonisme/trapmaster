@@ -12,6 +12,11 @@ public final class Mapper {
 	public static final char SOUTH = 'S';
 	public static final char EAST = 'E';
 	public static final char WEST = 'W';
+	
+	private final static int O_IN = 0;
+	private final static int N_IN = 1;
+	private final static int S_IN = 2;
+	private final static int M_IN = 3;
 	/*
     public static final int SPAWN = 32767;
 	    public static final int NORTHERLIES = 16383;
@@ -34,7 +39,12 @@ public final class Mapper {
      */
     public static Map_tm buildMap(int bounds, String tileList, String monsterList)  {
     	
-    	
+    	/*
+    	 * All key values may be guaranteed unique by the formula k = sqrt(x^2 + (y+x)^2), an injective function. 
+    	 * where x and y are the double's x and y coordinates. 
+    	 * This is further assured by putting k into  
+    	 */
+    	/*
     	final int MAX = (int)Math.floor(Math.pow(Math.floorDiv(bounds*2, Tile_tm.SIZE), 2));
     	
     	final int SPAWN = Math.floorDiv(MAX, 2);
@@ -44,46 +54,67 @@ public final class Mapper {
 	    final int SOUTHERLIES = SPAWN + Math.floorDiv(SPAWN, 2);
 	    	final int SOUTHEAST = SPAWN+1;
 	    	final int SOUTHWEST = SOUTHERLIES + 1;
-	   
-	    int controls[] = {SPAWN, NORTHERLIES, SOUTHERLIES, MAX};
-	    
+	   */
+    	final double MAX = (int)keygen(bounds, bounds); //This is the largest value a key can have
+    	final double ORIGIN = 0; //This is the origin, the midpoint 
+    		final double NORTHERLIES = Math.floorDiv((int)-MAX, 2); 
+    			final double NORTHWEST = -MAX; //The northwest region holds keys between [-MAX, NORTHERLIES)
+    			final double NORTHEAST = NORTHERLIES; //The northeast region holds keys between [NORTHERLIES, ORIGIN)
+    		final double SOUTHERLIES = Math.floorDiv((int)MAX, 2);
+    			final double SOUTHEAST = ORIGIN; //The southeast region holds keys between [ORIGIN, SOUTHERLIES)
+    			final double SOUTHWEST = SOUTHERLIES; //The southwest region holds keys between [SOUTHERLIES, MAX)
+    	
+	    	
+    	 
+	    //int controls[] = {SPAWN, NORTHERLIES, SOUTHERLIES, MAX};
+    		double controls[] = {ORIGIN, NORTHERLIES, SOUTHERLIES, MAX};
+    		    
 		Map_tm map = null; 
-    	
-    	
+ 	
     	if(tileList != null) {
-    		
-    		
+ 
         	String tileToken; 
         	Tile_tm prevTile = null;
         	Tile_tm currTile = null;
-        	char dirType;
-        	int originDirection = NORTH; //originDirection is relative to the origin. Obviously. 
+        	SpawnTile spawn = null;
+        	char dirType; 
         	char currDirection = NORTH; //currDirection is relative to whatever the previous tile was
         	char doorDirection = NORTH;
-        	
-        	boolean hasSpawned = false;
-        	boolean atSpawn = false;
+        	boolean hasSpawned = false; 
         	int treasureNumber = 0; 
+        	
         	int tileNumber = -1;
+        	double tileKey;
+        	/*
         	int tileKeyNorthwest = NORTHWEST;
         	int tileKeyNortheast = NORTHEAST;
         	int tileKeySoutheast = SOUTHEAST;
         	int tileKeySouthwest = SOUTHWEST;
+	    	*/
+        	double tileKeyNorthwest = NORTHWEST;
+        	double tileKeyNortheast = NORTHEAST;
+        	double tileKeySoutheast = SOUTHEAST;
+        	double tileKeySouthwest = SOUTHWEST;
 	    	Scanner s = new Scanner(tileList);
 	    	
 	    	
-	    	TreeMap<Integer, Tile_tm> tiles = new TreeMap<Integer, Tile_tm>();
+	    	//TreeMap<Integer, Tile_tm> tiles = new TreeMap<Integer, Tile_tm>();
+	    	TreeMap<Double, Tile_tm> tiles = new TreeMap<Double, Tile_tm>();
 	    	ArrayList<DoorTile> doorTiles = new ArrayList<DoorTile>();
 	    	ArrayList<TreasureTile> treasureTiles = new ArrayList<TreasureTile>();
 	    	
 	    	
 	    	while(s.hasNext()) {
 	    		if(s.hasNextDouble() && hasSpawned == false) {
-	    			prevTile = new SpawnTile(s.nextDouble(), s.nextDouble(), monsterList, s.next().charAt(0));
+	    			spawn = new SpawnTile(s.nextDouble(), s.nextDouble(), monsterList, s.next().charAt(0));
+	    			System.out.println("SPAWN'S KEY IS " + keygen(spawn.getXPosWorld(), spawn.getYPosWorld(), controls));
+	    			prevTile = spawn;
 	    			currTile = prevTile;
-	    			tiles.put(SPAWN, prevTile);
-	    			tiles.put(NORTHWEST, null);
-	    			tiles.put(SOUTHEAST, null);
+	    			//tileKey = keygen(spawn.getXPosWorld(), spawn.getYPosWorld(), controls);
+	    			//tiles.put(tileKey, spawn);
+	    			//tiles.put(ORIGIN, null);
+	    			//tiles.put(NORTHWEST, null);
+	    			//tiles.put(SOUTHEAST, null);
 	    			hasSpawned = true;
 	    		}
 	    		else {
@@ -113,11 +144,13 @@ public final class Mapper {
 	    				case SOUTH: doorDirection = NORTH; break;
 	    				case WEST: doorDirection = EAST; break;
 	    				case EAST: doorDirection = WEST; break;
-	    				}
+	    				} 
 	    				currTile = new DoorTile(prevTile.getNeighborX(currDirection), prevTile.getNeighborY(currDirection), doorDirection); 
+	    				doorTiles.add((DoorTile)currTile);
 	    			break;
 	    			case 'T': //T for treasure
 	    				currTile = new TreasureTile(prevTile.getNeighborX(currDirection), prevTile.getNeighborY(currDirection), treasureNumber++); 
+	    				treasureTiles.add((TreasureTile)currTile);
 	    			break;
 	    			case 'B': //B for basic  
 	    			default: 
@@ -125,6 +158,7 @@ public final class Mapper {
 	    			}
 	    		}
 	    		if(currTile != null) {
+	    			/*
 		    		if(currTile.getXPosWorld() > 0) {
 		    			if(currTile.getYPosWorld() > 0) { 
 		    				tileNumber = ++tileKeySoutheast;
@@ -141,24 +175,78 @@ public final class Mapper {
 		    				tileNumber = ++tileKeyNorthwest;
 		    			}
 		    		}
-	    		 
-		    		if(tileKeyNorthwest == NORTHERLIES || tileKeyNortheast == SPAWN || tileKeySoutheast == SOUTHERLIES || tileKeySouthwest == MAX) {
-		    			System.out.println("TOO MANY TILES");
+	    		 	*/
+
+	    		
+	    			tileKey = keygen(currTile.getXPosWorld(), currTile.getYPosWorld(), controls); 
+		    		//if(tileKeyNorthwest == NORTHERLIES || tileKeyNortheast == SPAWN || tileKeySoutheast == SOUTHERLIES || tileKeySouthwest == MAX) {
+		    		if(tileKeyNorthwest == NORTHERLIES || tileKeyNortheast == ORIGIN || tileKeySoutheast == SOUTHERLIES || tileKeySouthwest == MAX) { 
 		    			System.exit(0);
 		    		}
 	    		
-	    			tiles.put(tileNumber, currTile);
-	    			prevTile = currTile;
+	    			//tiles.put(tileNumber, currTile);
+		    		if(tiles.get(tileKey) == null) {
+		    			tiles.put(tileKey, currTile); 
+		    			prevTile = currTile;
+		    		}
+		    		else {
+		    			prevTile = tiles.get(tileKey);
+		    		}
 	    		}
 	    		
 	    	}
 	    	s.close();
-	    	map = new Map_tm((SpawnTile)tiles.get(SPAWN), tiles, doorTiles, treasureTiles, controls);
+	    	//map = new Map_tm((SpawnTile)tiles.get(SPAWN), tiles, doorTiles, treasureTiles, controls);
+	    	map = new Map_tm(spawn, tiles, doorTiles, treasureTiles, controls);
     	}
     	
     	return map;
     }
-     
+    
+
+    
+    /**
+     * Given ordered pair (x,y), returns its unique key. NOTE: Due to precision
+     * limits, the uniqueness of two keys cannot be absolutely guaranteed. This 
+     * won't be a problem, however, unless you're trying to overlap tiles. 
+     * @param x The x coordinate from which the key will be generated
+     * @param y The y coordinate from which the key will be generated
+     */
+    public static double keygen(double x, double y) {
+    	return keygen(x, y, null);
+    }
+    
+	 
+    /**
+     * Given ordered pair (x,y), returns its unique key. NOTE: Due to precision
+     * limits, the uniqueness of two keys cannot be absolutely guaranteed 
+     * @param x The x coordinate from which the key will be generated
+     * @param y The y coordinate from which the key will be generated
+     * @param controls The dividing values of the coordinate pairs 
+     * @return A key unique to the ordered pair given
+     */
+    public static double keygen(double x, double y, double[] controls) {
+    	System.out.println("X is " + x + ", y is " + y);
+    	double result = Math.hypot(x, y);
+    	double offset = 0;
+    	if(controls != null) {
+	    	 if(x < 0 && y < 0) { //Meaning Northwest region
+	    		offset = -controls[M_IN];
+	    	 }
+	    	 else if(x > 0 && y > 0) { //Meaning Southeast region
+	    		 offset = controls[O_IN]; //Just looks so incomplete without it.
+	    	 }
+	    	else {
+	    		if(x < 0) {//Implies y > 0; meaning Southwest region
+	    			offset = controls[S_IN];
+	    		} 
+	    		else {//Meaning northeast region.
+	    			offset = controls[N_IN];
+	    		}
+	    	}
+    	}
+    	return result + offset;
+    }
     
      
 }

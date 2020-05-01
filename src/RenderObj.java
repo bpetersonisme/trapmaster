@@ -253,15 +253,14 @@ public abstract class RenderObj {
 	 * @param col
 	 */
 	public void setCurrSprite(int row, int col) {
-		//System.out.println("Presenting sprite at " + row + ", " + col); 
-		System.out.println("Row is: " + row + ", max is " + spriteSheetRows + "\nCol is: " + col + ", max is " + spriteSheetCols);
+		//System.out.println("Presenting sprite at " + row + ", " + col);  
 		if(row >= spriteSheetRows || row < 0 || col >= spriteSheetCols || col < 0) {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
 		else {
 			currSpriteRow = row;
 			currSpriteCol = col;
-			rotateCurrSprite();
+			redrawCurrSprite();
 		}
 	}
 	
@@ -327,10 +326,19 @@ public abstract class RenderObj {
 	public boolean contains(double x, double y) { 
 		CollideEntry objBounds = getObjBounds(this);
 		if(this != null) {
-			System.out.println("Does objBounds contain (" + x + ", " + y + ")? " + objBounds.getShape().contains(x, y));
+			//System.out.println("Does objBounds contain (" + x + ", " + y + ")? " + (objBounds.getShape().contains(x, y) == true ? "yes" : "no"));
 			return objBounds.getShape().contains(x, y);
 		}
 		return false;
+	}
+	
+	/**
+	 * Returns the distance between two RenderObjs
+	 */
+	public static double getDistance(RenderObj local, RenderObj other) {
+		double centerDifferenceX = local.getXPosWorld() - other.getXPosWorld();
+		double centerDifferenceY = local.getYPosWorld() - other.getYPosWorld();
+		return Math.hypot(centerDifferenceX, centerDifferenceY);
 	}
 	
 	/**
@@ -342,17 +350,11 @@ public abstract class RenderObj {
  
 	public static boolean isColliding(RenderObj local, RenderObj other) {
 		
-		double centerDistances = Math.pow(local.getXPosWorld() - other.getXPosWorld(), 2);
-		centerDistances += Math.pow(local.getYPosWorld() - other.getYPosWorld(), 2);
-		centerDistances = Math.sqrt(centerDistances);
+		double centerDistances = getDistance(local, other);
 		
-		double localExtent = Math.pow(local.getSpriteHeight()/2, 2);
-		localExtent += Math.pow(local.getSpriteWidth()/2, 2);
-		localExtent = Math.sqrt(localExtent);
+		double localExtent = Math.hypot(local.getSpriteHeight()/2, local.getSpriteWidth()/2);  
 		
-		double otherExtent = Math.pow(other.getSpriteHeight()/2,  2);
-		otherExtent += Math.pow(other.getSpriteWidth()/2, 2);
-		otherExtent = Math.sqrt(otherExtent);
+		double otherExtent = Math.hypot(other.getSpriteHeight()/2, other.getSpriteWidth()/2);
 		
 		if(centerDistances > localExtent + otherExtent)
 			return false;
@@ -478,7 +480,13 @@ public abstract class RenderObj {
 	protected void setCurrSpriteRow(int newSpriteRow) { 
 		setCurrSprite(newSpriteRow, currSpriteCol);
 	}
-	
+
+	/**
+	 * Equivalent to rotateCurrSprite- basically just a more descriptive name for the same method. 
+	 */
+	public void redrawCurrSprite() {
+		rotateCurrSprite(angle);
+	}
 
 	/**
 	 * Rotates the sprite by degree degrees from its normal position
@@ -528,6 +536,7 @@ public abstract class RenderObj {
 		currSpriteWidth = (int) newWidth;
 		currSpriteHeight = (int) newHeight; 
 		currSprite = rotatedSprite;
+		makeDecoration(currSprite);
 		
 		if(canBeFocused) {
 			if(hasFocus) {
@@ -552,11 +561,13 @@ public abstract class RenderObj {
 				gee.drawLine(newWidth-focusBoundLength-1, newHeight-1, newWidth-1, newHeight-1); //Horizontal
 				gee.drawLine(newWidth-1,  newHeight-focusBoundLength-1, newWidth-1, newHeight-1); //Vertical
 				drawBars(gee);
-				gee.drawImage(rotatedSprite, 0, 0, null);
+				gee.drawImage(currSprite, 0, 0, null);
 			
 				gee.dispose();
 			}
 		}
+		
+		
 		 
 	}
 	
@@ -567,6 +578,16 @@ public abstract class RenderObj {
 		rotateCurrSprite(angle);
 	}
 
+	
+	/**
+	 * Adds 'decoration.' By default, does nothing. Made to be overridden 
+	 * @param currSprite The sprite(?) that is being "decorated"
+	 */
+	public void makeDecoration(BufferedImage currSprite) {
+		
+	}
+	
+	
 	/**
 	 * GetModelSprite returns an unrotated version of the current sprite
 	 * @return The model sprite, an unrotated version of the current sprite
@@ -607,7 +628,7 @@ public abstract class RenderObj {
 			doFilter = true; 
 			filterColor = new Color(col.getRed(), col.getGreen(), col.getBlue(), op);
 			filterOpacity = op;
-			rotateCurrSprite();
+			redrawCurrSprite();
 		}
 	}
 	
@@ -625,7 +646,7 @@ public abstract class RenderObj {
 	 */
 	public void removeFilter() {
 		doFilter = false;
-		rotateCurrSprite();
+		redrawCurrSprite();
 	}
 	
 	
@@ -1004,12 +1025,14 @@ public abstract class RenderObj {
 	/**
 	 * Adds a new stat bar to stats. To be called only after instantiateStats has been called. 
 	 * Returns true if stats was added, false otherwise
-	 * @param val
-	 * @param maxVal
-	 * @param lo
-	 * @param hi
+	 * @param val The value that will be tracked by the stat bar
+	 * @param maxVal The maximum of the value
+	 * @param lo The color to be used when the value is low
+	 * @param hi The color to be used when the value is high
 	 */
 	public boolean addStat(int val, int maxVal, Color lo, Color hi) {
+		if(stats == null) 
+	    	instantiateStats();
 		if(stats != null) {
 			return stats.add(new StatBarEntry(val, maxVal, lo, hi));
 		}
@@ -1122,9 +1145,7 @@ public abstract class RenderObj {
 	 * @param newHeight The height of the scaled image
 	 * @return A scaled version of img
 	 */
-	public static BufferedImage scaleImage(BufferedImage img, int newWidth, int newHeight) {
-		System.out.println("IMG IS " + img.getWidth() + " by " + img.getHeight());
-		System.out.println("New dimensions are: " + newWidth + " by " + newHeight);
+	public static BufferedImage scaleImage(BufferedImage img, int newWidth, int newHeight) { 
 		BufferedImage result = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = result.createGraphics(); 
 		g2d.drawImage(img.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT), null, null);

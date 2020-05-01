@@ -15,6 +15,7 @@ public class ActionBox extends RenderObj {
 	
 	private double boxDistance;
 	private RenderObj parent; 
+	private boolean enabled;
 	
 	
 	/**
@@ -76,6 +77,23 @@ public class ActionBox extends RenderObj {
 		setXPosWorld(worldXPos);
 		setYPosWorld(worldYPos);
 		setZPos(0);
+		enabled = true;
 	}
+	/**
+	 * @return True if the actionBox is collision-enabled, and false otherwise
+	 */
+	public boolean isEnabled() {
+		return enabled;
+	}
+	
+	/**
+	 * Sets whether or not it is enabled. If it is, it will detect collisions. 
+	 * @param enabled Whether or not this actionBox is to be enabled.
+	 */
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+	
+	
 	 
 }
