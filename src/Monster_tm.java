@@ -11,21 +11,20 @@ public class Monster_tm extends RenderObj {
 	 * 
 	 * @param dmgTaken
 	 *            - The amount of damage the monster will take.
-	 * @param p
-	 *            - Player is needed so that the loot of monster is added to player
-	 *            money pool.
 	 */
 
-	public void takeDmg(int dmgTaken, Player p) {
+	public void takeDmg(int dmgTaken) {
 		this.health -= dmgTaken;
 		if (this.health <= 0) {
-			 //death(p);
+			 death();
 		}
 	}
 
-	/*
-	 * Takes a treasure tile object and calls its method to take loot. Loot taken is
-	 * based on the damage dealt to the treasure.
+	/**
+	 * Takes a treasure tile object and calls its method to take loot. 
+	 * Loot taken is based on the damage dealt to the treasure.
+	 * 
+	 * @param chest
 	 */
 	public void plunder(TreasureTile chest) {
 		if (chest.getTreasure() > 0){
@@ -40,11 +39,14 @@ public class Monster_tm extends RenderObj {
 	}
 
 	/**
-	 * Plays the death animation, waits, then "deletes" monster from screen. 
-	 * Moves the monster's x position away from screen.
+	 * Sets the death animation once monster dies. 
+	 * This method assumes that giveGold() is called before it.
+	 * Sets the monster's loot to 0 to ensure loot isn't added twice. 
+	 * If statement is used to make the monster stay on screen before disappearing.
 	 */
 	public void death() {
 		cycleAnimation(4, 0, 1);
+		this.loot = 0;
 		if(count == 3){
 			setXPosWorld(-12000);
 			count = 0;
@@ -61,9 +63,6 @@ public class Monster_tm extends RenderObj {
 		return false;
 	}
 
-	public void attack() {}
-
-	public void move() {}
 
 	public int getHealth() {
 		return health;
