@@ -89,6 +89,7 @@ public abstract class RenderObj {
 				spriteSheet = scaleImage(spriteSheet, spriteWidth*numCols, spriteHeight*numRows);
 			}
 		}
+		
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
@@ -260,6 +261,7 @@ public abstract class RenderObj {
 		else {
 			currSpriteRow = row;
 			currSpriteCol = col;
+
 			redrawCurrSprite();
 		}
 	}
@@ -347,7 +349,7 @@ public abstract class RenderObj {
 	 * Returns whether or not this object is colliding with other. 
 	 * @return True is other is colliding with this object, false otherwise
 	 */
-	public boolean isColliding(RenderObj other) {
+	protected boolean isColliding(RenderObj other) {
 		
 		RenderObj local = this;
 		
@@ -616,12 +618,15 @@ public abstract class RenderObj {
 	private BufferedImage generateModelSprite() {
 		BufferedImage newSprite = new BufferedImage(modelSpriteWidth, modelSpriteHeight, BufferedImage.TYPE_INT_ARGB);
 	 	Graphics2D g2D = newSprite.createGraphics(); 
-		g2D.setColor(Color.RED);
+		colorEdge(g2D);
 		g2D.drawRect(0, 0, modelSpriteWidth - 1, modelSpriteHeight - 1);
+		g2D.dispose();
 		return newSprite;
 	}
 
- 
+	public void colorEdge(Graphics2D g) {
+		g.setColor(Color.RED);
+	}
 
 	/**
 	 * Adds a filter of color col at opacity op to the sprite

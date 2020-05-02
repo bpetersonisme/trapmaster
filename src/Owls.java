@@ -1,4 +1,4 @@
-import java.util.Random;
+/*import java.util.Random;
 
 public class Owls extends Monster_tm{
 	
@@ -13,3 +13,4 @@ public class Owls extends Monster_tm{
 	public void move(){};
 	
 }
+*/

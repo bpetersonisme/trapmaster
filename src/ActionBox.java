@@ -1,3 +1,5 @@
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 
@@ -13,8 +15,7 @@ import java.awt.image.BufferedImage;
  */
 public class ActionBox extends RenderObj {
 	
-	private double boxDistance;
-	private RenderObj parent; 
+ 
 	private boolean enabled;
 	
 	
@@ -76,9 +77,19 @@ public class ActionBox extends RenderObj {
 		setSpriteSheet((BufferedImage)null, 1, 1, boxWidth, boxHeight);
 		setXPosWorld(worldXPos);
 		setYPosWorld(worldYPos);
-		setZPos(0);
+		setZPos(1000000);
 		enabled = true;
+		setObjName("ActionBox");
 	}
+	
+	public void colorEdge(Graphics2D g2D) {
+		if(isEnabled())
+	 		g2D.setColor(Color.RED);
+	 	else 
+	 		g2D.setColor(Color.GREEN);
+	}
+	
+	
 	/**
 	 * @return True if the actionBox is collision-enabled, and false otherwise
 	 */
@@ -92,6 +103,16 @@ public class ActionBox extends RenderObj {
 	 */
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+		redrawCurrSprite();
+	}
+	
+	/**
+	 * Returns whether or not this is colliding with other
+	 * @param other The other RenderObj
+	 * @return True if the two are colliding and the ActionBox is enabled, false otherwise
+	 */
+	public boolean isColliding(RenderObj other) {
+		return super.isColliding(other) && isEnabled();
 	}
 	
 	

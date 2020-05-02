@@ -161,11 +161,7 @@ public class Testbed_tm {
  
 		
 		testers = new ArrayList<RenderObj>();
-		
-		System.out.println("SIZE IS " + testers.size());
-		testers.add(null);
-		System.out.println("SIZE IS " + testers.size());
-		
+		 
 		testers.add(tester);
 		testers.add(tester2);
 		testers.add(tester3); 
@@ -247,7 +243,7 @@ public class Testbed_tm {
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
 						entVelLabel.setText("Ent velocity: " + tester2.getVelocity() + "(" + formatter.format(tester2.getXVel()) + ", " + 
 						formatter.format(tester2.getYVel()) + ")"); 
-						viewportPos.setText("Testers colliding? Tester-tester2: " + tester2.isColliding(tester) + "Tester-tester3: " + tester2.isColliding(tester3));
+						viewportPos.setText("Testers colliding? Tester-tester2: " + RenderObj.isColliding(tester2, tester) + "Tester-tester3: " + RenderObj.isColliding(tester2, tester3));
 						lblCorners.setText(
 								"Upper Left: (" + (leftX*cos - topY*sin) + ", " + (leftX*sin + topY*cos) + ") " +
 								"Upper Right: (" + (rightX*cos - topY*sin) + ", " + (rightX*sin + topY*cos) + ") " +

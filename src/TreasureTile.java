@@ -1,4 +1,3 @@
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 /**
@@ -38,20 +37,18 @@ public final class TreasureTile extends Tile_tm{
     	TID = nuTID;
     }
     
-    public void setFScore(double f) {
-    	super.setFScore(0);
-    	super.setGScore(0);
-    	super.setFScore(TREASURE, 0);
-    }
-    
 
     /**
      * decrements the amount of treasure in this; sets treasure at 0 if treasure goes below 0
      * @param amount amount of treasure removed from treasure
      */
-    public void loseTreasure(int amount){
-        treasure -= amount;
-        if(treasure < 0) treasure = 0;
+    public int loseTreasure(int amount){
+        int loss = amount;
+    	if(getTreasure() < loss) {
+    		loss = getTreasure();
+    	}
+    	setTreasure(getTreasure() - loss);
+        return loss;
     }
 
     /**
@@ -77,4 +74,15 @@ public final class TreasureTile extends Tile_tm{
     public int getTreasure(){
         return treasure;
     }
+    /**
+     * Sets the amount of treasure to treas
+     * @param treas The new amount of treasure in this TreasureTile
+     */
+     public void setTreasure(int treas) {
+    	 if(treas < 0)
+    		 treas = 0;
+    	 else
+    		 treasure = treas;
+    	 
+     }
 }

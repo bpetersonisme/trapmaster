@@ -4,7 +4,7 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-public class Ogre extends Monster_tm {
+public abstract class Ogre /*extends Monster_tm*/ {
 	int frameDelay = 300; 
 	String filename = "Ogre.png";
 	boolean up = false; //All booleans variables are used to determine direction.
@@ -15,7 +15,7 @@ public class Ogre extends Monster_tm {
 	int count = 0;
 	long lastAtk = 0; //Used for cooldown method. Keeps time of last attack.
 	long cdTime = 1000; //Sets cooldown of attack.
-
+	/*
 	public Ogre(int rows, int columns, int width, int height, int xWorld, int yWorld){
 		try {
 			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(filename));
@@ -30,7 +30,7 @@ public class Ogre extends Monster_tm {
 		setXPosWorld(xWorld);
 		setYPosWorld(yWorld);
 	}
-
+	
 
 	
 	//This is used for testing to make the monster attack the chest. I'm using the Elf as a "chest".
@@ -97,7 +97,7 @@ public class Ogre extends Monster_tm {
 			}
 		}
 	}*/
-	
+	/*
 	//Testing method. This uses an elf as a chest. 
 	public void attack(Elf ev, int flag) {
 		if (right) {
@@ -155,7 +155,7 @@ public class Ogre extends Monster_tm {
 			cooldown(chest);
 		}
 	};*/
-	
+	/*
 	
 	//Testing method. Moves monster to the chest.
 	//Also takes in a monster object which I used as a "wall". 
@@ -214,7 +214,7 @@ public class Ogre extends Monster_tm {
 			newTime = timeSinceFrame;
 		return newTime;
 	}*/
-	
+	/*
 	//Tester method. Uses monster as to be sent to move to act as a "chest".
 	public int delay(int timeSinceFrame, Elf ev, Monster_tm m) {
 		int newTime = (int) (System.nanoTime() / 1000000);
@@ -242,7 +242,7 @@ public class Ogre extends Monster_tm {
 			lastAttack = time;
 		}
 	}*/
-	
+	/*
 	//Function used for attack cooldowns
 	//Tester method.
 	public void cooldown(Elf chest) {
@@ -293,4 +293,5 @@ public class Ogre extends Monster_tm {
 	public void atkRAni() {
 		cycleAnimation(6, 0, 2);
 	}
+	*/
 }

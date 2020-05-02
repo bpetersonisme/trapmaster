@@ -39,16 +39,22 @@ public class Main_tm {
 	private Thread monsterThread, trapThread, mapThread;
 	private RenderEngine_tm gameEngine;
 	private Map_tm gameMap;
+	private String mapStr;
 	private Hud_tm gameHud; 
+	private String monStr;
+	
 	private boolean doMonsterThread, doTrapThread, doMapThread;
 	private final int SCREEN_HEIGHT = 1080;
 	private final int SCREEN_WIDTH = 1920;
 	private int gameWidth;
 	private int gameHeight;
 	private boolean debug;
+	private boolean endSpawn;
+	
 	
 	private int goldAmt;
 	private DecimalFormat f;
+	
 	//Buy mode stuff
 	private RenderObj purchase;
 	private int purchaseCost; 
@@ -67,6 +73,7 @@ public class Main_tm {
 	private Monster_tm monster;
 	private Tile_tm tile;
 	private ActionBox aB;
+	private SpawnTile spawn;
 	
 	//Game Interaction Variables
 	private int screenScrollXZone;
@@ -98,11 +105,13 @@ public class Main_tm {
 	private JLabel lblPause;
 	
 	public static void main(String[] args) {
+		 
+	
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					
+			 
 					Main_tm window = new Main_tm(true);
 					window.game_frame.setVisible(true);
 				} catch (Exception e) {
@@ -176,12 +185,18 @@ public class Main_tm {
 		game_frame.pack();
 		
 		
+		
+		/**************************************************************
+		 *                Create Map and Monster Roster               *
+		 **************************************************************/
+		mapStr = "0 0 S NB ND WD EB ED WB ND NT";
+		monStr = "k 0 k 500";
+		
+		
 		/***************************************************************
 		 *                      Game Variables                         *
 		 ***************************************************************/
-		gameMap = null;
-		
-		gameMap = Mapper.buildMap(5000, "0 0 S ND NB NB NT NB NT", "k k k");
+		gameMap = Mapper.buildMap(5000, mapStr, monStr);
 			
 		
 		gameWidth = gameEngine.getViewportWidth();
@@ -197,6 +212,7 @@ public class Main_tm {
 		mouseY = 0;
 		mode = 0;
 		goldAmt = 1000;
+		endSpawn = false;
 
 		
 		
@@ -205,31 +221,33 @@ public class Main_tm {
 		 ***************************************************************/
 		
 		int i, arraySize;
-		RenderObj curr; 
+		Tile_tm currTile;
+		Monster_tm currMonster;
+		Trap_tm currTrap;
+		ActionBox currAB;
 		/************************
 		 * Tile Initializations *
 		 ************************/
+		
+		spawn = gameMap.getSpawnTile();
 		tiles = gameMap.getTiles();
 		doors = gameMap.getDoorTiles();
 		treasures = gameMap.getTreasureTiles();
 		
 
 		double tileKey = tiles.firstKey();
-		curr = tiles.get(tileKey);  
+		currTile = tiles.get(tileKey);  
 		 
 		
-		while(curr != null) {  
-			gameEngine.addRenderObj(curr);
+		while(currTile != null) {  
+			gameEngine.addRenderObj(currTile);
 			if(tiles.higherKey(tileKey) != null) {
 				tileKey = tiles.higherKey(tileKey);
-				curr = tiles.get(tileKey);
+				currTile = tiles.get(tileKey);
 			}
 			else 
-				curr = null;
-			//while(curr == null && (tileKey == gameMap.getNortherlyKey() || tileKey == gameMap.getSoutherlyKey() || tileKey == 0)) {
-			//	tiles.higherKey(tileKey);
-			//	curr = tiles.get(tileKey);
-			//}
+				currTile = null;
+			 
 		}
 		
 		
@@ -253,8 +271,8 @@ public class Main_tm {
 		 */
 		arraySize = traps.size();
 		for(i = 0; i < arraySize; i++) {
-			curr = traps.get(i);
-			gameEngine.addRenderObj(curr);
+			currTrap = traps.get(i);
+			gameEngine.addRenderObj(currTrap);
 		}
 
 		/***************************
@@ -264,8 +282,8 @@ public class Main_tm {
 		arraySize = monsters.size();
 		for(i = 0; i < arraySize; i++) {
 
-			curr = monsters.get(i);
-			gameEngine.addRenderObj(curr);
+			currMonster = monsters.get(i);
+			gameEngine.addRenderObj(currMonster);
 		}
 		
 		/*
@@ -275,6 +293,30 @@ public class Main_tm {
 		 * GameBound Initializations *
 		 *****************************/
 		gameBounds = new ArrayList<ActionBox>();
+		
+		tileKey = tiles.firstKey();
+		currTile = tiles.get(tileKey);
+		ArrayList<ActionBox> currHits; 
+		
+		while(currTile != null) {  
+			System.out.println("Doing tile " + currTile);
+			currHits = ((Tile_tm)currTile).getHitboxAsList();
+			
+			for(i = 0; i < currHits.size(); i++) {
+				currAB = currHits.get(i);
+				System.out.println("Did we add " + currAB + "? " + (gameBounds.add(currAB) ? "yes" : "no"));
+			}
+			
+			if(tiles.higherKey(tileKey) != null) {
+				tileKey = tiles.higherKey(tileKey);
+				currTile = tiles.get(tileKey);
+			}
+			else 
+				currTile = null;
+			 
+		}
+		
+		
 		/*
 		 * Some code/method call to populate the ActionBox (psst: base it off the tile list)
 		 */
@@ -287,8 +329,8 @@ public class Main_tm {
 			gameBounds.add(testBound);
 			arraySize = gameBounds.size(); 
 			for(i = 0; i < arraySize; i++) {
-				curr = gameBounds.get(i);
-				gameEngine.addRenderObj(curr);
+				currAB = gameBounds.get(i);
+				gameEngine.addRenderObj(currAB);
 			}
 		}
 		
@@ -332,7 +374,7 @@ public class Main_tm {
 						for(i = 0; i < size; i++) {
 							if(traps.get(i) != null) {
 								thing = traps.get(i);
-								if(purchase.isColliding(thing)) {
+								if(RenderObj.isColliding(purchase, thing)) {
 									canPlace = false;
 									i = size;
 								}
@@ -341,7 +383,7 @@ public class Main_tm {
 						size = monsters.size();
 						for(i = 0; i < size; i++) {
 							thing = monsters.get(i);
-							if(purchase.isColliding(thing)) {
+							if(RenderObj.isColliding(purchase, thing)) {
 								canPlace = false;
 								i = size;
 							}
@@ -349,7 +391,7 @@ public class Main_tm {
 						size = gameBounds.size();
 						for(i = 0; i < size; i++) {
 							thing = gameBounds.get(i);
-							if(purchase.isColliding(thing)) {
+							if(RenderObj.isColliding(purchase, thing)) {
 								canPlace = false;
 								i = size;
 							}
@@ -674,6 +716,8 @@ public class Main_tm {
 						for(monsterIt = 0; monsterIt < monsters.size(); monsterIt++) {
 							monster = monsters.get(monsterIt);
 							if(monster != null) {
+								
+								
 								/*
 								 * Monster Move action
 								 */
@@ -689,10 +733,20 @@ public class Main_tm {
 								
 							}
 						}
-						/*
-						 * Put monster actions here
-						 */ 
-						
+						if(endSpawn == false) {
+							monster = spawn.spawn();
+							if(monster != null) {
+								System.out.println("New monster!");
+								gameEngine.addRenderObj(monster);
+								monsters.add(monster);
+							}
+							
+							if(monster.isLastMonster()) {
+								endSpawn = true;
+							}
+						}
+					
+							 
 					}
 					try {
 						sleep(20);
@@ -752,6 +806,9 @@ public class Main_tm {
 					/*
 					 * Put map actions(?) here
 					 */
+						
+						
+						
 						gameHud.setGold(getGoldAmt());
 						/*********************
 						 * Scrolling options *

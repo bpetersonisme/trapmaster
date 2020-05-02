@@ -66,9 +66,11 @@ public final class SpawnTile extends Tile_tm{
      * provided that it is time to spawn a monster.  
      * @return The next monster in the monster list, if there IS a next monster. 
      */
-    public Monster_tm spawn(){
+    public Monster_tm spawn(){ 
     	Monster_tm newMonster = null;
-        if(System.nanoTime() <= nextMonsterTime) {
+    	System.out.println("nextMonsterTime is " + nextMonsterTime);
+    	System.out.println("Curr Time is " + System.nanoTime());
+        if(System.nanoTime() >= nextMonsterTime) { 
         	if(s.hasNextByte()) {
         		newMonster = spawnMonster((char)s.nextByte());
         	}
@@ -83,7 +85,7 @@ public final class SpawnTile extends Tile_tm{
         		s.close();
         		s = null;
         	}
-        }
+        } 
         return newMonster;
     }
 
@@ -120,11 +122,14 @@ public final class SpawnTile extends Tile_tm{
     	Monster_tm newMonster = null;
     	switch(Character.toLowerCase(choice)) {
     		case 'k': //'K' is for kobolds
-    		default: newMonster = new Kobold();
+    		default: newMonster = new Kobold(getXPosWorld(), getYPosWorld());
     	}
+    	 
     	
     	return newMonster;
     }
+    
+  
    
     /**
      * Returns the number of treasure tiles on the current map

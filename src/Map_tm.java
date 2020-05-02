@@ -276,6 +276,7 @@ public final class Map_tm {
     	  
     	  int i = 0;
     	  char dir = Mapper.NORTH;
+    	  double nuFScore;
     	  ArrayList<Tile_tm> neighbors = new ArrayList<Tile_tm>(); 
     	  PriorityQueue<Tile_tm> q = new PriorityQueue<Tile_tm>(new tileComparator()); 
     	  q.add(start);
@@ -291,7 +292,7 @@ public final class Map_tm {
     	  
     	  HashMap<Tile_tm, Double> fScores = new HashMap<Tile_tm, Double>();
     	  fScores.put(start, getHeuristic(start, goal));
-    	  
+    	  start.setFScore(Tile_tm.COMP, getHeuristic(start, goal));
     	  
     	  Tile_tm curr, neighbor;
     	  
@@ -317,8 +318,9 @@ public final class Map_tm {
 					 if(possibleGScore < gScores.get(neighbor)) {
 						 prevTiles = addToPrevious(prevTiles, neighbor, curr);
 						 gScores.put(neighbor,  possibleGScore);
-						 fScores.put(neighbor, gScores.get(neighbor) + getHeuristic(neighbor, goal));
-						 
+						 nuFScore = gScores.get(neighbor) + getHeuristic(neighbor, goal);
+						 fScores.put(neighbor, nuFScore);
+						 neighbor.setFScore(Tile_tm.COMP, nuFScore);
 						 if(q.contains(neighbor) == false)
 							 q.add(neighbor);
 						 
@@ -407,7 +409,7 @@ public final class Map_tm {
 
 		public int compare(Tile_tm arg0, Tile_tm arg1) {
 			int result = 0;
-			result = (int)(arg0.getFScore() - arg1.getFScore());
+			result = (int)(arg0.getFScore(Tile_tm.COMP) - arg1.getFScore(Tile_tm.COMP));
 			return result;
 		}
     	  
