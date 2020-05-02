@@ -82,8 +82,8 @@ public abstract class Tile_tm extends RenderObj  {
         valueToDoor = new double[4]; 
         maxTreasureDist = SIZE*maxTreasureDistance;
         setObjName("Tile");
-        AStarG = Double.POSITIVE_INFINITY;
-        AStarF = Double.POSITIVE_INFINITY;
+        AStarFS = Double.POSITIVE_INFINITY;
+        AStarFT = Double.POSITIVE_INFINITY;
     }
     
     public double getGScore() {
@@ -101,7 +101,7 @@ public abstract class Tile_tm extends RenderObj  {
     	switch(which) {
     	case TREASURE: return AStarFT; 
     	case SPAWN: return AStarFS;
-    	default: return AStarF;
+    	default: return -50000;
     	}
     }
     
@@ -342,26 +342,23 @@ public abstract class Tile_tm extends RenderObj  {
      * Given list, sets treasureDist- will also set the TID.
      * @param list A list of all treasureTiles
      */
-    public void setTreasureDist(ArrayList<TreasureTile> list) {
-    	int i, len;
+    public void setTreasureDist(ArrayList<TreasureTile> list) { 
+    	int i, len; 
+    	double leastDistance = Double.POSITIVE_INFINITY; 
+    	double currDistance;
+    	int leastDistantTID = -1; 
+    	TreasureTile currTreasure;
     	len = list.size();
-    	TreasureTile curr;
-    	if(len > 0) {
-	    	int nearestTID = list.get(0).getTID();
-	    	double leastDist = getDistance(this, list.get(0)); 
-	    	double possDist;
-	    	for(i = 1; i < len; i++) {
-	    		curr = list.get(i);
-	    		possDist = getDistance(this, curr);
-	    		if(possDist < leastDist && possDist < maxTreasureDist) {
-	    			leastDist = possDist;
-	    			nearestTID = curr.getTID();
-	    		}
-	    	}
-	    	if(treasureDist != 0)
-	    		setNearestTID(nearestTID);
-	    	treasureDist = leastDist;
+    	for(i = 0; i < len; i++) {
+    		currTreasure = list.get(i);
+    		currDistance = getDistance(this, currTreasure);
+    		if(currDistance < leastDistance && currDistance <= maxTreasureDist) {
+    			leastDistance = currDistance;
+    			leastDistantTID = currTreasure.getTID();
+    		}
     	}
+    	treasureDist = leastDistance;
+    	TID = leastDistantTID;
     }
     
      

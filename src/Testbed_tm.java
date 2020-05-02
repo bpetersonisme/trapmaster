@@ -162,12 +162,18 @@ public class Testbed_tm {
 		
 		testers = new ArrayList<RenderObj>();
 		
+		System.out.println("SIZE IS " + testers.size());
+		testers.add(null);
+		System.out.println("SIZE IS " + testers.size());
+		
 		testers.add(tester);
 		testers.add(tester2);
 		testers.add(tester3); 
 		testers.add(tester4);
 		testers.add(tester5);
 		 
+		
+		
 		
 		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override

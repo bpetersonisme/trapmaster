@@ -341,14 +341,15 @@ public abstract class RenderObj {
 		return Math.hypot(centerDifferenceX, centerDifferenceY);
 	}
 	
-	/**
-	 * Returns whether or not one object, local, is colliding with another, other. 
-	 * @param local The first object possibly colliding
-	 * @param other The second object possibly colliding
-	 * @return True if the two objects are colliding, false otherwise
-	 */
+
  
-	public static boolean isColliding(RenderObj local, RenderObj other) {
+	/**
+	 * Returns whether or not this object is colliding with other. 
+	 * @return True is other is colliding with this object, false otherwise
+	 */
+	public boolean isColliding(RenderObj other) {
+		
+		RenderObj local = this;
 		
 		double centerDistances = getDistance(local, other);
 		
@@ -422,11 +423,15 @@ public abstract class RenderObj {
 	
 	
 	/**
-	 * Returns whether or not this object is colliding with other. 
-	 * @return True is other is colliding with this object, false otherwise
+	 * Returns whether or not one object, local, is colliding with another, other. 
+	 * The main difference between this static isColliding method and its non-static peer
+	 * is that it compares the collision answer. 
+	 * @param local The first object possibly colliding
+	 * @param other The second object possibly colliding
+	 * @return True if both objects agree that they are colliding, false otherwise
 	 */
-	public boolean isColliding(RenderObj other) {
-		return isColliding(this, other);
+	public static boolean isColliding(RenderObj local, RenderObj other) {
+		return local.isColliding(other) && other.isColliding(other);
 	}
 	
 	/**

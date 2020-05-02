@@ -20,7 +20,6 @@ public final class TreasureTile extends Tile_tm{
         treasure = 0;
         TID = tid;
         setObjName("Treasure Tile");
-        System.out.println("TREASURE TILE WITH TID " + tid);
     }
 
     /**
@@ -38,6 +37,13 @@ public final class TreasureTile extends Tile_tm{
     public void setTID(int nuTID) {
     	TID = nuTID;
     }
+    
+    public void setFScore(double f) {
+    	super.setFScore(0);
+    	super.setGScore(0);
+    	super.setFScore(TREASURE, 0);
+    }
+    
 
     /**
      * decrements the amount of treasure in this; sets treasure at 0 if treasure goes below 0

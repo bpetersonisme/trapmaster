@@ -145,4 +145,8 @@ public final class SpawnTile extends Tile_tm{
     public String getObjName() {
     	return "Spawn Tile"; 
     }
+    
+    public String toString() {
+    	return getObjName() + " (" + (int)getXPosWorld() + ", " + (int)getYPosWorld() + ", " + getZPosWorld() + ")";
+    }
 }

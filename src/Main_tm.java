@@ -13,10 +13,12 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList; 
 import java.util.TreeMap;
 import java.awt.Color; 
   
+
 
 
 
@@ -46,7 +48,7 @@ public class Main_tm {
 	private boolean debug;
 	
 	private int goldAmt;
-	
+	private DecimalFormat f;
 	//Buy mode stuff
 	private RenderObj purchase;
 	private int purchaseCost; 
@@ -129,6 +131,7 @@ public class Main_tm {
 
 	private void initialize() {
 
+		f = new DecimalFormat("#.##");
 		
 		/***************************************************
 		 *                  Frame Setup                    *
@@ -178,7 +181,7 @@ public class Main_tm {
 		 ***************************************************************/
 		gameMap = null;
 		
-		gameMap = Mapper.buildMap(5000, "0 0 S ND NB NB NT NB SB WB EB EB NB WB WB", "k k k");
+		gameMap = Mapper.buildMap(5000, "0 0 S ND NB NB NT NB NT", "k k k");
 			
 		
 		gameWidth = gameEngine.getViewportWidth();
@@ -363,7 +366,8 @@ public class Main_tm {
 					}
 				}
 				if(debug)
-					lblMouseLocation.setText("Mouse X: " + mouseX + " ScrollX: " + screenScrollXZone + " MouseY: " + mouseY + " ScrollY: " + screenScrollYZone);
+					lblMouseLocation.setText("Mouse (viewport): (" + f.format(mouseX) + ", " + f.format(mouseY) + ")" +
+							" Mouse (world): (" + f.format(mouseX + gameEngine.getViewportX()) + ", " + f.format(mouseY + gameEngine.getViewportY()) + ")");
 				if(mouseX < screenScrollXZone) {
 					moveCamRight = false;
 					moveCamLeft = true;

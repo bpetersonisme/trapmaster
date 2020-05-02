@@ -225,8 +225,7 @@ public final class Mapper {
      * @param controls The dividing values of the coordinate pairs 
      * @return A key unique to the ordered pair given
      */
-    public static double keygen(double x, double y, double[] controls) {
-    	System.out.println("X is " + x + ", y is " + y);
+    public static double keygen(double x, double y, double[] controls) { 
     	double result = Math.hypot(x, y);
     	double offset = 0;
     	if(controls != null) {

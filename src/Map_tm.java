@@ -173,23 +173,23 @@ public final class Map_tm {
 				currTile = null;
 			}
     	}
+    	
+    	
     	/*
     	 * Step three: Step four: Calculate route optimality between adjacent tiles and treasure Tiles
     	 */
     	currKey = tiles.firstKey(); 
     	currTile = tiles.get(currKey);
-    	while(currTile != null) {
-    		
-    		if(currTile.getNearestTID() != -1) {
-    			bbAStar(currTile, treasureTiles.get(currTile.getNearestTID()));
-    			System.out.println("Hallo?");
+    	while(currTile != null) { 
+    		if(currTile.getNearestTID() != -1) { 
+    			
+    			
+    			resetFScores(bbAStar(currTile, treasureTiles.get(currTile.getNearestTID())), Tile_tm.TREASURE); 
+    			
+    			
+    			  
     		}
     		
-    		currTile.setTreasureVal(currTile.getNeighbor(Mapper.NORTH), Mapper.NORTH);
-    		currTile.setTreasureVal(currTile.getNeighbor(Mapper.EAST), Mapper.EAST);
-    		currTile.setTreasureVal(currTile.getNeighbor(Mapper.SOUTH), Mapper.SOUTH);
-    		currTile.setTreasureVal(currTile.getNeighbor(Mapper.WEST), Mapper.WEST);
-    		currTile.setFScore(Tile_tm.TREASURE, currTile.getFScore());
     		
     		if(tiles.higherKey(currKey) != null) {
 				currKey = tiles.higherKey(currKey);
@@ -200,8 +200,7 @@ public final class Map_tm {
 			}
     	}
     	
-    	
-    	
+    	 
     	
     	/*
     	 * Step Four: Calculate real distances between tiles and the spawn tile 
@@ -227,14 +226,8 @@ public final class Map_tm {
     	while(currTile != null) {
     		
     		 
-    			bbAStar(currTile, spawnTile); 
-    		
-    		
-    		currTile.setSpawnVal(currTile.getNeighbor(Mapper.NORTH), Mapper.NORTH);
-    		currTile.setSpawnVal(currTile.getNeighbor(Mapper.EAST), Mapper.EAST);
-    		currTile.setSpawnVal(currTile.getNeighbor(Mapper.SOUTH), Mapper.SOUTH);
-    		currTile.setSpawnVal(currTile.getNeighbor(Mapper.WEST), Mapper.WEST);
-    		currTile.setFScore(Tile_tm.SPAWN, currTile.getFScore());
+    		resetFScores(bbAStar(currTile, spawnTile), Tile_tm.SPAWN); 
+    		 
     		
     		if(tiles.higherKey(currKey) != null) {
 				currKey = tiles.higherKey(currKey);
@@ -251,64 +244,95 @@ public final class Map_tm {
     	
     }
     
+    	/**
+    	 * 'Resets' the FScores of each value in the ArrayList given, provided
+    	 * That the f-score is lower than what it already has. 
+    	 * @param path The ArrayList to be accessed
+    	 */
+      public void resetFScores(ArrayList<Tile_tm> path, char type) { 
+    	  	 
+	    	 int i, size, distance; 
+	    	 size = path.size();
+	    	 Tile_tm curr; 
+	    	 distance = Tile_tm.SIZE * size - 128; 
+	    	 
+	    	 for(i = 0; i < size; i++) {
+	    		 curr = path.get(i);  
+	    		 if(distance < curr.getFScore(type)) {  
+	    			 curr.setFScore(type, distance); 
+	    		 }
+	    		 distance -= Tile_tm.SIZE;
+	    	 } 
+      }
+    
+      
      /**
       * Utilizes a modified A* search algorithm to find a route between two tiles 
       * @param start The tile we're coming from
       * @param goal The tile we're going towards
       */
-      public ArrayList<Tile_tm> bbAStar(Tile_tm start, Tile_tm goal) { 
+      public ArrayList<Tile_tm> bbAStar(Tile_tm start, Tile_tm goal) {  
     	  
-    	   
-    	  PriorityQueue<Tile_tm> q = new PriorityQueue<Tile_tm>(new tileComparator());
-    	  start.setFScore(getHeuristic(start, goal)); 
+    	  
+    	  int i = 0;
+    	  char dir = Mapper.NORTH;
+    	  ArrayList<Tile_tm> neighbors = new ArrayList<Tile_tm>(); 
+    	  PriorityQueue<Tile_tm> q = new PriorityQueue<Tile_tm>(new tileComparator()); 
     	  q.add(start);
-    	  ArrayList<Tile_tm> prevTiles = new ArrayList<Tile_tm>(); 
-    	  Tile_tm curr;
-    	  Tile_tm neighbor;
-    	  int i = 1, cnt; 
-    	  char dir = Mapper.NORTH; 
+    	  
+    	  HashMap<Tile_tm, ArrayList<Tile_tm>> prevTiles = new HashMap<Tile_tm, ArrayList<Tile_tm>>();
+    	  
+    	  HashMap<Tile_tm, Double> gScores = new HashMap<Tile_tm, Double>();
+    	  
+    	  
+    	  
+    	  gScores.put(start, 0.0);  
+    	  double possibleGScore = 0;
+    	  
+    	  HashMap<Tile_tm, Double> fScores = new HashMap<Tile_tm, Double>();
+    	  fScores.put(start, getHeuristic(start, goal));
+    	  
+    	  
+    	  Tile_tm curr, neighbor;
+    	  
     	  while(q.peek() != null) {
-    		  curr = q.remove();
-    		   
     		  
-    		  if(curr.toString().equals(goal.toString())) {
-    			  return reconstructPath(prevTiles, curr);
-    		  }
-    		  
-    		  i = 1;
-    		  cnt = curr.countNeighbors();
-    		  while(i != 0 && cnt > 0) { 
-    			  
-    			  neighbor = curr.getNeighbor(dir);
-    			  
-    			  if(neighbor != null) {
-	    			  double possibleGScore = curr.getGScore() + Tile_tm.SIZE;
-	    			  
-	    			  if(possibleGScore < neighbor.getGScore()) {
-	    				  prevTiles.add(curr);
-	    				  neighbor.setGScore(possibleGScore);
-	    				  neighbor.setFScore(neighbor.getGScore() + getHeuristic(neighbor, goal));
-	    				  if(q.contains(neighbor) == false) {
-	    					  q.add(neighbor);
-	    				  }
-	    			  }
-    			  }
-    	    	  switch(dir) {
-	    	    	  case Mapper.NORTH: dir = Mapper.EAST; break;
-	    	    	  case Mapper.EAST: dir = Mapper.SOUTH; break; 
-	    	    	  case Mapper.SOUTH: dir = Mapper.WEST; break;
-	    	    	  case Mapper.WEST:
-	    	    		  dir = Mapper.NORTH;
-	    	    		  i = 0;
-	    	    		  break;
-	    	    	  default:  dir = Mapper.NORTH;
-    	    	  }
-    		  }
-    		  
+    		  curr = q.remove(); 
+    		  if(curr == goal) {
+				 return reconstructPath(prevTiles, curr, goal);
+			 }
+			 
+			 
+			 
+			 dir = Mapper.NORTH;
+			 do {
+				 
+				 neighbor = curr.getNeighbor(dir);
+				 if(neighbor != null) {
+					 if(gScores.get(neighbor) == null) {
+						 gScores.put(neighbor,  Double.POSITIVE_INFINITY);
+					 }
+					 
+					 possibleGScore = gScores.get(curr) + RenderObj.getDistance(curr, neighbor); 
+					 if(possibleGScore < gScores.get(neighbor)) {
+						 prevTiles = addToPrevious(prevTiles, neighbor, curr);
+						 gScores.put(neighbor,  possibleGScore);
+						 fScores.put(neighbor, gScores.get(neighbor) + getHeuristic(neighbor, goal));
+						 
+						 if(q.contains(neighbor) == false)
+							 q.add(neighbor);
+						 
+					 }
+					 
+				 }
+				 dir = directionCycler(dir);
+			 }while(dir != 'D');
+			 
     	  }
     	  
-    	  return null;
     	  
+    	  return null;
+    	
       }
       
       /**
@@ -319,22 +343,48 @@ public final class Map_tm {
     	  case Mapper.NORTH: return Mapper.EAST; 
     	  case Mapper.EAST: return Mapper.SOUTH;
     	  case Mapper.SOUTH: return Mapper.WEST;
-    	  case Mapper.WEST: return Mapper.NORTH;
+    	  case Mapper.WEST: return 'D';
     	  default: return Mapper.NORTH;
     	  }
       }
       
       /**
+       * This is to simplify some multi-key things. It's late, I don't want to explain.
+       * @param prevTiles
+       * @param key
+       * @param value
+       * @return
+       */
+      private HashMap<Tile_tm, ArrayList<Tile_tm>> addToPrevious(HashMap<Tile_tm, ArrayList<Tile_tm>> prevTiles, Tile_tm key, Tile_tm value) {
+    	  HashMap<Tile_tm, ArrayList<Tile_tm>> result = prevTiles;
+    	  
+    	  if(result.containsKey(key) == false) {
+    		  result.put(key, new ArrayList<Tile_tm>());
+    	  } 
+    	  result.get(key).add(value); 
+    	  return result;
+      }
+      
+      /**
        * Helper method for A*
        */
-      private ArrayList<Tile_tm> reconstructPath(ArrayList<Tile_tm> prev, Tile_tm current) {
+      private ArrayList<Tile_tm> reconstructPath(HashMap<Tile_tm, ArrayList<Tile_tm>> prev, Tile_tm current, Tile_tm goal) {
+    	  
+    	  
+    	  
     	  ArrayList<Tile_tm> path = new ArrayList<Tile_tm>();
+    	  ArrayList<Tile_tm> vals;
     	  path.add(current);
-    	  while(prev.size() > 0) {
-    		  current = prev.remove(prev.size()-1);
+    	  while(prev.get(current) != null && prev.get(current).size() > 0) {
+    		  vals = prev.get(current);
+    		  current = vals.remove(vals.size() - 1);
     		  path.add(0, current);
     		  
     	  }
+    		  
+	    	  
+ 
+    	  
     	  return path;
       }
        /**
@@ -343,8 +393,9 @@ public final class Map_tm {
         * @param goal The goal node 
         * @return The estimated cost of going between them
         */
-      public int getHeuristic(Tile_tm curr, Tile_tm goal) {
-    	  return (int)RenderObj.getDistance(curr, goal);
+      public double getHeuristic(Tile_tm curr, Tile_tm goal) {
+
+    	  return (double)RenderObj.getDistance(curr, goal);
       }
       
       /**
@@ -361,5 +412,7 @@ public final class Map_tm {
 		}
     	  
       }
+      
+      
       
 }
