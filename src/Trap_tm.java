@@ -9,7 +9,7 @@ import java.util.ArrayList;
  *
  */
 
-public abstract class Trap_tm extends RenderObj{
+public abstract class Trap_tm extends RenderObj implements Damageable{
 	
 	static int trap_count = 0;
 	private int tr_maxHealth;			//Trap maximum health
