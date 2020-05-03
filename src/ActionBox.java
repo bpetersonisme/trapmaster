@@ -17,7 +17,57 @@ public class ActionBox extends RenderObj {
 	
  
 	private boolean enabled;
+	public static final int COLLISION_MODE = 0;
+	public static final int EFFECTOR_MODE = 1;
+	private int mode;
+	private Damageable parent;
 	
+	/**
+	 * Creates a new ActionBox at (worldXPos, worldYPos). It is boxWidth by boxHeight at angle degrees
+	 * @param worldXPos The center horizontal coordinate of the ActionBox
+	 * @param worldYPos The central vertical coordinate of the ActionBox
+	 * @param boxWidth The width of the ActionBox
+	 * @param boxHeight The height of the ActionBox
+	 * @param angle The angle of the actionBox
+	 */
+	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxWidth, int boxHeight, Damageable par, double angle) {
+		return new ActionBox(worldXPos, worldYPos, boxWidth, boxHeight, 0, par);
+	}
+ 
+	/**
+	 * Creates a new ActionBox at (worldXPos, worldYPos). It is boxWidth by boxHeight. 
+	 * @param worldXPos The center horizontal coordinate of the ActionBox
+	 * @param worldYPos The central vertical coordinate of the ActionBox
+	 * @param boxWidth The width of the ActionBox
+	 * @param boxHeight The height of the ActionBox
+	 */
+	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxWidth, int boxHeight, Damageable par) {
+		return new ActionBox(worldXPos, worldYPos, boxWidth, boxHeight, 0, par);
+	}
+		
+	/**
+	 * Creates a new ActionBox at (worldXPos, worldYPos). It is boxDim by boxDim, at angle degrees
+	 * @param worldXPos The center horizontal coordinate of the ActionBox
+	 * @param worldYPos The central vertical coordinate of the ActionBox
+	 * @param boxDim The dimensions of the box (more of a square)
+	 * @param angle The angle of the box
+	 */
+	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxDim, double angle, Damageable par) {
+		return new ActionBox(worldXPos, worldYPos, boxDim, boxDim, angle,  par);
+	}
+	
+	/**
+	 * Creates a new ActionBox at (worldXPos, worldYPos). It is boxDim by boxDim. 
+	 * @param worldXPos The center horizontal coordinate of the ActionBox
+	 * @param worldYPos The central vertical coordinate of the ActionBox
+	 * @param boxDim The dimensions of the box (more of a square)
+	 */
+	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxDim, Damageable par) {
+		return new ActionBox( worldXPos, worldYPos, boxDim, boxDim, 0, par);
+	}
+	
+	
+
 	
 	/**
 	 * Creates a new ActionBox at (worldXPos, worldYPos). It is boxWidth by boxHeight at angle degrees
@@ -28,7 +78,7 @@ public class ActionBox extends RenderObj {
 	 * @param angle The angle of the actionBox
 	 */
 	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxWidth, int boxHeight, double angle) {
-		return new ActionBox(worldXPos, worldYPos, boxWidth, boxHeight, 0);
+		return new ActionBox(worldXPos, worldYPos, boxWidth, boxHeight, 0, null);
 	}
  
 	/**
@@ -39,7 +89,7 @@ public class ActionBox extends RenderObj {
 	 * @param boxHeight The height of the ActionBox
 	 */
 	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxWidth, int boxHeight) {
-		return new ActionBox(worldXPos, worldYPos, boxWidth, boxHeight, 0);
+		return new ActionBox(worldXPos, worldYPos, boxWidth, boxHeight, 0, null);
 	}
 		
 	/**
@@ -50,7 +100,7 @@ public class ActionBox extends RenderObj {
 	 * @param angle The angle of the box
 	 */
 	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxDim, double angle) {
-		return new ActionBox(worldXPos, worldYPos, boxDim, boxDim, angle);
+		return new ActionBox(worldXPos, worldYPos, boxDim, boxDim, angle, null);
 	}
 	
 	/**
@@ -60,7 +110,7 @@ public class ActionBox extends RenderObj {
 	 * @param boxDim The dimensions of the box (more of a square)
 	 */
 	public static ActionBox makeActionBox(double worldXPos, double worldYPos, int boxDim) {
-		return new ActionBox( worldXPos, worldYPos, boxDim, boxDim, 0);
+		return new ActionBox( worldXPos, worldYPos, boxDim, boxDim, 0, null);
 	}
 	
 	
@@ -73,8 +123,9 @@ public class ActionBox extends RenderObj {
 	 * @param boxHeight The height of the ActionBox
 	 * @param parent The parent of the actionBox, whose actions it monitors
 	 */
-	private ActionBox(double worldXPos, double worldYPos, int boxWidth, int boxHeight, double angle) {
+	private ActionBox(double worldXPos, double worldYPos, int boxWidth, int boxHeight, double angle, Damageable par) {
 		setSpriteSheet((BufferedImage)null, 1, 1, boxWidth, boxHeight);
+		parent = par;
 		setXPosWorld(worldXPos);
 		setYPosWorld(worldYPos);
 		setZPos(1000000);
@@ -106,13 +157,22 @@ public class ActionBox extends RenderObj {
 		redrawCurrSprite();
 	}
 	
+	public int getMode() {
+		if(parent == null) 
+			return COLLISION_MODE;
+		return EFFECTOR_MODE;
+	}
+	
 	/**
 	 * Returns whether or not this is colliding with other
 	 * @param other The other RenderObj
 	 * @return True if the two are colliding and the ActionBox is enabled, false otherwise
 	 */
 	public boolean isColliding(RenderObj other) {
-		return super.isColliding(other) && isEnabled();
+		boolean result = super.isColliding(other) && isEnabled();
+		if(mode == EFFECTOR_MODE && result == true) 
+			parent.doEffect(other);
+		return result;
 	}
 	
 	

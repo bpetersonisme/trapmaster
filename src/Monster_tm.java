@@ -1,3 +1,4 @@
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ public class Monster_tm extends RenderObj implements Damageable{
 	private int loot;
 	private int lootMax;
 	private int attack;
+	private double oldXPosWorld;
+	private double oldYPosWorld;
 	private double xRate;
 	private double yRate;
 	public static char NORTH = 'N';
@@ -22,6 +25,7 @@ public class Monster_tm extends RenderObj implements Damageable{
 	public static char WEST = 'W';
 	int count = 0;
 	boolean lastMonster = false;
+	boolean collided;
 	TreasureTile targetTreasure;
 	
 	
@@ -33,6 +37,8 @@ public class Monster_tm extends RenderObj implements Damageable{
 		setXPosWorld(xPos);
 		setYPosWorld(yPos);
 		setZPosWorld(1);
+		xRate = 5;
+		yRate = 5;
 		setHealth(HP);
 		healthMax = HP;
 		setLoot(loot);
@@ -71,7 +77,35 @@ public class Monster_tm extends RenderObj implements Damageable{
 		}
 	}
 
+	/**
+	 * @return True if the monster collided with SOMETHING the previous tick, false otherwise
+	 */
+	public boolean getCollision() {
+		return collided;
+	}
 	
+	/**
+	 * Move 
+	 * @param collided Whether or not the previous move caused a collision, which would demand changing directions
+	 * @param other, The thing we collided with
+	 */
+	public void move(boolean coll, RenderObj other) {
+		collided = coll;
+		System.out.println(this + " moves!");
+		
+		Point velocity = choice(1, other);
+ 
+			setYPosWorld(getYPosWorld() + velocity.getY());
+		setXPosWorld(getXPosWorld() + velocity.getX());
+	}
+	
+	/**
+	 * Choice makes a decision based on an integer input
+	 * @return
+	 */
+	public Point choice(int input, RenderObj other) {
+		return new Point(0, -2);
+	}
 	
  
 	/**
@@ -91,7 +125,45 @@ public class Monster_tm extends RenderObj implements Damageable{
 			return 0;
 	}
 
+	/**
+	 * Sets xPosWorld to newXPosWorld. Also sets oldXPosWorld to the
+	 * old world XPos
+	 * @param newXPosWorld The new horizontal coordinate
+	 */
+	public void setXPosWorld(double newXPosWorld) {
+		oldXPosWorld = getXPosWorld();
+		super.setXPosWorld(newXPosWorld);
+		
+	}
 	
+	/**
+	 * @return the immediate previous xPosWorld
+	 */
+	public double getOldX() {
+		return oldXPosWorld;
+	}
+	
+	/**
+	 * Sets yPosWorld to newYPosWorld. Also sets oldYPosWorld to the
+	 * old world YPos
+	 * @param newYPosWorld The new vertical coordinate
+	 */
+	public void setYPosWorld(double newYPosWorld) {
+		oldYPosWorld = getYPosWorld();
+		super.setYPosWorld(newYPosWorld);
+	}
+	
+	/**
+	 * @return the immediate previous yPosWorld
+	 */
+	public double getOldY() {
+		return oldYPosWorld;
+	}
+	
+	public void revertWorldPos() {
+		setXPosWorld(oldXPosWorld);
+		setYPosWorld(oldYPosWorld);
+	}
 	
 	
 	public void attackAnim(char dir) {
@@ -240,6 +312,17 @@ public class Monster_tm extends RenderObj implements Damageable{
 	public void makeHitboxes() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public void doEffect(RenderObj collider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public boolean isDead() {
+		if(getHealth() <= 0) 
+			return true;
+		return false;
 	}
 
 }

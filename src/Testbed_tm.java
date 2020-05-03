@@ -164,7 +164,11 @@ public class Testbed_tm {
 		 
 		testers.add(tester);
 		testers.add(tester2);
-		testers.add(tester3); 
+		testers.add(tester3);
+		
+		 
+		
+		System.exit(0);
 		testers.add(tester4);
 		testers.add(tester5);
 		 

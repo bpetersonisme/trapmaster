@@ -3,9 +3,11 @@ import java.io.IOException;
 /**
  * @author Joseph Grieser
  */
-public final class TreasureTile extends Tile_tm{
+public final class TreasureTile extends Tile_tm implements Damageable {
 
     private int treasure;
+    public static char BOX = 'B';
+    public static char TREASURE = 'T';
     private int TID;
     /**
      * Creates a new TreasureTile at (xPos, yPos). Will have a Mapper-assigned TID
@@ -18,7 +20,9 @@ public final class TreasureTile extends Tile_tm{
         super(importImage("/treasure_tile.png"), xPos,yPos, 1, 1);
         treasure = 0;
         TID = tid;
+        addTreasureBounds();
         setObjName("Treasure Tile");
+        
     }
 
     /**
@@ -85,4 +89,67 @@ public final class TreasureTile extends Tile_tm{
     		 treasure = treas;
     	 
      }
+     /**
+      * Adds a bounding box around the treasure- a colliding one to keep 
+ 	  * mobs from walking over the chest, and a non-colliding one to take 
+ 	  * loot from 
+      */
+     public void addTreasureBounds() {
+    	 
+    	 putHitbox(BOX, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)), (int)(SIZE * (58.0/256))));
+    	 getHitbox(BOX).setEnabled(true);
+    	 putHitbox(TREASURE, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)) + 10, (int)(SIZE * (58.0/256))+10));
+    	 getHitbox(TREASURE).setEnabled(true);
+     }
+
+	public int getHealth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getHealthMax() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setHealth(int healthVal) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setHealthMax(int nuMax) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public int takeDamage(int hit) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getHealed(int help) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setAttack(int dmg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public int getAttack() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void doEffect(RenderObj collider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public boolean isDead() {
+		if(getHealth() <= 0) 
+			return true;
+		return false;
+	}
 }

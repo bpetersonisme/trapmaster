@@ -240,5 +240,15 @@ public final class DoorTile extends Tile_tm implements Damageable{
 		return super.toString() + " Oriented " + orientation;
 	}
 
+
+	public void doEffect(RenderObj collider) {	}
+
+
+	public boolean isDead() {
+		if(getHealth() <= 0) 
+			return true;
+		return false;
+	}
+
  
 }

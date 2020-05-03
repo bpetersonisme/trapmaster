@@ -45,6 +45,17 @@ public interface Damageable extends Collideable {
 	 * @return the attack damage of the Damageable
 	 */
 	public int getAttack();
+	/**
+	 * A method to be called by an ActionBox when it detects a collision. 
+	 * If you just want normal normal collision detection, 
+	 * @param collider
+	 */
+	public void doEffect(RenderObj collider);
+	
+	/**
+	 * @return True if the 
+	 */
+	public boolean isDead();
 	
 	
 }

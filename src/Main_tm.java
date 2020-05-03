@@ -15,9 +15,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList; 
+import java.util.Stack;
 import java.util.TreeMap;
 import java.awt.Color; 
   
+
 
 
 
@@ -50,7 +52,8 @@ public class Main_tm {
 	private int gameHeight;
 	private boolean debug;
 	private boolean endSpawn;
-	
+	private Stack<RenderObj> collisions; 
+	private Stack<RenderObj> coll2;
 	
 	private int goldAmt;
 	private DecimalFormat f;
@@ -197,7 +200,9 @@ public class Main_tm {
 		 *                      Game Variables                         *
 		 ***************************************************************/
 		gameMap = Mapper.buildMap(5000, mapStr, monStr);
-			
+		
+		collisions = new Stack<RenderObj>();
+		coll2 = new Stack<RenderObj>();
 		
 		gameWidth = gameEngine.getViewportWidth();
 		gameHeight = gameEngine.getViewportHeight();
@@ -325,8 +330,6 @@ public class Main_tm {
 		 * debug Initializations *
 		 *************************/
 		if(debug) {
-			testBound = ActionBox.makeActionBox(0, 0, 10, 10);
-			gameBounds.add(testBound);
 			arraySize = gameBounds.size(); 
 			for(i = 0; i < arraySize; i++) {
 				currAB = gameBounds.get(i);
@@ -715,9 +718,16 @@ public class Main_tm {
 					if(doMonsterThread) {
 						for(monsterIt = 0; monsterIt < monsters.size(); monsterIt++) {
 							monster = monsters.get(monsterIt);
-							if(monster != null) {
-								
-								
+							if(monster != null) { 
+								System.out.println("Current monster is " + monster);
+								monster.move(false, null);
+								for(ActionBox currBound: gameBounds) {
+							
+									if(RenderObj.isColliding(monster, currBound)) {
+										monster.revertWorldPos(); 
+										collisions.push(currBound);
+									}
+								}
 								/*
 								 * Monster Move action
 								 */
@@ -737,8 +747,8 @@ public class Main_tm {
 							monster = spawn.spawn();
 							if(monster != null) {
 								System.out.println("New monster!");
-								gameEngine.addRenderObj(monster);
 								monsters.add(monster);
+								gameEngine.addRenderObj(monster);
 							}
 							
 							if(monster.isLastMonster()) {

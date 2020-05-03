@@ -42,8 +42,8 @@ public abstract class RenderObj {
 	private int modelSpriteWidth; //The (x) width of each sprite on the sprite sheet
 	
 
-	private double xPosWorld; //The horizontal (x) position of the object 
-	private double yPosWorld;//The vertical (y) position of the object 
+	private double xPosWorld = 0; //The horizontal (x) position of the object 
+	private double yPosWorld = 0;//The vertical (y) position of the object 
 	
 	private boolean hasFocus = false;
 	private boolean canBeFocused = false;
