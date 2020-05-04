@@ -24,7 +24,11 @@ public class Monster_tm extends RenderObj implements Damageable{
 	private long lastWalkFrame;
 	private long walkFrameDelay;
 	private long attackFrameDelay;
+	
 	private LinearVector currVelocity;
+	private LinearVector prevVelocity;
+	private LinearVector goalVelocity;
+	
 	private double oldXPosWorld;
 	private double oldYPosWorld;
 	HashMap<Character, ActionBox> hitboxes;
@@ -61,12 +65,14 @@ public class Monster_tm extends RenderObj implements Damageable{
 	/**Monster Move State- Confirm Treasure: Monster Confirms that the treasure's there */
 	public static final int CONFIRM_TREASURE = 9; 
 	public static final int WALK_TO_CENTER = 10;
+
+	public static final int VICTORY = 11;
 	//Monster state outcomes
 	public static final int NORMAL = 0;
 	public static final int FIGHTING = 1;
 	public static final int KILLEDTARGET = 2; 
 	public static final int SEARCHING_FOR_TREASURE = 3; 
-	
+	public static final int STANDING_STILL = 4;
 	
 	/**Monster State Replies*/
 	public static final int STARTUP = -1;
@@ -74,6 +80,7 @@ public class Monster_tm extends RenderObj implements Damageable{
 	public static final int TARGET_NO_TREASURE = 1;
 	
 	private char currDir;
+	private char oldDir;
 	private double hitOffsetX, hitOffsetY;
 	private int weaponLength, weaponWidth;
 	
@@ -111,7 +118,13 @@ public class Monster_tm extends RenderObj implements Damageable{
 		this.loot = loot;
 		lootMax = loot*4;
 		dmg = attack;
+		
+		
 		currVelocity = new LinearVector(0, 0);
+		goalVelocity = null;
+		prevVelocity = null;
+		
+		
 		setObjName("Abstract Monster");
 		looted = false;
 		lastWalkFrame = 0;
@@ -120,6 +133,7 @@ public class Monster_tm extends RenderObj implements Damageable{
 		attackFrameDelay = 20;
 		response = -1;
 		
+	
 		despawned = false;
 	}
 	
@@ -154,21 +168,14 @@ public class Monster_tm extends RenderObj implements Damageable{
 	 */
 	public void move(LinearVector velocity) {
 
-
-		/*
-		if(tileLastTick == null) {
-			tileLastTick = currTile;
-			prevTile = currTile;
-		}
-		
-		
-		if(currTile.equals(tileLastTick) == false) {
-			prevTile = tileLastTick;
-		}
-		
-		LinearVector velocity = choice(other, currTile);
-		*/
  
+	
+		
+		prevVelocity = currVelocity;
+		currVelocity = velocity;
+ 
+		System.out.println("Actual new velocity (" + velocity.getX() + ", " + velocity.getY() + ")");
+		
 		setYPosWorld(getYPosWorld() + velocity.getY());
 		setXPosWorld(getXPosWorld() + velocity.getX()); 
 		
@@ -242,15 +249,23 @@ public class Monster_tm extends RenderObj implements Damageable{
 		else {
 			
 			if(collided == true) {
+				
 				if(state == GET_TREASURE) { 
 					if(loot == lootMax - 1) {
 						System.out.println("move");
 						state = MOVE;
 					}
 				}
-				else  
+				else if(state == VICTORY) 
+					state = MOVE;
+				else if(state == FIND_SPAWN) {
+					if(((RenderObj)other.getParent()).getType() == TILE_TREASURE) {
+						state = MOVE;
+					}
+				}
+				else {
 					state = STAND_STILL;
-				
+				}
 			}
 			else {
 				state = MOVE;
@@ -298,7 +313,7 @@ public class Monster_tm extends RenderObj implements Damageable{
 			switch(state) {
 			case FIND_TREASURE:
 				System.out.println("find treasure");
-				nuVelocity = goDirection(currTile.getMostValuableNeighbor(Tile_tm.TREASURE));
+				nuVelocity = makeVelocity(currTile.getMostValuableNeighbor(Tile_tm.TREASURE), currTile, 1);
 				
 			break;
 			case CONFIRM_TREASURE:
@@ -313,7 +328,7 @@ public class Monster_tm extends RenderObj implements Damageable{
 			break;
 			case FIND_SPAWN:
 				System.out.println("go home");
-				nuVelocity =  goDirection(currTile.getMostValuableNeighbor(Tile_tm.SPAWN));
+				nuVelocity = makeVelocity(currTile.getMostValuableNeighbor(Tile_tm.SPAWN), currTile, 1);
 				
 			break;
 			default: System.out.println("... Stand there.");
@@ -323,12 +338,14 @@ public class Monster_tm extends RenderObj implements Damageable{
 			
 			if(nuVelocity == null)
 				nuVelocity = new LinearVector(xPos, yPos);
-			currVelocity = nuVelocity;
+			
 			move(nuVelocity); 
 			
 			break;
 			
 		case STAND_STILL:
+			
+			outcome = STANDING_STILL;
 			System.out.print("stand still ");
 			xPos = 0;
 			yPos = 0;
@@ -353,16 +370,22 @@ public class Monster_tm extends RenderObj implements Damageable{
 					System.out.println("and ATTACK!!!!");
 					doAttack(other.getParent(), other);
 					if(other.getParent().isDead()) {
-						collided = false;
-						outcome = 2;
+						System.out.println("It died!");
+						
+						outcome = KILLEDTARGET;
+						state = VICTORY;
 					}
 				break;
 				case GET_TREASURE:
-					System.out.println("Gather treasure");
+					System.out.println("and gather treasure");
 				break;
-			
-			
+				default: 
+					if(currDir == NORTH || currDir == SOUTH)
+						setXPosWorld(currTile.getXPosWorld());
+					else if(currDir == EAST || currDir == WEST)
+						setYPosWorld(currTile.getYPosWorld());
 			}
+			collided = false;
 			break;
 			case DESPAWN:
 					setXPosWorld(-10000);
@@ -379,40 +402,95 @@ public class Monster_tm extends RenderObj implements Damageable{
 		
 	}
 	
+	
+	
+	
 	/**
-	 * Given a direction, returned a linear vector which corresponds to that direction
+	 * Given a direction, returns a linear vector which corresponds to that direction
 	 * @param dir The direction we'll be going 
 	 * @return Some vector in that direction
 	 */
-	public LinearVector goDirection(char dir) {
+	public LinearVector makeVelocity(char dir, Tile_tm currTile, double scale) {
+		
+		
 		LinearVector course = null;
+		
+		
+		
 		double xPos = 0;
-		double yPos = 0;
-		double sideFactor = 8.0;
-		double yRange, xRange;
+		double yPos = 0; 
+		double xFactor = 0, yFactor = 0;
+		
+		System.out.println("DIR IS " + dir + ", CURR DIR IS " + currDir);
+		/*if(prevVelocity == null || dir == currDir) {
+			currXFactor = 1;
+			currYFactor = 1;
+		}
+		else {
+			if(currTile.getType() == TILE_BASIC) {
+				 
+				
+				 
+				
+				
+			}
+			
+		}
+		 */
+
+		
 		switch(dir) {
 			case NORTH:
-				xRange = xRate/sideFactor + xRate/sideFactor + 1;
-				yRange = yRate*-1; 
-				yPos = Math.random()*yRange - 1;
-			break;
+				xFactor = 0;
+				yFactor = -1;
+			break; 
 			case EAST:
-				yRange = yRate/sideFactor + yRate/sideFactor + 1;
-				xPos = Math.random()*xRate*-1 - 1; 
+				xFactor = 1;
+				yFactor = 0;
 			break;
 			case SOUTH:
-				xRange = xRate/sideFactor + xRate/sideFactor + 1; 
-				yPos = Math.random()*yRate +1;
+				xFactor = 0;
+				yFactor = 1;
 			break;
 			case WEST:
-				yRange = yRate/sideFactor + yRate/sideFactor + 1;
-				xPos = Math.random()*xRate + 1; 
-			break;
-				
+				xFactor = -1;
+				yFactor = 0;
+			break;	
 		}
+		
+		
+		
+		if((currDir == NORTH || currDir == SOUTH) && (dir == EAST || dir == WEST)) {
+			if(getYPosWorld() < currTile.getYPosWorld() - Tile_tm.SIZE/10 || getYPosWorld() > currTile.getYPosWorld() + Tile_tm.SIZE/10) {
+				xFactor = 0;
+				if(currDir == NORTH)
+					yFactor = -1;
+				else
+					yFactor = 1;
+			}
+		}
+		else if((currDir == EAST || currDir == WEST) && (dir == NORTH || dir == SOUTH)) {
+			if(getXPosWorld() < currTile.getXPosWorld() - Tile_tm.SIZE/10 || getXPosWorld() > currTile.getXPosWorld() + Tile_tm.SIZE/10) {
+				if(currDir == EAST)
+					xFactor = 1;
+				else
+					xFactor = -1;
+				yFactor = 0;
+			}
+		}
+		
+		xPos = xRate*xFactor*scale;
+		yPos = yRate*yFactor*scale;
+		
+		
+		
 		System.out.println("Curr Velocity: (" + xPos + ", " + yPos + ")");
 		course = new LinearVector(xPos, yPos);
+		if(course == goalVelocity) {
+			goalVelocity = null;
+		}
 		return course;
+		 
 	}
 	
 	public LinearVector getVelocity() {
@@ -653,7 +731,7 @@ public class Monster_tm extends RenderObj implements Damageable{
 		return healthMax;
 	}
 
-	public void setHealth(int nuHealth) {
+	public synchronized void setHealth(int nuHealth) {
 		if(nuHealth > healthMax)
 			health = healthMax;
 		else 

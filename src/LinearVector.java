@@ -14,6 +14,17 @@ public class LinearVector {
 	}
 	
 	/**
+	 * Compares two vectors. 
+	 */
+	public boolean equals(LinearVector other) {
+		boolean result = false;
+		if(other.getX() == getX() && other.getY() == getY())
+			result = true;
+		
+		return result;
+	}
+	
+	/**
 	 * @return the x (horizontal) magnitude of the vector
 	 */
 	public double getX() {

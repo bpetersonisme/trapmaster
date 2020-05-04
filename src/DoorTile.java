@@ -130,7 +130,7 @@ public final class DoorTile extends Tile_tm implements Damageable{
 		
 	}
 
-	public void setHealth(int healthVal) {
+	public synchronized void setHealth(int healthVal) {
 		if(healthVal > hpMax)
 			hp = hpMax;
 		else
@@ -140,6 +140,8 @@ public final class DoorTile extends Tile_tm implements Damageable{
 			if(isOpen() == false)
 				open();
 			setHitbox(DOOR, false);
+			setHitbox(LEFTWALL, false);
+			setHitbox(RIGHTWALL, false);
 		}
 		redrawCurrSprite();
 		

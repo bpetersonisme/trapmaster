@@ -1,0 +1,2 @@
+0 0 S NB WB NB EB EB SB WB NB NB NT
+k 500 k 800 k 200 k 200 k 200 k 0 k 

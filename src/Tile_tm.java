@@ -351,7 +351,7 @@ public abstract class Tile_tm extends RenderObj implements Collideable  {
     	for(i = 0; i < len; i++) {
     		currTreasure = list.get(i);
     		currDistance = getDistance(this, currTreasure);
-    		if(currDistance < leastDistance && currDistance <= maxTreasureDist) {
+    		if(currDistance < leastDistance && (currDistance <= maxTreasureDist || maxTreasureDist == 0)) {
     			leastDistance = currDistance;
     			leastDistantTID = currTreasure.getTID();
     		}

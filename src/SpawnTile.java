@@ -30,7 +30,7 @@ public final class SpawnTile extends Tile_tm{
     public SpawnTile(double xPos, double yPos, String list, char orient)  {
         super(RenderObj.importImage("/spawn_tile.png"), xPos, yPos, 1, 1);
         monsterList = list; 
-        nextMonsterTime = System.currentTimeMillis() + 1000;
+        nextMonsterTime = System.currentTimeMillis() + 10000;
         numTreasure = 0;
         orientation = orient;
         switch(orient) {

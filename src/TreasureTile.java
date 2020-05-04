@@ -6,6 +6,7 @@ import java.io.IOException;
 public final class TreasureTile extends Tile_tm implements Damageable {
 
     private int treasure;
+    private int treasureTaken;
     public static char BOX = 'B';
     public static char TREASURE = 'T';
     private int TID;
@@ -18,7 +19,7 @@ public final class TreasureTile extends Tile_tm implements Damageable {
      */
     public TreasureTile(double xPos, double yPos, int tid) {
         super(importImage("/treasure_tile.png"), xPos,yPos, 1, 1);
-        
+        treasureTaken = 0;
         treasure = 0;
         TID = tid;
         addTreasureBounds();
@@ -55,9 +56,18 @@ public final class TreasureTile extends Tile_tm implements Damageable {
     		loss = getTreasure();
     	}
     	setTreasure(getTreasure() - loss);
+    	treasureTaken += loss;
         return loss;
     }
 
+    
+    public int getTreasureLost() {
+    	int temp = treasureTaken;
+    	treasureTaken = 0;
+    	return temp;
+    	
+    }
+    
     /**
      * increments the amount of treasure in this
      * @param amount amount of treasure added to treasure

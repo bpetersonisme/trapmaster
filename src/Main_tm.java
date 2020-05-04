@@ -12,13 +12,21 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter; 
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList; 
+import java.util.Scanner;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.awt.Color; 
   
+
+
+
+
 
 
 
@@ -105,12 +113,19 @@ public class Main_tm implements ObjTypes {
 	public static final int TRAP = 1;
 	public static final int TILE = 2;
 	
+	public static String fileName;
+	
 	private JLabel lblMouse;
 	private JLabel lblPause;
 	
 	public static void main(String[] args) {
 		 
-	
+		if(args.length == 2) {
+			fileName = args[1];
+		}
+		else {
+			fileName = "default.txt";
+		}
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -193,8 +208,15 @@ public class Main_tm implements ObjTypes {
 		/**************************************************************
 		 *                Create Map and Monster Roster               *
 		 **************************************************************/
-		mapStr = "0 0 S NB ND WD EB ED WB ND NT";
-		monStr = "k";
+		//S NB ND WD EB ED WB ND NB WB NT
+		
+		mapStr = "0 0 S NB WB EB EB WB NB WB EB NB ED EB NB WB EB EB WB NB WB WB NB NB ND NT";
+		monStr = "k 500 k 500 k 200 k 200 k 200 k 0 k 500 k 500 k 500 k 500 k 500";
+		
+		for(int i = 0; i < 30; i++) {
+			monStr = monStr.concat("k 500");
+		}
+		
 		
 		
 		/***************************************************************
@@ -217,7 +239,7 @@ public class Main_tm implements ObjTypes {
 		mouseX = 0;
 		mouseY = 0;
 		mode = 0;
-		goldAmt = 1000;
+		goldAmt = 500;
 		endSpawn = false;
 
 		
@@ -474,15 +496,28 @@ public class Main_tm implements ObjTypes {
 				}
 				else if(mode == REPAIR_MODE) {
 					Trap_tm currTrap;
+					boolean repairGet = false;
 					int i; 
 					for(i = 0; i < traps.size(); i++) {
 						currTrap = traps.get(i); 
 						if(currTrap.contains(mouseXClick, mouseYClick)) {
+							currTrap.getHealed(takeGold(150));
 							
-							//currTrap.toggleRepair(); 
+							repairGet = true;
 							i = traps.size();
 						}
 					} 
+					if(repairGet == false) {
+						DoorTile currDoor; 
+						for(i = 0; i < doors.size(); i++) {
+							currDoor = doors.get(i);
+							if(currDoor.contains(mouseXClick,  mouseYClick)) {
+								currDoor.getHealed(takeGold(150));
+								i = doors.size();
+							}
+						}
+					}
+					
 				}
 				else if(mode == STD_MODE) {
 					Trap_tm currTrap; 
@@ -773,6 +808,10 @@ public class Main_tm implements ObjTypes {
 										}
 									}
 									
+									if(monster.isDead()) {
+										giveGold(monster.lootAmt());
+									}
+									
 									System.out.println("\n\n\n");
 							}
 								/*
@@ -829,16 +868,20 @@ public class Main_tm implements ObjTypes {
 						for(trapIt = 0; trapIt < traps.size(); trapIt++) {
 							trap = traps.get(trapIt);
 							if(trap != null) {
+								
+								
+								 
+								
+								trap.acquireTarget(monsters);
+								
 								/*
-								 * Trap target actions
-								 */
-								/*
-								 * Trap Attack actions
-								 */
+								trap.acquireTarget(monsters);
+								 
 								Ammo_tm ammo = trap.tr_attack(monsters);
 								if (ammo != null) {
+									System.out.println("POW");
 									ammo.fire();
-								}
+								}*/
 								
 								/*
 								 * Trap cooldown actions
@@ -870,12 +913,24 @@ public class Main_tm implements ObjTypes {
 					/*
 					 * Put map actions(?) here
 					 */
-						int sumTreas = 0;
-						for(TreasureTile curr: treasures) {
+						/*int sumTreas = 0;
+						for(TreasureTile curr: treasures) { 
 							sumTreas += curr.getTreasure();
 						}
 						
 						setGoldAmt(sumTreas);
+						
+						gameHud.setGold(getGoldAmt());
+						*/
+						
+						 
+						for(TreasureTile curr: treasures) {
+							
+							takeGold(curr.getTreasureLost());
+							
+						}
+						 
+						 
 						
 						gameHud.setGold(getGoldAmt());
 						
@@ -1036,15 +1091,24 @@ public class Main_tm implements ObjTypes {
 	 * And the counter
 	 * @param newAmt The new amount of gold the player has
 	 */
-	public void setGoldAmt(int newAmt) {
+	public synchronized void setGoldAmt(int newAmt) {
 		goldAmt = newAmt;
+		if(goldAmt < 0) 
+			goldAmt = 0;
 		gameHud.setGold(goldAmt);
+		
 	}
 	/**
 	 * Takes amtTaken gold from the player
 	 */
-	public void takeGold(int amtTaken) {
+	public int takeGold(int amtTaken) {
+		int oldGold = getGoldAmt();
 		setGoldAmt(getGoldAmt() - amtTaken);
+		if(getGoldAmt() == 0) {
+			return oldGold;
+		}
+		else 
+			return amtTaken;
 	}
 	/**
 	 * Adds amtGiven to the amount of gold the player has

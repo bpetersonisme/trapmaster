@@ -104,11 +104,11 @@ public abstract class Trap_tm extends RenderObj implements Damageable{
 	 * @return true if target found and false otherwise.
 	 */
 	public boolean acquireTarget (ArrayList<Monster_tm> monsters) {
-		Monster_tm tempmonster;
-		
+		Monster_tm tempmonster; 
 		for(int i = 0; i < monsters.size(); i++) {
 			tempmonster = monsters.get(i);
-			if(AOE.contains(tempmonster.getXPosWorld(), tempmonster.getYPosWorld())) {
+			if(AOE.contains(tempmonster.getXPosWorld(), tempmonster.getYPosWorld()) && tempmonster.isDead() == false) { 
+				tempmonster.takeDamage(getAttack());
 				target = tempmonster;
 				return true;
 			}
@@ -140,13 +140,13 @@ public abstract class Trap_tm extends RenderObj implements Damageable{
 	public void tr_place() {
 		
 		if (facing == 0) {
-			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() - (tr_range * 32), 64, tr_range * 64);
+			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() - (tr_range * 32), 64, tr_range * 64, this);
 		} else if (facing == 1) {
-			AOE = ActionBox.makeActionBox(this.getXPosWorld() + (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64);
+			AOE = ActionBox.makeActionBox(this.getXPosWorld() + (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64, this);
 		} else if (facing == 2) {
-			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() + (tr_range * 32), 64, tr_range * 64);
+			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() + (tr_range * 32), 64, tr_range * 64, this);
 		} else {
-			AOE = ActionBox.makeActionBox(this.getXPosWorld() - (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64);
+			AOE = ActionBox.makeActionBox(this.getXPosWorld() - (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64, this);
 		}
 
 	}
@@ -163,7 +163,7 @@ public abstract class Trap_tm extends RenderObj implements Damageable{
 		return getTr_maxHealth();
 	}
 
-	public void setHealth(int healthVal) {
+	public synchronized void setHealth(int healthVal) {
 		setTr_currentHealth(healthVal);
 	}
 
@@ -195,11 +195,14 @@ public abstract class Trap_tm extends RenderObj implements Damageable{
 	}
 
 	public void makeHitboxes() {
-		// TODO Auto-generated method stub
-		
+ 
 	}
 
 	public void doEffect(RenderObj collider) {
+		Damageable enemy = (Damageable)collider;
+		
+		getAttack(); 
+		
 		// TODO Auto-generated method stub
 		
 	}
