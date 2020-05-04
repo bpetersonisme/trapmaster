@@ -1,19 +1,14 @@
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
+ import java.awt.Color;
+import java.awt.Graphics2D; 
 import java.awt.Polygon;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
-import java.awt.image.AffineTransformOp;
+import java.awt.geom.Line2D; 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
+import java.io.InputStream;
+import java.net.URI;
+import java.text.DecimalFormat; 
+import java.util.ArrayList; 
 
 import javax.imageio.ImageIO;
 
@@ -31,7 +26,7 @@ import javax.imageio.ImageIO;
  * @author Bb Peterson
  *
  */
-public abstract class RenderObj {
+public abstract class RenderObj implements ObjTypes {
 	private String objName = "Render Obj"; 
 	private BufferedImage spriteSheet; //The spriteSheet of an object- i.e., all states of its animation.  
 	private BufferedImage currSprite; //The currently displayed sprite of an object, including its rotation.  
@@ -47,28 +42,41 @@ public abstract class RenderObj {
 	private int modelSpriteWidth; //The (x) width of each sprite on the sprite sheet
 	
 
-	private double xPosWorld; 
-	private double yPosWorld;
+	private double xPosWorld = 0; //The horizontal (x) position of the object 
+	private double yPosWorld = 0;//The vertical (y) position of the object 
 	
-	private double xPos = 0; //The horizontal (x) position of the object 
-	private double yPos = 0; //The vertical (y) position of the object 
-	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
-	private double xPosWorld; //The horizontal coordinate of the renderObj center
-	private double yPosWorld; //The vertical coordinate of the renderObj center
+	private boolean hasFocus = false;
+	private boolean canBeFocused = false;
+	private ArrayList<StatBarEntry> stats;
+	private int focusBoundLength = 30;
+	
 
-	
-	private double xPos = 0; //The horizontal (x) position of the object 
-	private double yPos = 0; //The vertical (y) position of the object 
+	private double xPos = 0; 
+	private double yPos = 0; 
 	private int zPos = 0; //The "depth" (z?) position of the object; used to determine the draw order
 	private double angle; //The angle of the sprite- can be any number between 0 and 360 degrees
-
-	private boolean noFilterYet = true;
+ 
 	private boolean doFilter;
 	private Color filterColor; 
 	private int filterOpacity = 100;
 	
-	 
+	private int type;
 	
+	
+	/**
+	 * Sets the type
+	 * @param t The new type
+	 */
+	public void setType(int t) {
+		type = t;
+	}
+	
+	/**
+	 * @return The type
+	 */
+	public int getType() {
+		return type;
+	}
 	
 	
 	/**
@@ -92,18 +100,29 @@ public abstract class RenderObj {
 	protected void setSpriteSheet(BufferedImage newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) {
 		
 		spriteSheet = newSS;
+		if(spriteSheet != null) {
+			if(spriteSheet.getWidth() != spriteWidth * numCols || spriteSheet.getHeight() != spriteHeight*numRows) {
+				spriteSheet = scaleImage(spriteSheet, spriteWidth*numCols, spriteHeight*numRows);
+			}
+		}
+		
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
 		modelSpriteHeight = spriteHeight;
 		currSpriteWidth = spriteWidth;
 		currSpriteHeight = spriteHeight;	
+		
+		type = -1;
+		
+		
 		currSpriteRow = 0;
 		currSpriteCol = 0;
 		setCurrSprite(0, 0);
-		if(angle > 0)
-			rotateCurrSprite();
 	}
+	
+	
+	
 	/**
 	 * Sets the sprite sheet to a bufferedImage defined by newSS, which has numRows rows- 
 	 */
@@ -116,9 +135,12 @@ public abstract class RenderObj {
 	 * @param spriteWidth The width of sprites on the new sprite sheet
 	 * @param spriteHeight The height of sprites on the new sprite sheet
 	 */
-	protected void setSpriteSheet(String newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) throws IOException {
+	protected void setSpriteSheet(String newSS, int numRows, int numCols, int spriteWidth, int spriteHeight) {
 		
+		setSpriteSheet(importImage(newSS), numRows, numCols, spriteWidth, spriteHeight);
+		/*
 		spriteSheet = ImageIO.read(this.getClass().getResourceAsStream(newSS));
+		
 		spriteSheetRows = numRows;
 		spriteSheetCols = numCols;
 		modelSpriteWidth = spriteWidth;
@@ -130,6 +152,7 @@ public abstract class RenderObj {
 		setCurrSprite(0, 0);
 		if(angle > 0)
 			rotateCurrSprite();
+		*/
 	}
 	
 	/**
@@ -250,12 +273,15 @@ public abstract class RenderObj {
 	 * @param col
 	 */
 	public void setCurrSprite(int row, int col) {
-		//System.out.println("Presenting sprite at " + row + ", " + col); 
-		if(row > spriteSheetRows || row < 0 || col > spriteSheetCols || col < 0) {
+		//System.out.println("Presenting sprite at " + row + ", " + col);  
+		if(row >= spriteSheetRows || row < 0 || col >= spriteSheetCols || col < 0) {
 			System.out.println("INVALID SPRITE INPUT, NO CHANGE MADE");
 		}
 		else {
-			rotateCurrSprite();
+			currSpriteRow = row;
+			currSpriteCol = col;
+
+			redrawCurrSprite();
 		}
 	}
 	
@@ -309,48 +335,48 @@ public abstract class RenderObj {
 		return result;
 	}
  
-	/**
-	 * Returns whether or not one object, local, is colliding with another, other. 
-	 * @param local The first object possibly colliding
-	 * @param other The second object possibly colliding
-	 * @return True if the two objects are colliding, false otherwise
-	 */
+	 
  
-	 * Tests to see if a point, (x,y), is inside of the shape formed by local
+	 /** Tests to see if a point, (x,y), is inside of the shape formed by local
 	 * @param local The shape whose bounds shall be defined
 	 * @param x The x coordinate to be tested
 	 * @param y The y coordinate to be tested
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	public boolean contains(double x, double y) { 
 		CollideEntry objBounds = getObjBounds(this);
 		if(this != null) {
-			System.out.println("Does objBounds contain (" + x + ", " + y + ")? " + objBounds.getShape().contains(x, y));
+			//System.out.println("Does objBounds contain (" + x + ", " + y + ")? " + (objBounds.getShape().contains(x, y) == true ? "yes" : "no"));
 			return objBounds.getShape().contains(x, y);
 		}
 		return false;
 	}
 	
 	/**
-	 * Returns whether or not one object, local, is colliding with another, other. 
-	 * @param local The first object possibly colliding
-	 * @param other The second object possibly colliding
-	 * @return True if the two objects are colliding, false otherwise
+	 * Returns the distance between two RenderObjs
 	 */
+	public static double getDistance(RenderObj local, RenderObj other) {
+		double centerDifferenceX = local.getXPosWorld() - other.getXPosWorld();
+		double centerDifferenceY = local.getYPosWorld() - other.getYPosWorld();
+		return Math.hypot(centerDifferenceX, centerDifferenceY);
+	}
+	
+
  
-	public static boolean isColliding(RenderObj local, RenderObj other) {
+	/**
+	 * Returns whether or not this object is colliding with other. 
+	 * @return True is other is colliding with this object, false otherwise
+	 */
+	protected boolean isColliding(RenderObj other) {
 		
-		double centerDistances = Math.pow(local.getXPosWorld() - other.getXPosWorld(), 2);
-		centerDistances += Math.pow(local.getYPosWorld() - other.getYPosWorld(), 2);
-		centerDistances = Math.sqrt(centerDistances);
+		RenderObj local = this;
 		
-		double localExtent = Math.pow(local.getSpriteHeight()/2, 2);
-		localExtent += Math.pow(local.getSpriteWidth()/2, 2);
-		localExtent = Math.sqrt(localExtent);
+		double centerDistances = getDistance(local, other);
 		
-		double otherExtent = Math.pow(other.getSpriteHeight()/2,  2);
-		otherExtent += Math.pow(other.getSpriteWidth()/2, 2);
-		otherExtent = Math.sqrt(otherExtent);
+		double localExtent = Math.hypot(local.getSpriteHeight()/2, local.getSpriteWidth()/2);  
+		
+		double otherExtent = Math.hypot(other.getSpriteHeight()/2, other.getSpriteWidth()/2);
 		
 		if(centerDistances > localExtent + otherExtent)
 			return false;
@@ -418,11 +444,15 @@ public abstract class RenderObj {
 	
 	
 	/**
-	 * Returns whether or not this object is colliding with other. 
-	 * @return True is other is colliding with this object, false otherwise
+	 * Returns whether or not one object, local, is colliding with another, other. 
+	 * The main difference between this static isColliding method and its non-static peer
+	 * is that it compares the collision answer. 
+	 * @param local The first object possibly colliding
+	 * @param other The second object possibly colliding
+	 * @return True if both objects agree that they are colliding, false otherwise
 	 */
-	public boolean isColliding(RenderObj other) {
-		return isColliding(this, other);
+	public static boolean isColliding(RenderObj local, RenderObj other) {
+		return local.isColliding(other) && other.isColliding(local);
 	}
 	
 	/**
@@ -456,9 +486,8 @@ public abstract class RenderObj {
 	 * animation
 	 * @param currSpriteCol The new column of the current sprite
 	 */
-	protected void setCurrSpriteCol(int newSpriteCol) {
-		currSpriteCol = newSpriteCol;
-		setCurrSprite(currSpriteRow, currSpriteCol);
+	protected void setCurrSpriteCol(int newSpriteCol) { 
+		setCurrSprite(currSpriteRow, newSpriteCol);
 	}
 	
 	/**
@@ -474,11 +503,16 @@ public abstract class RenderObj {
 	 * useful to skip frames of an animation
 	 * @param newSpriteRow The new row sprite 
 	 */
-	protected void setCurrSpriteRow(int newSpriteRow) {
-		currSpriteRow = newSpriteRow;
-		setCurrSprite(currSpriteRow, currSpriteCol);
+	protected void setCurrSpriteRow(int newSpriteRow) { 
+		setCurrSprite(newSpriteRow, currSpriteCol);
 	}
-	
+
+	/**
+	 * Equivalent to rotateCurrSprite- basically just a more descriptive name for the same method. 
+	 */
+	public void redrawCurrSprite() {
+		rotateCurrSprite(angle);
+	}
 
 	/**
 	 * Rotates the sprite by degree degrees from its normal position
@@ -513,7 +547,7 @@ public abstract class RenderObj {
 		g2D.drawImage(modelSprite, 0, 0, null);
 
     
-		if(doFilter == true) {
+		if(doFilter) {
 			filter = new BufferedImage(getSpriteWidth(), getSpriteHeight(), BufferedImage.TYPE_INT_ARGB); 
 			Graphics2D model2D = filter.createGraphics();
 			model2D.setColor(filterColor);
@@ -521,15 +555,45 @@ public abstract class RenderObj {
 			model2D.dispose();
 			g2D.drawImage(filter, 0,  0, null);
 		} 
-	
+		
 
 		g2D.dispose();
 
 		currSpriteWidth = (int) newWidth;
 		currSpriteHeight = (int) newHeight; 
 		currSprite = rotatedSprite;
+		makeDecoration(currSprite);
 		
- 
+		if(canBeFocused) {
+			if(hasFocus) {
+				setBars();
+				Graphics2D gee = currSprite.createGraphics();
+				gee.setColor(Color.GREEN);
+				
+				if(newWidth/16 < 30) {
+					focusBoundLength = newWidth/16;
+				}
+				
+				//Upper Left-hand corner
+				gee.drawLine(0, 0, focusBoundLength, 0); //Horizontal
+				gee.drawLine(0,  0, 0, focusBoundLength); //Vertical
+				//Upper right-hand corner
+				gee.drawLine(newWidth-focusBoundLength-1, 0, newWidth-1, 0); //Horizontal
+				gee.drawLine(newWidth-1,  0, newWidth-1, focusBoundLength); //Vertical
+				//Lower left-hand corner
+				gee.drawLine(0, newHeight-1, focusBoundLength, newHeight-1); //Horizontal
+				gee.drawLine(0,  newHeight-1, 0, newHeight-focusBoundLength-1); //Vertical
+				//Lower right-hand corner
+				gee.drawLine(newWidth-focusBoundLength-1, newHeight-1, newWidth-1, newHeight-1); //Horizontal
+				gee.drawLine(newWidth-1,  newHeight-focusBoundLength-1, newWidth-1, newHeight-1); //Vertical
+				drawBars(gee);
+				gee.drawImage(currSprite, 0, 0, null);
+			
+				gee.dispose();
+			}
+		}
+		
+		
 		 
 	}
 	
@@ -540,6 +604,16 @@ public abstract class RenderObj {
 		rotateCurrSprite(angle);
 	}
 
+	
+	/**
+	 * Adds 'decoration.' By default, does nothing. Made to be overridden 
+	 * @param currSprite The sprite(?) that is being "decorated"
+	 */
+	public void makeDecoration(BufferedImage currSprite) {
+		
+	}
+	
+	
 	/**
 	 * GetModelSprite returns an unrotated version of the current sprite
 	 * @return The model sprite, an unrotated version of the current sprite
@@ -563,12 +637,15 @@ public abstract class RenderObj {
 	private BufferedImage generateModelSprite() {
 		BufferedImage newSprite = new BufferedImage(modelSpriteWidth, modelSpriteHeight, BufferedImage.TYPE_INT_ARGB);
 	 	Graphics2D g2D = newSprite.createGraphics(); 
-		g2D.setColor(Color.RED);
+		colorEdge(g2D);
 		g2D.drawRect(0, 0, modelSpriteWidth - 1, modelSpriteHeight - 1);
+		g2D.dispose();
 		return newSprite;
 	}
 
- 
+	public void colorEdge(Graphics2D g) {
+		g.setColor(Color.RED);
+	}
 
 	/**
 	 * Adds a filter of color col at opacity op to the sprite
@@ -580,7 +657,7 @@ public abstract class RenderObj {
 			doFilter = true; 
 			filterColor = new Color(col.getRed(), col.getGreen(), col.getBlue(), op);
 			filterOpacity = op;
-			rotateCurrSprite();
+			redrawCurrSprite();
 		}
 	}
 	
@@ -598,7 +675,7 @@ public abstract class RenderObj {
 	 */
 	public void removeFilter() {
 		doFilter = false;
-		rotateCurrSprite();
+		redrawCurrSprite();
 	}
 	
 	
@@ -758,7 +835,7 @@ public abstract class RenderObj {
 
 	/**
 	 * Changes the vertical position of sprite's upper left hand corner 
-	 * @param newXPos The new x position of sprite's upper left hand corner
+	 * @param newYPos The new y (vertical) position of sprite's upper left hand corner
 	 */
 	public void setPosY(double newYPos) {
 		yPosWorld = newYPos;
@@ -858,8 +935,7 @@ public abstract class RenderObj {
 
 
 	/**
-	 * CollideEntry is a helper method to return both a polygon, as well as the points which compose it. 
-	 * This is a slightly hacky workaround to a problem I was having, don't worry about it. 
+	 * CollideEntry is a helper class to return both a polygon, as well as the points which compose it.  
 	 * @author Bradley 'Bb' Peterson
 	 */
 	private static class CollideEntry {
@@ -891,8 +967,248 @@ public abstract class RenderObj {
 		public double[][] getCoords() {
 			return coords;
 		}
+	}
+	
+	/**
+	 * The statBarEntry class is a private method to make drawing stat bars a little easier
+	 *
+	 */
+	private class StatBarEntry {
+		private int entryVal;
+		private int entryMax;
+		private Color colorLow, colorHigh;
+		
+		/**
+		 * Creates a new StatBarEntry at a current value of val, a maximum value of max, colored between lo and hi
+		 * @param val The current value of the stat bar
+		 * @param max The maximum value of the stat bar
+		 * @param lo The "low" color
+		 * @param hi The "high" color
+		 */
+		public StatBarEntry(int val, int max, Color lo, Color hi) {
+			entryVal = val;
+			entryMax = max;
+			colorLow = lo;
+			colorHigh = hi;
+		}
+		/**
+		 * Returns a percent value for what fraction of the maximum val is
+		 * @return The fractional value of entryVal/entryMax
+		 */
+		public double getPercent() {
+			return (double)entryVal/(double)entryMax;
+		}
+		
+		/**
+		 * Returns the value of entryVal
+		 * @return The value of entryVal
+		 */
+		public int getEntryVal() {
+			return entryVal;
+		}
+		
+		/**
+		 * Sets the value of entryVal
+		 * @param newVal The new value of entryValue
+		 */
+		public void setEntryVal(int newVal) {
+			entryVal = newVal;
+		}
+		/**
+		 * Returns the maximum value of EntryVal
+		 * @return The highest value entryVal can be
+		 */
+		public int getMax() {
+			return entryMax;
+		}
+		/**
+		 * Sets the maximum value of EntryVal to newHi
+		 * @param newHi The new maximum value of EntryVal
+		 */
+		public void setMax(int newHi) {
+			entryMax = newHi;
+		}
+		/**
+		 * Returns the color of loVal
+		 * @return The "low" color, for when the bar is low
+		 */
+		public Color getLo() {
+			return colorLow;
+		}
+		/**
+		 * Returns the color of highVal
+		 * @return The "high" color, for when the bar is high
+		 */
+		public Color getHi() {
+			return colorHigh;
+		}
+	}
+	
+	
+	/**
+	 * As the name implies, instantiateStats will instantiate the stats arrayList
+	 */
+	public void instantiateStats() {
+		stats = new ArrayList<StatBarEntry>();
+	}
+	/**
+	 * Adds a new stat bar to stats. To be called only after instantiateStats has been called. 
+	 * Returns true if stats was added, false otherwise
+	 * @param val The value that will be tracked by the stat bar
+	 * @param maxVal The maximum of the value
+	 * @param lo The color to be used when the value is low
+	 * @param hi The color to be used when the value is high
+	 */
+	public boolean addStat(int val, int maxVal, Color lo, Color hi) {
+		if(stats == null) 
+	    	instantiateStats();
+		if(stats != null) {
+			return stats.add(new StatBarEntry(val, maxVal, lo, hi));
+		}
+		return false;
+	}
+	
+	/**
+	 * Sets whether or not this has the ABILITY to be focused on- makes for a good difference between monsters/traps, and
+	 * tiles. 
+	 * @param foc The new focusable state
+	 */
+	public void setFocusable(boolean foc) {
+		canBeFocused = foc;
+	}
+	
+	/**
+	 * Returns the focusable state of the RenderObj
+	 * @return True if the object can be focused on, false otherwise
+	 */
+	public boolean getFocusable() {
+		return canBeFocused;
+	}
+	
+	/**
+	 * Sets whether or not this has focus- if it does, it will have whatever dataBars it needs. 
+	 * @param foc The new focus state 
+	 */
+	public void setFocus(boolean foc) {
+		System.out.println("Ha ha, focus!");
+		hasFocus = foc;
+	}
+	
+	/**
+	 * Equivalent to setFocus
+	 * @param foc
+	 */
+	public void hasFocus(boolean foc) {
+		hasFocus = foc;
+	}
+	
+	/**
+	 * Returns whether or not this has focus.
+	 * @return True if it does have focus, false otherwise
+	 */
+	public boolean isFocused() {
+		return hasFocus;
+	}
+	
+	/**
+	 * Draws all the stat bars that the object has
+	 * @param g
+	 */
+	private void drawBars(Graphics2D g) {
+		double weight; 
+		double invWeight; 
+		int num = 0;
+		for(StatBarEntry curr: stats) {
+			if(curr != null) {
+				weight = curr.getPercent(); 
+				invWeight = 1 - weight;
+				g.setColor(new Color((int)(curr.getLo().getRed()*invWeight + curr.getHi().getRed()*weight)/2,
+									 (int)(curr.getLo().getGreen()*invWeight + curr.getHi().getGreen()*weight)/2, 
+									 (int)(curr.getLo().getBlue()*invWeight + curr.getHi().getBlue()*weight)/2));
+				g.fillRect(0, 10*num, (int)(weight*(getRotatedSpriteWidth() - 10)), 10);
+				num++;
+			}
+		}
+	 
 		
 		
+	}
+	/**
+	 * Returns the BufferedImage, should one exist, at the location indicated by the filename. NOTE: For images located
+	 * within the project or jar file, you need only write "/NameOfFile" and place it within the sprites source-folder. 
+	 * For a file located on the disk, you will need to include the full filepath 
+	 * @param filename The string name of the file. Obviously. 
+	 * @return The BufferedImage this draws from
+	 */
+	public static BufferedImage importImage(String filename) {
 		
+		BufferedImage result = null;
+		try {
+		InputStream is = RenderObj.class.getResourceAsStream(filename);
+		if(is != null)
+			result = ImageIO.read(is);
+		}
+		catch(IOException e) {
+			System.out.println("FAILED TO IMPORT " + filename + ", STACK TRACE TO FOLLOW");
+			e.printStackTrace();
+		}
+		return result;
+	}
+ 
+	
+	/**
+	 * Returns the BufferedImage, should one exist, at the location indicated by URI. NOTE: For images located
+	 * within the project or jar file, you need only write "/NameOfFile" and place it within the sprites source-folder. 
+	 * For a file located on the disk, you will need to include the full filepath 
+	 * @param fileURI The URI of the file. Obviously. 
+	 * @return A BufferedImage of the file image
+	 */
+	public BufferedImage importImage(URI fileURI)  {
+		return importImage(fileURI.toString());
+	}
+	
+	/**
+	 * Returns a version of BufferedImage, scaled to be newWidth x newHeight 
+	 * @param img The old image which is to be scaled
+	 * @param newWidth The width of the scaled image
+	 * @param newHeight The height of the scaled image
+	 * @return A scaled version of img
+	 */
+	public static BufferedImage scaleImage(BufferedImage img, int newWidth, int newHeight) { 
+		BufferedImage result = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = result.createGraphics(); 
+		g2d.drawImage(img.getScaledInstance(newWidth, newHeight, BufferedImage.SCALE_DEFAULT), null, null);
+		g2d.dispose();
+		return result;
+	}
+	
+	/**
+	 * Sets the value of all the bars. Meant to be overridden by implementing classes.
+	 */
+	public void setBars() {
+		System.out.println("THIS INHERITING CLASS DOES NOT OVERRIDE SETBARS. BETTER GET ON THAT."); 
+		if(stats != null) {
+			
+		}
+	}
+	
+	/**
+	 * Sets the value of the indicated bar, if it exists.
+	 * @param index The index of the bar you're accessing
+	 * @param val The value you're setting the bar to
+	 */
+	public void setBarVal(int index, int val) {
+		if(stats != null)
+			stats.get(index).setEntryVal(val);
+	}
+ 
+	/**
+	 * Sets the maximum value of the indicated bar, if it exists
+	 * @param index The index of the bar you're accessing
+	 * @param max The value you're setting the bar max to
+	 */
+	public void setBarMax(int index, int max) {
+		if(stats != null)
+			stats.get(index).setMax(max);
 	}
 }

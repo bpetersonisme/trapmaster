@@ -1,31 +1,73 @@
-import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 /**
  * @author Joseph Grieser
  */
-public final class TreasureTile extends Tile_tm{
+public final class TreasureTile extends Tile_tm implements Damageable {
 
     private int treasure;
-
-    public TreasureTile(BufferedImage texture, double xPos, double yPos) {
-        super(texture, xPos,yPos);
+    private int treasureTaken;
+    public static char BOX = 'B';
+    public static char TREASURE = 'T';
+    private int TID;
+    /**
+     * Creates a new TreasureTile at (xPos, yPos). Will have a Mapper-assigned TID
+     * @param xPos The x (horizontal) position of the Treasure tile
+     * @param yPos The y (vertical) position of the Treasure tile
+     * @param tid The Treasure ID of 
+     * @throws IOException
+     */
+    public TreasureTile(double xPos, double yPos, int tid) {
+        super(importImage("/treasure_tile.png"), xPos,yPos, 1, 1);
+        treasureTaken = 0;
         treasure = 0;
+        TID = tid;
+        addTreasureBounds();
+        setObjName("Treasure Tile");
+        setType(TILE_TREASURE);
+        setFScore(TREASURE, 0);
     }
 
-    public TreasureTile(BufferedImage texture, double xPos, double yPos, int treasure){
-        super(texture, xPos, yPos);
-        this.treasure = treasure;
+    
+    /**
+     * Returns the treasureTile's tid 
+     * @return tid The treasure ID of the treasureTile
+     */
+    public int getTID() {
+    	return TID;
     }
+    
+    /**
+     * Sets the treasureTile's tid
+     * @param nuTID The NEW treasure ID
+     */
+    public void setTID(int nuTID) {
+    	TID = nuTID;
+    }
+    
 
     /**
      * decrements the amount of treasure in this; sets treasure at 0 if treasure goes below 0
      * @param amount amount of treasure removed from treasure
      */
-    public void loseTreasure(int amount){
-        treasure -= amount;
-        if(treasure < 0) treasure = 0;
+    public int loseTreasure(int amount){
+        int loss = amount;
+    	if(getTreasure() < loss) {
+    		loss = getTreasure();
+    	}
+    	setTreasure(getTreasure() - loss);
+    	treasureTaken += loss;
+        return loss;
     }
 
+    
+    public int getTreasureLost() {
+    	int temp = treasureTaken;
+    	treasureTaken = 0;
+    	return temp;
+    	
+    }
+    
     /**
      * increments the amount of treasure in this
      * @param amount amount of treasure added to treasure
@@ -49,4 +91,79 @@ public final class TreasureTile extends Tile_tm{
     public int getTreasure(){
         return treasure;
     }
+    /**
+     * Sets the amount of treasure to treas
+     * @param treas The new amount of treasure in this TreasureTile
+     */
+     public void setTreasure(int treas) {
+    	 if(treas < 0)
+    		 treas = 0;
+    	 else
+    		 treasure = treas;
+    	 
+     }
+     /**
+      * Adds a bounding box around the treasure- a colliding one to keep 
+ 	  * mobs from walking over the chest, and a non-colliding one to take 
+ 	  * loot from 
+      */
+     public void addTreasureBounds() {
+    	 
+    	 putHitbox(BOX, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)), (int)(SIZE * (58.0/256))));
+    	 getHitbox(BOX).setEnabled(true);
+    	 putHitbox(TREASURE, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)) + 10, (int)(SIZE * (58.0/256))+10, this));
+    	 getHitbox(TREASURE).setEnabled(true);
+    	 System.out.println("Treasure hitbox is " + treasure);
+     }
+
+	public int getHealth() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getHealthMax() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setHealth(int healthVal) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setHealthMax(int nuMax) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public int takeDamage(int hit) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public int getHealed(int help) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setAttack(int dmg) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public int getAttack() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void doEffect(RenderObj collider) {
+		Monster_tm t = (Monster_tm)collider;
+		t.plunder(this);
+	}
+
+	public boolean isDead() {
+		if(getHealth() <= 0) 
+			return true;
+		return false;
+	}
 }

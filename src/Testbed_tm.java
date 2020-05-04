@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.JLabel;
 
@@ -160,12 +161,19 @@ public class Testbed_tm {
  
 		
 		testers = new ArrayList<RenderObj>();
-		
+		 
 		testers.add(tester);
 		testers.add(tester2);
-		testers.add(tester3); 
+		testers.add(tester3);
+		
+		 
+		
+		System.exit(0);
 		testers.add(tester4);
 		testers.add(tester5);
+		 
+		
+		
 		
 		gameFramer.addMouseMotionListener(new MouseMotionAdapter() {
 			@Override
@@ -183,9 +191,12 @@ public class Testbed_tm {
 			
 		});
 		
-
+		String testString = "-55.555 a" ;
 		testers.get(0).addFilter(Color.GREEN, 20);
 
+		 Scanner s = new Scanner(testString);
+		 System.out.println(s.hasNextDouble() + " " + s.nextDouble() + s.next().charAt(0));
+		 s.close(); 
 		 
 		
 		Thread testThread = new Thread() {
@@ -214,7 +225,7 @@ public class Testbed_tm {
 		
 						j++;
 						
-						i -= 1;
+						i -= 5;
 						i %= 360;
 						if(i < 0) {
 							i = 360 + i;
@@ -236,7 +247,7 @@ public class Testbed_tm {
 						entDimLabel.setText("Ent width: " + tester2.getRotatedSpriteWidth() + " Ent Height: " + tester2.getRotatedSpriteHeight());
 						entVelLabel.setText("Ent velocity: " + tester2.getVelocity() + "(" + formatter.format(tester2.getXVel()) + ", " + 
 						formatter.format(tester2.getYVel()) + ")"); 
-						viewportPos.setText("Testers colliding? Tester-tester2: " + tester2.isColliding(tester) + "Tester-tester3: " + tester2.isColliding(tester3));
+						viewportPos.setText("Testers colliding? Tester-tester2: " + RenderObj.isColliding(tester2, tester) + "Tester-tester3: " + RenderObj.isColliding(tester2, tester3));
 						lblCorners.setText(
 								"Upper Left: (" + (leftX*cos - topY*sin) + ", " + (leftX*sin + topY*cos) + ") " +
 								"Upper Right: (" + (rightX*cos - topY*sin) + ", " + (rightX*sin + topY*cos) + ") " +
@@ -277,12 +288,20 @@ public class Testbed_tm {
 		private double xRate;
 		private double yRate;
 		private long frameDelay;
+		private final int ANGLEBAR = 0;
 		public testRender(String fileName, int sheetRows, int sheetCols, int x, int y, int z) throws IOException {
+			
 			BufferedImage buf = ImageIO.read(this.getClass().getResourceAsStream(fileName));
-		 
+			//BufferedImage buf = Main_tm.importImage(fileName);
 			frameDelay = 250; //Number of ms
 			int newWidth = buf.getWidth(); 
 			int newHeight = buf.getHeight(); 
+			
+			setFocusable(true);
+			setFocus(true);
+			instantiateStats();
+			addStat((int)getAngle(), 360, Color.RED, Color.GREEN); //This comes first, so I know it's 0. 
+			
 			
 			/*if(buf.getWidth() > 256 || buf.getHeight() > 256) {
 				
@@ -320,6 +339,10 @@ public class Testbed_tm {
 			
 			xRate = Math.random() * 5.0;
 			setAngle(0);
+		}
+		
+		public void setBars() {
+			setBarVal(ANGLEBAR, (int)getAngle());
 		}
 		
 		

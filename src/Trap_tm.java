@@ -1,10 +1,6 @@
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.lang.ClassLoader;
+import java.awt.Color;
 import java.util.ArrayList;
-
-import javax.imageio.ImageIO;
+import java.util.HashMap;
 /**
  * Trap_tm is the superclass for all individual trap classes.
  * It provides the necessary variables for all traps as well as 
@@ -14,7 +10,7 @@ import javax.imageio.ImageIO;
  *
  */
 
-public abstract class Trap_tm extends RenderObj{
+public abstract class Trap_tm extends RenderObj implements Damageable{
 	
 	static int trap_count = 0;
 	private int tr_maxHealth;			//Trap maximum health
@@ -22,12 +18,10 @@ public abstract class Trap_tm extends RenderObj{
 	private int tr_range;				//Trap range
 	private int tr_damage;				//Trap damage
 	private int tr_cost;				//Trap cost
-	private int tr_cooldown;			//Trap cooldown/firerate
-	private int timer;					//Used to keep track of cooldown
 	private int tr_ID;					//numerical ID of the trap
 	private int facing;					//direction trap is facing. 0 = north, 1 = east, 2 = south, 3 = west
 	private Monster_tm target;			//The target of the trap
-	private ActionBox AOE;		//The tiles covered by this trap.
+	private ActionBox AOE;				//The tiles covered by this trap.
 	
 	/**
 	 * Abstract constructor. Just to make things easier for the actual trap classes.
@@ -36,10 +30,13 @@ public abstract class Trap_tm extends RenderObj{
 		this.setXPosWorld(xPos);
 		this.setYPosWorld(yPos);
 		this.setZPos(2);
-		this.timer = this.tr_cooldown;
 		this.facing = facing;
+		this.setFocusable(true);
+		instantiateStats();
+		addStat(tr_currentHealth, tr_maxHealth, Color.red, Color.green);
 		tr_ID = trap_count;
 		trap_count++;
+		setType(TRAP);
 	}
 	
 	
@@ -77,12 +74,6 @@ public abstract class Trap_tm extends RenderObj{
 	public void setTr_cost(int tr_cost) {
 		this.tr_cost = tr_cost;
 	}
-	public int getTr_cooldown() {
-		return tr_cooldown;
-	}
-	public void setTr_cooldown(int tr_cooldown) {
-		this.tr_cooldown = tr_cooldown;
-	}
 	public int getTr_ID() {
 		return tr_ID;
 	}
@@ -103,13 +94,25 @@ public abstract class Trap_tm extends RenderObj{
 	public void setTarget(Monster_tm target) {
 		this.target = target;
 	}
+	public ActionBox getAOE() {
+		return AOE;
+	}
 	
 	/**
 	 * Allows a trap to select a monster to begin attacking.
 	 * @param monsters The list of spawned monsters from Map_tm
-	 * @return The targeted monster
+	 * @return true if target found and false otherwise.
 	 */
-	public boolean acquireTarget (ActionBox AOE) {
+	public boolean acquireTarget (ArrayList<Monster_tm> monsters) {
+		Monster_tm tempmonster; 
+		for(int i = 0; i < monsters.size(); i++) {
+			tempmonster = monsters.get(i);
+			if(AOE.contains(tempmonster.getXPosWorld(), tempmonster.getYPosWorld()) && tempmonster.isDead() == false) { 
+				target = tempmonster;
+				return true;
+			}
+		}
+		
 		return false;
 	}
 	
@@ -118,37 +121,7 @@ public abstract class Trap_tm extends RenderObj{
 	 * triggers an attack from the trap to its target.
 	 * If no, acquires a new target.
 	 */
-	public void tr_attack () {
-		if (this.timer == -1) {
-			if (acquireTarget(AOE)) {
-				//fire at target
-				this.timer = tr_cooldown;
-				this.setCurrSpriteRow(1);
-			} else {
-			}
-		} else if (this.timer == 0) {
-			if (acquireTarget(AOE)) {
-				//fire at target
-				this.timer = tr_cooldown;
-				this.setCurrSpriteRow(1);
-			} else {
-				this.timer = -1;
-			}
-		} else if (this.timer == (int)(tr_cooldown / 4)) {
-			this.setCurrSpriteRow(0);
-			this.timer = this.timer - 1;
-		} else {
-			this.timer = this.timer - 1;
-		}
-	}
-	
-	/**
-	 * Called when the trap is destroyed.
-	 * Removes the trap from the map.
-	 */
-	public void tr_destroy() {
-		
-	}
+	public abstract Ammo_tm tr_attack (ArrayList<Monster_tm> monsters);
 	
 	/**
 	 * Called when the trap is sold.
@@ -160,5 +133,82 @@ public abstract class Trap_tm extends RenderObj{
 		return (int)total;
 	}
 	
+	/**
+	 * Creates the trap's action box "AOE" when placed.
+	 */
+	public void tr_place() {
+		
+		if (facing == 0) {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() - (tr_range * 32), 64, tr_range * 64, this);
+		} else if (facing == 1) {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld() + (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64, this);
+		} else if (facing == 2) {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld(), this.getYPosWorld() + (tr_range * 32), 64, tr_range * 64, this);
+		} else {
+			AOE = ActionBox.makeActionBox(this.getXPosWorld() - (tr_range * 32), this.getYPosWorld(), tr_range * 64, 64, this);
+		}
+
+	}
 	
+	public void setBars() {
+		setBarVal(0, tr_currentHealth);
+	}
+	
+	public int getHealth() {
+		return getTr_currentHealth();
+	}
+
+	public int getHealthMax() {
+		return getTr_maxHealth();
+	}
+
+	public synchronized void setHealth(int healthVal) {
+		setTr_currentHealth(healthVal);
+	}
+
+	public void setHealthMax(int nuMax) {
+		setTr_maxHealth(nuMax);
+	}
+
+	public int takeDamage(int hit) {
+		setTr_currentHealth(getTr_currentHealth() - hit);
+		return getTr_currentHealth();
+	}
+
+	public int getHealed(int help) {
+		setTr_currentHealth(getTr_currentHealth() + help);
+		return getTr_currentHealth();
+	}
+
+	public void setAttack(int dmg) {
+		setTr_damage(dmg);
+	}
+
+	public int getAttack() {
+		return getTr_damage();
+	}
+
+	public HashMap<Character, ActionBox> getHitboxes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void makeHitboxes() {
+ 
+	}
+
+	public void doEffect(RenderObj collider) {
+		Damageable enemy = (Damageable)collider;
+		
+		getAttack(); 
+		
+		// TODO Auto-generated method stub
+		
+	}
+
+	public boolean isDead() {
+		if(getTr_currentHealth() <= 0) 
+			return true;
+		return false;
+	}
 }

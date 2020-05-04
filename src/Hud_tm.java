@@ -26,9 +26,9 @@ import java.text.DecimalFormat;
 
 
 @SuppressWarnings("serial")
-public class HUD_tm extends JPanel {
+public class Hud_tm extends JPanel {
 
-	private final double ASPECT_RATIO = 168.0/720.0;
+	private final double ASPECT_RATIO = 200.0/720.0;
 	private int hudHeight;
 	private int hudWidth;
 	DecimalFormat goldFormatter;
@@ -41,7 +41,7 @@ public class HUD_tm extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public HUD_tm(Main_tm ref, int screenWidth, int screenHeight) {
+	public Hud_tm(Main_tm ref, int screenWidth, int screenHeight) {
 		
 		buttonsActive = true;
 		gameRef = ref;
@@ -108,7 +108,7 @@ public class HUD_tm extends JPanel {
 		gbl_trapMenuPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0};
 		trapMenuPanel.setLayout(gbl_trapMenuPanel);
 		
-		trapACost = 500;
+		trapACost = 50;
 		
 		trapA = new JButton("<html><center>Ballista <br/>($" + trapACost + ")</center></html>");
 		trapA.setBackground(new Color(169, 169, 169));
@@ -131,7 +131,7 @@ public class HUD_tm extends JPanel {
 		gbc_trapA.gridy = 1;
 		trapMenuPanel.add(trapA, gbc_trapA);
 		
-		trapBCost = 850;
+		trapBCost = 85;
 		
 		trapB = new JButton("<html><center>Wind Trap <br/>($" + trapBCost + ")</center></html>");
 		trapB.setBackground(new Color(245, 245, 245));
@@ -148,7 +148,7 @@ public class HUD_tm extends JPanel {
 		gbc_trapB.gridy = 1;
 		trapMenuPanel.add(trapB, gbc_trapB);
 		
-		trapCCost = 1500;
+		trapCCost = 150;
 		
 		trapC = new JButton("<html><center>Flamethrower <br/>($" + trapCCost + ")</center></html>");
 		trapC.setBackground(new Color(255, 127, 80));
@@ -164,7 +164,7 @@ public class HUD_tm extends JPanel {
 		gbc_trapC.gridy = 2;
 		trapMenuPanel.add(trapC, gbc_trapC);
 		
-		trapDCost = 2000;
+		trapDCost = 200;
 		
 		
 		trapD = new JButton("<html><center>Freeze Rune <br/>($" + trapDCost + ")</center></html>");
@@ -187,7 +187,7 @@ public class HUD_tm extends JPanel {
 		gbc_sellRepairButtonPanel.insets = new Insets(0, 0, 5, 5);
 		gbc_sellRepairButtonPanel.fill = GridBagConstraints.BOTH;
 		gbc_sellRepairButtonPanel.gridx = 1;
-		gbc_sellRepairButtonPanel.gridy = 4;
+		gbc_sellRepairButtonPanel.gridy = 5;
 		add(sellRepairButtonPanel, gbc_sellRepairButtonPanel);
 		
 		btnSell = new JButton("Sell");
@@ -232,6 +232,8 @@ public class HUD_tm extends JPanel {
 	public void spawnObj(RenderObj obj, int cost) {
 		gameRef.makePurchase(obj, Main_tm.TRAP, cost);
 	}
+	
+
 	
 	/**
 	 * Turns all the buttons on or off- when off, they cannot be clicked. 

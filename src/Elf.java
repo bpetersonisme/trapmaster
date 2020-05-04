@@ -1,4 +1,4 @@
-import java.awt.image.BufferedImage;
+/*import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Random;
 
@@ -20,8 +20,8 @@ public class Elf extends Monster_tm {
 			this.loot = 0;
 	}
 
-	public Elf(int rows, int columns, int width, int height, int xWorldPos, int yWorldPos) throws IOException {
-		setSpriteSheet(buf, rows, columns, width, height);
+	public Elf(int xWorldPos, int yWorldPos) throws IOException {
+		super("/Elves.png", rows, columns, width, height) 
 		Random rmd = new Random();
 		health = 200;
 		loot = rmd.nextInt(150) + 50;
@@ -67,7 +67,7 @@ public class Elf extends Monster_tm {
 		} else {
 			attack(right, left, up, down);
 		}
-	};*/
+	};*//*
 
 	public int animate(int timeSinceFrame, Ogre og) {
 		int newTime = (int) (System.nanoTime() / 1000000);
@@ -116,4 +116,4 @@ public class Elf extends Monster_tm {
 	}
 
 
-}
+}*/
