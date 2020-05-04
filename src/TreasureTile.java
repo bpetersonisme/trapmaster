@@ -18,13 +18,16 @@ public final class TreasureTile extends Tile_tm implements Damageable {
      */
     public TreasureTile(double xPos, double yPos, int tid) {
         super(importImage("/treasure_tile.png"), xPos,yPos, 1, 1);
+        
         treasure = 0;
         TID = tid;
         addTreasureBounds();
         setObjName("Treasure Tile");
-        
+        setType(TILE_TREASURE);
+        setFScore(TREASURE, 0);
     }
 
+    
     /**
      * Returns the treasureTile's tid 
      * @return tid The treasure ID of the treasureTile
@@ -98,8 +101,9 @@ public final class TreasureTile extends Tile_tm implements Damageable {
     	 
     	 putHitbox(BOX, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)), (int)(SIZE * (58.0/256))));
     	 getHitbox(BOX).setEnabled(true);
-    	 putHitbox(TREASURE, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)) + 10, (int)(SIZE * (58.0/256))+10));
+    	 putHitbox(TREASURE, ActionBox.makeActionBox(getXPosWorld(), getYPosWorld() - 3, (int)(SIZE* (116.0/256)) + 10, (int)(SIZE * (58.0/256))+10, this));
     	 getHitbox(TREASURE).setEnabled(true);
+    	 System.out.println("Treasure hitbox is " + treasure);
      }
 
 	public int getHealth() {
@@ -143,8 +147,8 @@ public final class TreasureTile extends Tile_tm implements Damageable {
 	}
 
 	public void doEffect(RenderObj collider) {
-		// TODO Auto-generated method stub
-		
+		Monster_tm t = (Monster_tm)collider;
+		t.plunder(this);
 	}
 
 	public boolean isDead() {

@@ -80,6 +80,8 @@ public abstract class Tile_tm extends RenderObj implements Collideable  {
         boundaries = new HashMap<Character, ActionBox>();
         makeHitboxes();
         
+        setType(TILE);
+        
         
         setSpriteSheet(texture,numRows,numCols,SIZE,SIZE);
         
@@ -218,6 +220,32 @@ public abstract class Tile_tm extends RenderObj implements Collideable  {
     }
     
     /**
+     * @param Which FScore you're looking for
+     * @return The direction of the neighbor with the lowest FScore
+     */
+    public char getMostValuableNeighbor(char which) {
+    
+    	char dir = NORTH;
+    	char currDir = NORTH;
+    	double lowestFScore = Double.POSITIVE_INFINITY;
+    	Tile_tm neighbor; 
+    	while(currDir != 'D') {
+    		neighbor = getNeighbor(currDir);
+    		if(neighbor != null) {
+    			if(neighbor.getFScore(which) < lowestFScore) {
+    				lowestFScore = neighbor.getFScore(which);
+    				dir = currDir;
+    			}
+    		}
+    		currDir = Map_tm.directionCycler(currDir);
+    	}
+    	
+    	 
+    	
+    	return dir;
+    }
+    
+    /**
      * Sets the neighbor at dirIndex to neighbor
      * @param neighbor The tile's new neighbor
      * @param dirIndex the direction the new neighbor is in.
@@ -229,6 +257,37 @@ public abstract class Tile_tm extends RenderObj implements Collideable  {
     
     public Tile_tm getNeighbor(char dir) {
     	return neighbors.get(dir);
+    }
+
+    public char getNeighborDir(Tile_tm neighbor) {
+    	if(neighbor.equals(neighbors.get(NORTH)))
+    		return NORTH;
+    	if(neighbor.equals(neighbors.get(EAST)))
+    		return EAST;
+    	if(neighbor.equals(neighbors.get(SOUTH)))
+    		return SOUTH;
+    	if(neighbor.equals(neighbors.get(WEST)))
+    		return WEST;
+    	
+    	
+    	return 'D';
+    }
+    
+    
+    public ArrayList<Tile_tm> getNeighborList() {
+    	ArrayList<Tile_tm> list = new ArrayList<Tile_tm>();
+    	
+    	if(getNeighbor(NORTH) != null)
+    		list.add(getNeighbor(NORTH));
+    	if(getNeighbor(EAST) != null)
+    		list.add(getNeighbor(EAST));
+    	if(getNeighbor(SOUTH) != null)
+    		list.add(getNeighbor(SOUTH));
+    	if(getNeighbor(WEST) != null)
+    		list.add(getNeighbor(WEST));
+    	return list;
+    	
+    	
     }
     
     

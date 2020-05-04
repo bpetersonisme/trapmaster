@@ -33,6 +33,7 @@ public class Trap_Ballista extends Trap_tm{
 		}
 		this.setSpriteSheet(buf, 2, 4, 64, 64);
 		this.setCurrSpriteCol(facing);
+		setType(TRAP_BALLISTA);
 		
 	}
 	
@@ -63,47 +64,5 @@ public class Trap_Ballista extends Trap_tm{
 		}
 	}
 
-	public int getHealth() {
-		return getTr_currentHealth();
-	}
-
-	public int getHealthMax() {
-		return getTr_maxHealth();
-	}
-
-	public void setHealth(int healthVal) {
-		setTr_currentHealth(healthVal);
-	}
-
-	public void setHealthMax(int nuMax) {
-		setTr_maxHealth(nuMax);
-	}
-
-	public int takeDamage(int hit) {
-		setTr_currentHealth(getTr_currentHealth() - hit);
-		return getTr_currentHealth();
-	}
-
-	public int getHealed(int help) {
-		setTr_currentHealth(getTr_currentHealth() + help);
-		return getTr_currentHealth();
-	}
-
-	public void setAttack(int dmg) {
-		setTr_damage(dmg);
-	}
-
-	public int getAttack() {
-		return getTr_damage();
-	}
-
-	public HashMap<Character, ActionBox> getHitboxes() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void makeHitboxes() {
-		// TODO Auto-generated method stub
-		
-	}
+	
 }

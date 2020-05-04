@@ -56,12 +56,8 @@ public final class DoorTile extends Tile_tm implements Damageable{
         else
         	close();
         
+        setType(TILE_DOOR);
         
-        System.out.println("\n\n\n\n");
-        for(ActionBox curr: getHitboxAsList()) {
-        	System.out.println("curr " + curr);
-        }
-        System.out.println("\n\n\n\n\n");
         hp = 100;
     	hpMax = 100;
     	setFocusable(true);
@@ -139,6 +135,13 @@ public final class DoorTile extends Tile_tm implements Damageable{
 			hp = hpMax;
 		else
 			hp = healthVal;
+		if(hp < 0) {
+			hp = 0;
+			if(isOpen() == false)
+				open();
+			setHitbox(DOOR, false);
+		}
+		redrawCurrSprite();
 		
 	}
 
@@ -223,8 +226,9 @@ public final class DoorTile extends Tile_tm implements Damageable{
 			rightWallXPos = doorXPos;
 		}
 		
-		putHitbox(DOOR, ActionBox.makeActionBox(doorXPos, doorYPos, doorWidth, doorHeight));
+		putHitbox(DOOR, ActionBox.makeActionBox(doorXPos, doorYPos, doorWidth, doorHeight, this));
 		getHitbox(DOOR).setEnabled(isOpen());
+		getHitbox(DOOR).setBlock(true);
 		getHitbox(DOOR).setZPos(getHitbox(DOOR).getZPos() + 1);
 		putHitbox(LEFTWALL, ActionBox.makeActionBox(leftWallXPos, leftWallYPos, wallWidth, wallHeight));
 		getHitbox(LEFTWALL).setEnabled(true);

@@ -40,7 +40,7 @@ public abstract class Ammo_tm extends RenderObj {
 			}
 		}
 		
-		target.takeDmg(damage);
+		target.takeDamage(damage);
 	}
 	
 }

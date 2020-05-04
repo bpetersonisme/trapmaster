@@ -26,7 +26,7 @@ import javax.imageio.ImageIO;
  * @author Bb Peterson
  *
  */
-public abstract class RenderObj {
+public abstract class RenderObj implements ObjTypes {
 	private String objName = "Render Obj"; 
 	private BufferedImage spriteSheet; //The spriteSheet of an object- i.e., all states of its animation.  
 	private BufferedImage currSprite; //The currently displayed sprite of an object, including its rotation.  
@@ -60,7 +60,23 @@ public abstract class RenderObj {
 	private Color filterColor; 
 	private int filterOpacity = 100;
 	
+	private int type;
 	
+	
+	/**
+	 * Sets the type
+	 * @param t The new type
+	 */
+	public void setType(int t) {
+		type = t;
+	}
+	
+	/**
+	 * @return The type
+	 */
+	public int getType() {
+		return type;
+	}
 	
 	
 	/**
@@ -97,13 +113,16 @@ public abstract class RenderObj {
 		currSpriteWidth = spriteWidth;
 		currSpriteHeight = spriteHeight;	
 		
-		
+		type = -1;
 		
 		
 		currSpriteRow = 0;
 		currSpriteCol = 0;
 		setCurrSprite(0, 0);
 	}
+	
+	
+	
 	/**
 	 * Sets the sprite sheet to a bufferedImage defined by newSS, which has numRows rows- 
 	 */
@@ -433,7 +452,7 @@ public abstract class RenderObj {
 	 * @return True if both objects agree that they are colliding, false otherwise
 	 */
 	public static boolean isColliding(RenderObj local, RenderObj other) {
-		return local.isColliding(other) && other.isColliding(other);
+		return local.isColliding(other) && other.isColliding(local);
 	}
 	
 	/**

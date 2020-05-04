@@ -30,7 +30,7 @@ public final class SpawnTile extends Tile_tm{
     public SpawnTile(double xPos, double yPos, String list, char orient)  {
         super(RenderObj.importImage("/spawn_tile.png"), xPos, yPos, 1, 1);
         monsterList = list; 
-        nextMonsterTime = System.nanoTime();
+        nextMonsterTime = System.currentTimeMillis() + 1000;
         numTreasure = 0;
         orientation = orient;
         switch(orient) {
@@ -39,7 +39,7 @@ public final class SpawnTile extends Tile_tm{
 	        case 'W': setAngle(-90); break;
 	        default: 
 	    }
-        
+        setType(TILE_SPAWN);
         s = new Scanner(monsterList);
         
     }
@@ -69,18 +69,24 @@ public final class SpawnTile extends Tile_tm{
     public Monster_tm spawn(){ 
     	Monster_tm newMonster = null;
     	System.out.println("nextMonsterTime is " + nextMonsterTime);
-    	System.out.println("Curr Time is " + System.nanoTime());
-        if(System.nanoTime() >= nextMonsterTime) { 
-        	if(s.hasNextByte()) {
-        		newMonster = spawnMonster((char)s.nextByte());
+    	System.out.println("Curr Time is " + System.currentTimeMillis());
+        if(System.currentTimeMillis() >= nextMonsterTime) { 
+        	if(s.hasNext()) {
+        		String cur = s.next();
+        		System.out.println("Spawning a monster of type " + cur);
+        		newMonster = spawnMonster(cur.charAt(0));
         	}
         	else { //If this is false, something went wrong. 
-        		newMonster = spawnMonster('k');
+        		System.out.println("AAAA");
         	}
         	if(s.hasNextInt()) {
-        		nextMonsterTime += s.nextInt() * 1000000;
+        		int next = s.nextInt();
+        		System.out.println("Delay is: " + next);
+        		nextMonsterTime = System.currentTimeMillis() + next;
+        		System.out.println("Next monster time is " + nextMonsterTime);
         	}
         	else {
+        		System.out.println("This is the last monster");
         		newMonster.setLastMonster(true);
         		s.close();
         		s = null;
@@ -120,9 +126,12 @@ public final class SpawnTile extends Tile_tm{
      */
     private Monster_tm spawnMonster(char choice) {
     	Monster_tm newMonster = null;
+    	//If you want to do more with it, make it tied to orientation
+    	double newMonsterXPos = getXPosWorld();
+    	double newMonsterYPos = getYPosWorld() + SIZE/2 - wallThickness*4; 
     	switch(Character.toLowerCase(choice)) {
     		case 'k': //'K' is for kobolds
-    		default: newMonster = new Kobold(getXPosWorld(), getYPosWorld());
+    		default: newMonster = new Kobold(newMonsterXPos, newMonsterYPos);
     	}
     	 
     	

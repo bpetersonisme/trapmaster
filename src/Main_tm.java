@@ -34,7 +34,7 @@ import javax.swing.SwingConstants;
 import java.awt.Font;
  
 
-public class Main_tm {
+public class Main_tm implements ObjTypes {
  
 	//Game framing variables
 	private JFrame game_frame; 
@@ -52,8 +52,8 @@ public class Main_tm {
 	private int gameHeight;
 	private boolean debug;
 	private boolean endSpawn;
-	private Stack<RenderObj> collisions; 
-	private Stack<RenderObj> coll2;
+	private Stack<ActionBox> collisions; 
+	private ActionBox collision;
 	
 	private int goldAmt;
 	private DecimalFormat f;
@@ -71,11 +71,12 @@ public class Main_tm {
 		private ArrayList<DoorTile> doors;
 		private ArrayList<TreasureTile> treasures; 
 	private ArrayList<ActionBox> gameBounds; //Bounds should be... 1a1a1a this color?
-	private int trapIt, monsterIt, tileIt, aBIt; 
+	
+	private ArrayList<ActionBox> monsterHitboxes; //This is the monster attack thing.
+	private int trapIt, monsterIt; 
 	private Trap_tm trap;
 	private Monster_tm monster;
 	private Tile_tm tile;
-	private ActionBox aB;
 	private SpawnTile spawn;
 	
 	//Game Interaction Variables
@@ -193,7 +194,7 @@ public class Main_tm {
 		 *                Create Map and Monster Roster               *
 		 **************************************************************/
 		mapStr = "0 0 S NB ND WD EB ED WB ND NT";
-		monStr = "k 0 k 500";
+		monStr = "k";
 		
 		
 		/***************************************************************
@@ -201,8 +202,8 @@ public class Main_tm {
 		 ***************************************************************/
 		gameMap = Mapper.buildMap(5000, mapStr, monStr);
 		
-		collisions = new Stack<RenderObj>();
-		coll2 = new Stack<RenderObj>();
+		collisions = new Stack<ActionBox>();
+		collision = null;  
 		
 		gameWidth = gameEngine.getViewportWidth();
 		gameHeight = gameEngine.getViewportHeight();
@@ -244,6 +245,7 @@ public class Main_tm {
 		currTile = tiles.get(tileKey);  
 		 
 		
+		
 		while(currTile != null) {  
 			gameEngine.addRenderObj(currTile);
 			if(tiles.higherKey(tileKey) != null) {
@@ -253,6 +255,14 @@ public class Main_tm {
 			else 
 				currTile = null;
 			 
+		}
+		
+		
+		int treTiCnt = treasures.size();
+		int amountPerChest = getGoldAmt()/treTiCnt;
+		
+		for(TreasureTile curr: treasures) {
+			curr.setTreasure(amountPerChest);
 		}
 		
 		
@@ -301,15 +311,14 @@ public class Main_tm {
 		
 		tileKey = tiles.firstKey();
 		currTile = tiles.get(tileKey);
-		ArrayList<ActionBox> currHits; 
+		ArrayList<ActionBox> currHits;  
 		
-		while(currTile != null) {  
-			System.out.println("Doing tile " + currTile);
+		while(currTile != null) {   
 			currHits = ((Tile_tm)currTile).getHitboxAsList();
 			
 			for(i = 0; i < currHits.size(); i++) {
-				currAB = currHits.get(i);
-				System.out.println("Did we add " + currAB + "? " + (gameBounds.add(currAB) ? "yes" : "no"));
+				currAB = currHits.get(i); 
+				gameBounds.add(currAB); 
 			}
 			
 			if(tiles.higherKey(tileKey) != null) {
@@ -334,6 +343,7 @@ public class Main_tm {
 			for(i = 0; i < arraySize; i++) {
 				currAB = gameBounds.get(i);
 				gameEngine.addRenderObj(currAB);
+				
 			}
 		}
 		
@@ -716,18 +726,55 @@ public class Main_tm {
 			public void run() {
 				while(true) {
 					if(doMonsterThread) {
+						int output;
+						int response = -1;
 						for(monsterIt = 0; monsterIt < monsters.size(); monsterIt++) {
 							monster = monsters.get(monsterIt);
 							if(monster != null) { 
-								System.out.println("Current monster is " + monster);
-								monster.move(false, null);
-								for(ActionBox currBound: gameBounds) {
-							
-									if(RenderObj.isColliding(monster, currBound)) {
-										monster.revertWorldPos(); 
-										collisions.push(currBound);
+								
+								
+								if(monster.isDead()) { 
+									if(monster.isLooted() == false) {
+										splitTreasure(monster.getLoot());
+										monster.setLooted(true);
 									}
 								}
+								else if(monster.isDespawned() == false) { 
+									
+									 
+									tile = gameMap.getTile(monster.getXPosWorld(), monster.getYPosWorld());
+									System.out.println("Current monster is " + monster + " With " + monster.getLoot() + " plunder! Standing on " + tile);
+							 
+									
+									for(ActionBox currBound: gameBounds) {
+										if(RenderObj.isColliding(monster, currBound)) {
+											if(currBound.doBlock()) {
+												System.out.println("Hello?");
+												monster.revertWorldPos();  
+											}
+											collision = currBound;
+										
+										}
+										
+									}
+									
+									
+									output = monster.choice(collision, tile);
+									
+									if(output == Monster_tm.KILLEDTARGET) {
+										collision = null;
+									}
+									if(output == Monster_tm.CONFIRM_TREASURE){
+										int TID = tile.getNearestTID();
+										if(TID != -1) {
+											if(treasures.get(TID).getTreasure() > 0) {
+												monster.reply(Monster_tm.TARGET_HAS_TREASURE);
+											}
+										}
+									}
+									
+									System.out.println("\n\n\n");
+							}
 								/*
 								 * Monster Move action
 								 */
@@ -749,11 +796,18 @@ public class Main_tm {
 								System.out.println("New monster!");
 								monsters.add(monster);
 								gameEngine.addRenderObj(monster);
+								 
+								if(debug)
+									gameEngine.addRenderObj(monster.getHitbox());
+								
+								
+								
+								if(monster.isLastMonster()) {
+									endSpawn = true;
+								}
+								monster = null;
 							}
 							
-							if(monster.isLastMonster()) {
-								endSpawn = true;
-							}
 						}
 					
 							 
@@ -816,10 +870,15 @@ public class Main_tm {
 					/*
 					 * Put map actions(?) here
 					 */
+						int sumTreas = 0;
+						for(TreasureTile curr: treasures) {
+							sumTreas += curr.getTreasure();
+						}
 						
-						
+						setGoldAmt(sumTreas);
 						
 						gameHud.setGold(getGoldAmt());
+						
 						/*********************
 						 * Scrolling options *
 						 *********************/
@@ -885,6 +944,19 @@ public class Main_tm {
 	 */
 	public int getGameBoundary() {
 		return gameEngine.getBoundary();
+	}
+	
+	/**
+	 * Splits some amount of treasure between all the treasureTiles 
+	 * @param treasure The amount of treasure to be split 
+	 */
+	public void splitTreasure(int treasure) {
+		int i, amtPerChest; 
+		int length = treasures.size();
+		amtPerChest = treasure/length;
+		for(i = 0; i < length; i++) {
+			treasures.get(i).addTreasure(amtPerChest);
+		}
 	}
 	
 	/**

@@ -340,7 +340,7 @@ public final class Map_tm {
       /**
        * Helper method for A*
        */
-      private char directionCycler(char dir) {
+      public static char directionCycler(char dir) {
     	  switch(dir) {
     	  case Mapper.NORTH: return Mapper.EAST; 
     	  case Mapper.EAST: return Mapper.SOUTH;
@@ -414,6 +414,53 @@ public final class Map_tm {
 		}
     	  
       }
+
+      /**
+       * Given (xPosWorld, yPosWorld), returns which tile contains it- or null if no tile contains it
+       * @param xPosWorld The x coordinate
+       * @param yPosWorld The y coordinate
+       * @return The tile containing (xPosWorld, yPosWorld), or null if nothing contains it
+       */
+	public Tile_tm getTile(double xPosWorld, double yPosWorld) {
+		Tile_tm ans = null, curr;
+		double key = 0, coordKey; 
+		coordKey = Mapper.keygen(xPosWorld, yPosWorld, controls);
+		
+		if(tiles.ceilingKey(coordKey) != null)
+			key = tiles.ceilingKey(coordKey);
+		else if(tiles.floorKey(coordKey) != null)
+			key = tiles.floorKey(coordKey);
+		else if(tiles.floorKey(coordKey) == null && tiles.ceilingKey(coordKey) == null) {
+			System.out.println("Why are you trying to call this method on an empty map? This is an error state.");
+		}
+		
+		curr = tiles.get(key);
+		
+		if(curr.contains(xPosWorld, yPosWorld)) {
+			ans = curr;
+		}
+		
+		if(ans == null) {
+			key = tiles.firstKey();
+			curr = tiles.get(key);
+			while(curr != null) {
+				if(curr.contains(xPosWorld, yPosWorld)) {
+					ans = curr;
+					curr = null;
+				}
+					
+				if(tiles.higherKey(key) != null) {
+					key = tiles.higherKey(key);
+					curr = tiles.get(key);
+				}
+				else 
+					curr = null;
+				 
+			}
+		}
+		
+		return ans;
+	}
       
       
       

@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 /**
  * Trap_tm is the superclass for all individual trap classes.
  * It provides the necessary variables for all traps as well as 
@@ -35,6 +36,7 @@ public abstract class Trap_tm extends RenderObj implements Damageable{
 		addStat(tr_currentHealth, tr_maxHealth, Color.red, Color.green);
 		tr_ID = trap_count;
 		trap_count++;
+		setType(TRAP);
 	}
 	
 	
@@ -151,5 +153,60 @@ public abstract class Trap_tm extends RenderObj implements Damageable{
 	
 	public void setBars() {
 		setBarVal(0, tr_currentHealth);
+	}
+	
+	public int getHealth() {
+		return getTr_currentHealth();
+	}
+
+	public int getHealthMax() {
+		return getTr_maxHealth();
+	}
+
+	public void setHealth(int healthVal) {
+		setTr_currentHealth(healthVal);
+	}
+
+	public void setHealthMax(int nuMax) {
+		setTr_maxHealth(nuMax);
+	}
+
+	public int takeDamage(int hit) {
+		setTr_currentHealth(getTr_currentHealth() - hit);
+		return getTr_currentHealth();
+	}
+
+	public int getHealed(int help) {
+		setTr_currentHealth(getTr_currentHealth() + help);
+		return getTr_currentHealth();
+	}
+
+	public void setAttack(int dmg) {
+		setTr_damage(dmg);
+	}
+
+	public int getAttack() {
+		return getTr_damage();
+	}
+
+	public HashMap<Character, ActionBox> getHitboxes() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void makeHitboxes() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void doEffect(RenderObj collider) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public boolean isDead() {
+		if(getTr_currentHealth() <= 0) 
+			return true;
+		return false;
 	}
 }
