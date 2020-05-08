@@ -186,7 +186,7 @@ public class Main_tm implements ObjTypes {
 		lblPause.setFont(new Font("Tahoma", Font.PLAIN, 60));
 		lblPause.setHorizontalAlignment(SwingConstants.CENTER);
 		lblPause.setSize(375, 104);
-		lblPause.setLocation(672, 454); 
+		lblPause.setLocation(420, 320); 
 		gameEngine.add(lblPause);
 		lblPause.setVisible(false);
 		
@@ -524,7 +524,7 @@ public class Main_tm implements ObjTypes {
 						for(i = 0; i < doors.size(); i++) {
 							currDoor = doors.get(i);
 							if(currDoor.contains(mouseXClick,  mouseYClick)) {
-								currDoor.getHealed(takeGold(150));
+								currDoor.getHealed(takeGold(50) * 3);
 								i = doors.size();
 							}
 						}
@@ -785,6 +785,7 @@ public class Main_tm implements ObjTypes {
 								
 								if(monster.isDead()) { 
 									if(monster.isLooted() == false) {
+										goldAmt += monster.getLoot();
 										splitTreasure(monster.getLoot());
 										monster.setLooted(true);
 									}
